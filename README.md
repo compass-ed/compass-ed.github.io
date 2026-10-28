@@ -22,6 +22,7 @@ assets/demo.js        Preview mode: a sample campus in the browser that mirrors 
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
 supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues, gallery, parent links, uploads
 supabase/compassed-v2.3.sql     Run after v2.1: login codes, consent, admin overview, calendar feeds (.ics), Compass Dash link
+supabase/compassed-v2.4.2-feedback.sql   Run after v2.3: the feedback button (admin-only inbox)
 privacy.html terms.html cookies.html consent.html   Legal pages and the printable parent/carer consent form
 parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
 sw.js                           Offline support: keeps the app shell and pages you have opened
@@ -72,6 +73,9 @@ then open http://127.0.0.1:8766/.
 - **Consent**: accounts record when the Terms and Privacy Policy were accepted (and parental consent if given). Existing accounts are asked once at sign-in.
 - All `ed_*` tables have row-level security on with no policies, so the only way in is through the `security definer` functions, each of which checks the caller's token and role.
 - Students can only read and write their own submissions, entries, review cards and completions, and only see assignments for their class.
+
+## v2.4.2
+- **Feedback button** in both portals; only the administrator reads messages, under Admin > Feedback.
 
 ## v2.4
 - Name: **Compass Ed**. Clubs are **ECA** (extra-curricular activities). The campus home page is also inside both portals at `#/campus`. Motion everywhere, with ambient loops designed in Moda (`assets/art/*-loop.mp4`), all honouring reduced-motion settings.

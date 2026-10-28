@@ -395,3 +395,11 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 .ver-row .vwrap{overflow:hidden;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh)} .ver-row .vwrap video{display:block;width:100%;height:auto;margin:0;border:0;border-radius:0;box-shadow:none}
 /* trailer: cropped wrapper hides the export badge in the corner */
 .trailer.vwrap{overflow:hidden;border-radius:20px;border:1px solid var(--line);box-shadow:var(--sh);background:#000;max-width:1100px} .trailer.vwrap video{display:block;width:100%;height:auto;margin:0}
+/* feedback */
+.fab-fb{position:fixed;right:18px;bottom:18px;z-index:120;display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:var(--ink);color:#fff;border:2px solid var(--ink);font-weight:700;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:pointer;transition:transform .15s,background .15s} .fab-fb .i{width:18px;height:18px} .fab-fb:hover{transform:translateY(-2px);background:var(--cyan);color:#000;border-color:var(--cyan)} .fab-fb:active{transform:scale(.97)}
+:root[data-theme="dark"] .fab-fb{background:#fff;color:#000;border-color:#fff}
+@media (max-width:640px){.fab-fb span{display:none} .fab-fb{padding:12px;right:14px;bottom:14px}}
+.cookie~.fab-fb,.cookie+.fab-fb{bottom:96px}
+@media print{.fab-fb{display:none!important}}
+.stars{display:inline-flex;gap:2px} .stars button{border:0;background:none;font-size:30px;line-height:1;color:var(--line2);cursor:pointer;padding:0 2px;transition:transform .12s,color .12s} .stars button.on{color:#f5c518} .stars button:hover{transform:scale(1.15)}
+.fb-card{border-left:4px solid var(--line)} .fb-card.new{border-left-color:var(--cyan)} .fb-card .fb-stars{color:#f5c518;letter-spacing:1px;font-size:15px} .fb-card .fb-body{white-space:pre-wrap;line-height:1.55}

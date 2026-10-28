@@ -49,6 +49,8 @@
       feed_format: "That address is not an iCalendar (.ics) feed.",
       mirrored: "This event comes from a calendar feed. Change it in the source calendar, or remove the feed.",
       no_free_codes: "No free codes are left.",
+      too_many: "You have sent feedback very recently. Wait half a minute and try again.",
+      bad_rating: "Choose a star rating first.",
       too_big: "That is too long to save.", empty: "Write something or add a link first.",
       graded: "This work has been marked. Hand in a new version if your teacher asked for one.",
       bad_text: "Please check the text: something is missing or too long.",
@@ -344,7 +346,32 @@
     CE.$$("[data-burger]").forEach(b => b.onclick = () => { side.classList.toggle("open"); scrim.classList.toggle("show"); });
     if (scrim) scrim.onclick = () => { side.classList.remove("open"); scrim.classList.remove("show"); };
     addEventListener("hashchange", () => { side.classList.remove("open"); if (scrim) scrim.classList.remove("show"); CE.markNav(); });
-    CE.markNav();
+    CE.markNav(); CE.feedbackButton();
+  };
+  /* ---------- feedback button (students and staff send; only the administrator reads, under Admin > Feedback) ---------- */
+  CE.FB_CATS = ["Bug report", "Feature request", "Suggestion", "Other"];
+  CE.feedbackButton = function () {
+    if (!CE.auth.get() || CE.$("#fbBtn")) return;
+    const h = CE.h, b = h("button", { id: "fbBtn", class: "fab-fb", type: "button", "aria-label": "Send feedback", onclick: CE.feedbackOpen }, CE.icon("megaphone"), h("span", {}, "Feedback"));
+    document.body.append(b);
+  };
+  CE.feedbackOpen = function () {
+    const h = CE.h; let rating = 0;
+    const stars = h("div", { class: "stars", role: "radiogroup", "aria-label": "Rating" }, ...[1, 2, 3, 4, 5].map(k => h("button", { type: "button", role: "radio", "aria-checked": "false", "aria-label": k + " star" + (k > 1 ? "s" : ""), onclick: () => { rating = k; CE.$$("button", stars).forEach((x, i) => { x.classList.toggle("on", i < k); x.setAttribute("aria-checked", i === k - 1); }); } }, "★")));
+    const cat = h("select", { class: "in" }, ...CE.FB_CATS.map(c => h("option", { value: c }, c))), msg = h("textarea", { class: "in", rows: 5, maxlength: 2000, placeholder: "What is working, what is not, or what would help? Please do not include passwords or other people's personal details." }), hp = h("input", { class: "hide", tabindex: -1, autocomplete: "off", "aria-hidden": "true" }), er = h("div", { class: "err" }), send = h("button", { class: "btn cyan", type: "button" }, "Send feedback");
+    const page = (CE.me ? (CE.me.role === "student" ? "Student portal " : "Staff portal ") : "") + (location.hash || "#/");
+    send.onclick = async () => {
+      er.textContent = "";
+      if (!rating) return er.textContent = CE.errText("bad_rating");
+      if (msg.value.trim().length < 10) return er.textContent = "Please write at least 10 characters.";
+      if (hp.value) return CE.closeModal();
+      const last = +(LS.get("ce_fb_at") || 0); if (Date.now() - last < 30000) return er.textContent = CE.errText("too_many");
+      send.disabled = true; send.textContent = "Sending…";
+      try { const r = await CE.capi("ed_feedback_send", { p_rating: rating, p_cat: cat.value, p_msg: msg.value.trim(), p_page: page }); if (!r.ok) { er.textContent = CE.errText(r); return; } LS.set("ce_fb_at", Date.now()); CE.closeModal(); CE.toast("Thanks, your feedback has been sent to the administrator.", "ok"); }
+      catch (e) { er.textContent = CE.errText(e); } finally { send.disabled = false; send.textContent = "Send feedback"; }
+    };
+    CE.modal(h("div", { class: "stack" }, h("h3", {}, "Send feedback"), h("p", { class: "sm mut", style: { margin: 0 } }, "Tell the administrator what is working and what is not. Only they can read it."), h("label", { class: "f" }, "Rating", stars), h("label", { class: "f" }, "Category", cat), h("label", { class: "f" }, "Message", msg), hp, h("div", { class: "xs mut" }, "Sent from: " + page), er, h("div", { class: "row" }, send, h("button", { class: "btn ghost", type: "button", onclick: CE.closeModal }, "Cancel"))));
+    setTimeout(() => msg.focus(), 50);
   };
   CE.markNav = () => { const h = (location.hash || "#/").split("?")[0].split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); };
   /* sub-tabs under the top bar: a page group calls CE.subnav([[label, hash], ...]) */

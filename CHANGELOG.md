@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.4.2 — 28 October 2026
+- **Feedback button** in both portals (bottom right), modelled on Compass Dash: a star rating, a category, a message, a honeypot and a 30-second cooldown. Only the administrator can read it, under Admin > Feedback (New/All/category filters, mark as seen, delete, average rating). Database: run `supabase/compassed-v2.4.2-feedback.sql`.
+- **v2.4.1**: the Moda export badge is cropped out of every video.
+
 ## v2.4 — 28 October 2026
 - **Compass Ed** is the name everywhere (pages, portals, policies, manifest, sample data); run `supabase/patches/rename-compass-ed.sql` once to rename the live school record.
 - **ECA**: the Clubs section says "ECA and after school" and "ECA (extra-curricular activities)" instead of "Lunchtime".

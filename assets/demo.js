@@ -166,6 +166,9 @@
     db.feeds = db.feeds || [{ id: 1, name: "Global Campus events", url: "https://globalcampus.nae.school/calendar/export.ics", source: "globalcampus", class_id: null, tz: "Europe/London", last_sync: day(-1), last_error: null, n: 3, uid: 1, created: day(-10) }];
     db.school.links = db.school.links || [{ name: "Global Campus", url: "https://globalcampus.nae.school/", blurb: "Nord Anglia's online campus: global challenges and programmes with Juilliard, MIT and UNICEF." }, { name: "Compass Dash", url: "https://compassdash.github.io/Compassdash/", blurb: "KS3 revision games with XP, duels and the house cup." }];
     if (!db.events.some(e => e.src)) [["Global Challenge launch", 2, 10, "feed:1", "gc-1"], ["STEAM Festival submissions close", 9, 17, "feed:1", "gc-2"], ["Global Campus live: Juilliard masterclass", 16, 15, "feed:1", "gc-3"]].forEach(([t, d, hr, src, su]) => db.events.push({ id: nid(), class_id: null, kind: "event", title: t, starts: dayAt(d, hr), ends: dayAt(d, hr + 1), place: "Online", uid: 1, src, src_uid: su }));
+    db.feedback = db.feedback || [{ id: 1, uid: 101, role: "student", name: "Alice Johnson", rating: 5, category: "Suggestion", body: "Could the review queue show how many cards are due tomorrow as well as today? I like planning ahead.", page: "Student portal #/review", created: day(-1), seen_at: null },
+      { id: 2, uid: 3, role: "teacher", name: "Mr Ode", rating: 3, category: "Bug report", body: "The heatmap takes a while to load for 8B when the quiz list is long. Not broken, just slow.", page: "Staff portal #/class/2/heatmap", created: day(-2), seen_at: null },
+      { id: 3, uid: 103, role: "student", name: "Cara Mensah", rating: 4, category: "Feature request", body: "A dark mode for the public home page too, please. The portals have it already.", page: "Student portal #/campus", created: day(-5), seen_at: day(-4) }];
     db.users.forEach(u => { if (u.consent == null) u.consent = u.username === "dev.p" ? {} : { terms: u.created, privacy: u.created, v: 1 }; if (u.must_pw == null) u.must_pw = false; if (u.cd_code === undefined) { u.cd_code = u.username === "alice.j" ? "7K3Q" : null; u.cd_user = u.username === "alice.j" ? "alice_j" : null; } });
   };
   const load = () => { try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {} if (!db || !db.users) { db = seed(); } migrate(); save(); };
@@ -428,6 +431,14 @@
     ed_s_cd_unlink(a) { const u = who(a); if (!u) return err("bad_key"); u.cd_code = null; u.cd_user = null; return { ok: true }; },
     ed_s_cd(a) { const u = who(a); if (!u) return err("bad_key"); const linked = !!u.cd_code; return { ok: true, on: true, linked, cd_user: u.cd_user, houses: CD.houses, board: CD.board, my: linked ? CD.my : null, anns: linked ? CD.anns : null }; },
     ed_t_cd(a) { const u = who(a); const e = mustStaff(u); if (e) return e; return { ok: true, on: true, houses: CD.houses, board: CD.board, linked: db.users.filter(x => x.cd_code).length }; }
+  });
+
+  Object.assign(F, {
+    ed_feedback_send(a) { const u = who(a); if (!u) return err("bad_key"); if (!(a.p_rating >= 1 && a.p_rating <= 5)) return err("bad_rating"); if ((a.p_msg || "").trim().length < 10) return err("empty"); if (db.feedback.some(f => f.uid === u.id && Date.now() - new Date(f.created) < 30000)) return err("too_many");
+      const f = { id: nid(), uid: u.id, role: u.role, name: u.name, rating: +a.p_rating, category: ["Bug report", "Feature request", "Suggestion", "Other"].includes(a.p_cat) ? a.p_cat : "Other", body: a.p_msg.trim(), page: (a.p_page || "").slice(0, 120), created: now(), seen_at: null }; db.feedback.push(f); return { ok: true, id: f.id }; },
+    ed_a_feedback(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); const rows = db.feedback.slice().sort((p, q) => q.created < p.created ? -1 : 1); return { ok: true, unseen: rows.filter(f => !f.seen_at).length, total: rows.length, avg: rows.length ? Math.round(rows.reduce((n, f) => n + f.rating, 0) / rows.length * 10) / 10 : null, rows: rows.map(f => ({ id: f.id, uid: f.uid, role: f.role, name: f.name, username: (db.users.find(x => x.id === f.uid) || {}).username || null, rating: f.rating, category: f.category, body: f.body, page: f.page, created: f.created, seen: !!f.seen_at })) }; },
+    ed_a_feedback_seen(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); db.feedback.forEach(f => { if (!a.p_id || f.id === +a.p_id) f.seen_at = a.p_seen === false ? null : (f.seen_at || now()); }); return { ok: true }; },
+    ed_a_feedback_del(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); const i = db.feedback.findIndex(f => f.id === +a.p_id); if (i < 0) return { ok: false }; db.feedback.splice(i, 1); return { ok: true }; }
   });
 
   window.CE_DEMO = {

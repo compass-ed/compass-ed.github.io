@@ -639,6 +639,7 @@
       if (tab === "codes") return codesTab();
       if (tab === "feeds") return feedsTab();
       if (tab === "links") return linksTab();
+      if (tab === "feedback") return feedbackTab();
       const r = await api("ed_a_dash"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
       page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Admin overview"), h("div", { class: "sm mut" }, r.school.name + " · accounts, codes, feeds and links in one place.")), h("div", { class: "row" }, h("a", { class: "btn", href: "#/admin/codes" }, "Login codes"), h("a", { class: "btn ghost", href: "#/people" }, "Accounts"))));
@@ -660,6 +661,7 @@
         ...r.feeds.map(f => h("div", { class: "row between" }, h("span", {}, srcTag(f.source, f.name), " ", f.name), h("span", { class: "xs mut" }, f.last_error ? "Error: " + f.last_error : f.last_sync ? f.n + " events · synced " + D.ago(f.last_sync) : "Never synced"))),
         h("div", { class: "row" }, h("a", { class: "btn sm ghost", href: "#/admin/feeds" }, "Calendar feeds"), h("a", { class: "btn sm ghost", href: "#/admin/links" }, "Links on home pages")))));
       g.append(card("Houses", h("div", { class: "stack sm" }, ...Object.entries(r.school.houses || CE.HOUSE_NAMES).map(([k, v]) => h("div", { class: "row between house-" + k }, h("span", { class: "hpill" }, v), h("span", { class: "xs mut" }, { N: "red", E: "green", S: "blue", W: "yellow" }[k]))), h("div", { class: "xs mut" }, "Students choose a house once; staff change it from a class page. Points and the leaderboard are under House points."))));
+      api("ed_a_feedback").then(f => { if (!f.ok) return; const t = tile(f.unseen, "New feedback", "#/admin/feedback", f.unseen ? "warn" : ""); page.querySelector(".adm-grid").append(t); }).catch(() => {});
       g.append(card("Printable forms", h("div", { class: "stack sm" }, h("a", { class: "btn sm ghost", href: CE.root + "consent.html", target: "_blank" }, "Parent or carer consent form"), h("a", { class: "btn sm ghost", href: "#/admin/codes" }, "Login code sheets"), h("div", { class: "xs mut" }, "Also: ", h("a", { href: CE.root + "privacy.html", target: "_blank" }, "Privacy Policy"), " · ", h("a", { href: CE.root + "terms.html", target: "_blank" }, "Terms of Service"), " · ", h("a", { href: CE.root + "cookies.html", target: "_blank" }, "Cookie Policy")))));
     } catch (e) { CE.fail(page, e); }
   }
@@ -717,6 +719,25 @@
     setTimeout(() => print(), 50);
   }
 
+  /* ----- feedback (admin only reads it) ----- */
+  async function feedbackTab() {
+    const r = await api("ed_a_feedback"); if (!r.ok) return CE.fail(page, r);
+    page.innerHTML = ""; let filter = "new";
+    page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Feedback"), h("div", { class: "sm mut" }, r.total + " message" + (r.total === 1 ? "" : "s") + (r.avg ? " · average rating " + r.avg + " of 5" : "") + " · " + r.unseen + " new. Only the administrator can see this page.")), r.unseen ? h("button", { class: "btn ghost", onclick: async () => { const x = await api("ed_a_feedback_seen", { p_id: 0, p_seen: true }); if (!x.ok) return CE.toast(CE.errText(x), "bad"); feedbackTab(); } }, "Mark all as seen") : null));
+    const seg = h("div", { class: "seg" }, ...[["new", "New"], ["all", "All"]].concat(CE.FB_CATS.map(c => [c, c])).map(([k, l]) => h("button", { class: k === filter ? "on" : "", onclick: e => { filter = k; CE.$$("button", seg).forEach(b => b.classList.toggle("on", b === e.target)); draw(); } }, l)));
+    const list = h("div", { class: "stack" }); page.append(h("div", { class: "row" }, seg), list);
+    const draw = () => {
+      list.innerHTML = "";
+      const rows = r.rows.filter(x => filter === "all" || (filter === "new" ? !x.seen : x.category === filter));
+      if (!rows.length) list.append(CE.emptyArt("inbox", filter === "new" ? "Nothing new" : "No feedback here yet", "Students and staff send it from the Feedback button in their portal."));
+      rows.forEach(x => list.append(h("div", { class: "card fb-card" + (x.seen ? "" : " new") },
+        h("div", { class: "hd" }, h("div", { class: "row" }, h("span", { class: "fb-stars", "aria-label": x.rating + " of 5" }, "★".repeat(x.rating) + "☆".repeat(5 - x.rating)), h("span", { class: "badge cyan" }, x.category), x.seen ? null : h("span", { class: "badge ink" }, "New")), h("div", { class: "row" }, h("button", { class: "btn sm ghost", onclick: async () => { const y = await api("ed_a_feedback_seen", { p_id: x.id, p_seen: !x.seen }); if (!y.ok) return CE.toast(CE.errText(y), "bad"); x.seen = !x.seen; r.unseen += x.seen ? -1 : 1; draw(); } }, x.seen ? "Mark as new" : "Mark as seen"), h("button", { class: "btn sm bad", onclick: async () => { if (await CE.confirm("Delete this message?", "Delete")) { const y = await api("ed_a_feedback_del", { p_id: x.id }); if (!y.ok) return CE.toast(CE.errText(y), "bad"); r.rows = r.rows.filter(z => z !== x); r.total--; if (!x.seen) r.unseen--; draw(); } } }, "Delete"))),
+        h("div", { class: "fb-body" }, x.body),
+        h("div", { class: "xs mut", style: { marginTop: "10px" } }, (x.name || "Unknown") + (x.username ? " (" + x.username + ")" : "") + " · " + x.role + " · " + D.ago(x.created) + (x.page ? " · from " + x.page : "")))));
+    };
+    draw();
+  }
+
   /* ----- calendar feeds ----- */
   async function feedsTab() {
     const r = await api("ed_a_feeds"); if (!r.ok) return CE.fail(page, r);
@@ -766,7 +787,7 @@
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
     [["Announcements", "#/announcements"], ["Calendar", "#/calendar"]],
     [["People & classes", "#/people", /^#\/people/], ["House points", "#/points"]],
-    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"]],
+    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"]],
     [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
   ];
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g && g.length > 1 ? g : []); };
