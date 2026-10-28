@@ -77,7 +77,7 @@
     if (r && r.error === "bad_key") { CE.auth.clear(); location.replace(ROOT + "signin.html"); throw new Error("bad_key"); }
     return r;
   };
-  CE.signOut = function () { const s = CE.auth.get(); if (s) CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); CE.auth.clear(); location.href = ROOT + "signin.html"; };
+  CE.signOut = function () { const s = CE.auth.get(); if (s) CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); CE.auth.clear(); CE.go(ROOT + "signin.html"); };
   /* Load the profile (and lists) for a portal page. Redirects to sign-in when there is no session or the wrong role. */
   CE.requireRole = async function (roles) {
     const s = CE.auth.get();
@@ -192,19 +192,31 @@
 
   /* ---------- hash router ---------- */
   CE.router = function (routes, notFound) {
+    let first = true;
     const go = () => {
       const path = (location.hash.replace(/^#\/?/, "") || "").split("?")[0];
       const parts = path.split("/").filter(Boolean);
+      let fn = null;
       for (const r of routes) {
         const rp = r.path.split("/").filter(Boolean);
         if (rp.length !== parts.length) continue;
         const params = {}; let ok = true;
         rp.forEach((p, i) => { if (p[0] === ":") params[p.slice(1)] = decodeURIComponent(parts[i]); else if (p !== parts[i]) ok = false; });
-        if (ok) { r.handler(params); return; }
+        if (ok) { fn = () => r.handler(params); break; }
       }
-      (notFound || routes[0].handler)({});
+      if (!fn) fn = () => (notFound || routes[0].handler)({});
+      if (first) { first = false; fn(); } else CE.txRoute(fn);   /* the boot route paints plainly; later routes swap with a short transition */
     };
     addEventListener("hashchange", go); go();
+  };
+  /* In-portal route changes: a quick blur-and-settle swap through the View Transitions API (Chrome, Edge, Safari 18, Firefox 144).
+     Elsewhere, or with reduced motion, a hidden tab or an open dialog, the route simply renders as before. */
+  CE.txRoute = fn => {
+    if (!document.startViewTransition || !txOk() || CE.$(".modal.show, .gate")) return fn();
+    const d = document.documentElement; d.classList.add("vt");
+    const t = document.startViewTransition(() => { fn(); });
+    t.updateCallbackDone.catch(() => {}); t.ready.catch(() => {});
+    t.finished.catch(() => {}).finally(() => d.classList.remove("vt"));
   };
   CE.nav = h => { location.hash = h; };
   CE.q = k => new URLSearchParams(location.hash.split("?")[1] || "").get(k);
@@ -290,6 +302,34 @@
   /* Vercel Web Analytics (cookieless page counts) and Speed Insights (load-time measurements), only where Vercel serves the
      scripts: the GitHub Pages copy has no such files. Vercel's script counts the portal's hash routes by itself, one view per change. */
   if (/\.vercel\.app$/.test(location.hostname)) ["/_vercel/insights/script.js", "/_vercel/speed-insights/script.js"].forEach(src => { const s = document.createElement("script"); s.defer = true; s.src = src; document.head.append(s); });
+  /* ---------- page transitions: the compass ----------
+     Leaving a page: a black veil blurs it away while the compass needle spins up and settles on north, then we navigate.
+     The arriving page (assets/tx.js, run before its first paint) opens the veil from the compass and flies through it.
+     Nothing runs for reduced-motion users, hidden tabs, modifier clicks, downloads, external links or in-page anchors. */
+  const TX_ART = ["compass-rose.png", "compass-needle.png"].map(f => ROOT + "assets/art/" + f);
+  const txOk = () => !matchMedia("(prefers-reduced-motion: reduce)").matches && document.visibilityState === "visible" && !CE.$(".tx");
+  CE.go = function (url) {
+    if (!txOk()) { location.href = url; return; }
+    const c = CE.h("div", { class: "tx", "aria-hidden": "true" }, CE.h("div", { class: "tx-veil" }),
+      CE.h("div", { class: "tx-c" }, CE.h("img", { class: "tx-rose", src: TX_ART[0], alt: "", draggable: "false" }), CE.h("img", { class: "tx-needle", src: TX_ART[1], alt: "", draggable: "false" })));
+    document.body.append(c);
+    let gone = false; addEventListener("pagehide", () => { gone = true; }, { once: true });
+    setTimeout(() => { try { sessionStorage.setItem("ce_tx", String(Date.now())); } catch (e) {} location.href = url; }, 520);
+    setTimeout(() => { if (!gone) c.remove(); }, 6000);   /* the browser never left (a download, a blocked page): put the page back */
+  };
+  const samePage = u => u.pathname.replace(/\/index\.html$/, "/") === location.pathname.replace(/\/index\.html$/, "/") && u.search === location.search;
+  document.addEventListener("click", e => {
+    if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    const a = e.target && e.target.closest ? e.target.closest("a[href]") : null;
+    if (!a || a.hasAttribute("download") || (a.target && a.target !== "_self") || a.closest("[data-no-tx]")) return;
+    const href = a.getAttribute("href"); if (!href || /^(#|javascript:|mailto:|tel:)/i.test(href)) return;
+    let u; try { u = new URL(a.href, location.href); } catch (x) { return; }
+    if (u.origin !== location.origin || !/^https?:$/.test(u.protocol) || samePage(u)) return;
+    if (/\.(mp4|webm|m4a|mp3|pdf|png|jpe?g|gif|svg|webp|zip|ics|csv|txt|json|xml)$/i.test(u.pathname)) return;
+    e.preventDefault(); if (!CE.$(".tx")) CE.go(u.href);
+  });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) (window.requestIdleCallback ? f => requestIdleCallback(f) : f => setTimeout(f, 1500))(() => TX_ART.forEach(s => { const i = new Image(); i.src = s; }));
+  addEventListener("pageshow", e => { if (e.persisted) { CE.$$(".tx").forEach(x => x.remove()); document.documentElement.classList.remove("tx-in", "vt"); } });
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
     let had = !!navigator.serviceWorker.controller;
@@ -392,7 +432,7 @@
   CE.demoBanner = () => {
     if (!demo) return;
     const b = CE.h("div", { class: "banner" }, CE.icon("eye"), " ", CE.h("span", {}, CE.h("b", {}, "Preview mode."), " This is a sample campus kept in your browser. Nothing here reaches the real database."),
-      CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample campus to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); CE.auth.clear(); location.href = ROOT + "signin.html"; } } }, "Reset sample"));
+      CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample campus to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); CE.auth.clear(); CE.go(ROOT + "signin.html"); } } }, "Reset sample"));
     document.body.prepend(b);
   };
   if (document.body) CE.cookieBanner(); else document.addEventListener("DOMContentLoaded", CE.cookieBanner);

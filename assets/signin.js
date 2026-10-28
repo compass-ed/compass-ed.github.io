@@ -28,7 +28,7 @@
       CE.h("div", { class: "xs mut", style: { marginTop: "8px" } }, "Join code " + a.join + " · invite code " + a.invite + ". Preview mode keeps a sample campus in this browser; add ?demo=0 to turn it off.")));
   }
 
-  const go = (r) => { CE.auth.set(r.tok, r.me); const next = qs.get("next") || ""; const hash = next.includes("#") ? next.slice(next.indexOf("#")) : ""; location.href = (r.me.role === "student" ? "student/" : "teacher/") + hash; };
+  const go = (r) => { CE.auth.set(r.tok, r.me); const next = qs.get("next") || ""; const hash = next.includes("#") ? next.slice(next.indexOf("#")) : ""; CE.go((r.me.role === "student" ? "student/" : "teacher/") + hash); };
   const lockText = r => r.error === "locked" ? "Too many tries. Wait " + (r.secs || 60) + " seconds, then try again." : CE.errText(r);
 
   fIn: {
