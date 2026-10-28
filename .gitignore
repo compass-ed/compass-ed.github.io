@@ -5,3 +5,4 @@
 supabase/local/
 .vercel
 .env*
+node_modules/
