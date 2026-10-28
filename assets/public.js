@@ -5,18 +5,18 @@
   const y = document.getElementById("yr"); if (y) y.textContent = new Date().getFullYear();
   const s = CE.auth && CE.auth.get();
   const cta = document.querySelector(".nav .cta");
-  if (cta && s && s.me) { cta.innerHTML = ""; cta.append(CE.h("a", { class: "btn cyan", href: s.me.role === "student" ? "app.html" : "teach.html" }, s.me.role === "student" ? "Open my campus" : "Open staff portal")); }
+  if (cta && s && s.me) { cta.innerHTML = ""; cta.append(CE.h("a", { class: "btn cyan", href: s.me.role === "student" ? "student/" : "teacher/" }, s.me.role === "student" ? "Open my campus" : "Open staff portal")); }
 
   const catGrid = document.getElementById("catGrid"); if (!catGrid) return;
-  const h = CE.h, D = CE.date, portal = s && s.me ? (s.me.role === "student" ? "app.html" : "teach.html") : null;
-  const link = (studentHash) => portal === "app.html" ? "app.html" + studentHash : "signin.html";
+  const h = CE.h, D = CE.date, portal = s && s.me ? s.me.role : null;
+  const link = (studentHash) => portal === "student" ? "student/" + studentHash : "signin.html";
   CE.api("ed_public").then(r => {
     if (!r.ok) throw r;
     const sn = document.getElementById("schoolName"); if (sn && r.school) sn.textContent = r.school === "CompassED" ? "Campus" : r.school + " campus";
     let age = "all";
     const drawAge = () => {
       catGrid.innerHTML = "";
-      r.categories.forEach(c => { const n = age === "under11" ? (c.n_u11 ?? c.n) : age === "11plus" ? (c.n_11 ?? c.n) : c.n; catGrid.append(h("a", { class: "subj", href: link("#/explore/" + c.id) }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon(c.icon)), h("span", { class: "badge" }, n + (n === 1 ? " activity" : " activities"))), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, c.blurb))); });
+      r.categories.forEach(c => { const n = age === "under11" ? (c.n_u11 ?? c.n) : age === "11plus" ? (c.n_11 ?? c.n) : c.n; catGrid.append(h("a", { class: "subj pat", style: { "--pat": "url(assets/art/pat-" + (CE.PAT[c.id] || "hub") + ".svg)" }, href: link("#/explore/" + c.id) }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon(c.icon)), h("span", { class: "badge" }, n + (n === 1 ? " activity" : " activities"))), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, c.blurb))); });
       const cg = document.getElementById("compGrid"); cg.innerHTML = "";
       const comps = r.competitions.filter(c => age === "all" || !c.ages || c.ages === "all" || c.ages === age);
       if (!comps.length) cg.append(h("div", { class: "empty" }, "Nothing open right now. Check back soon."));

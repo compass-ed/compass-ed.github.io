@@ -10,7 +10,8 @@
     demo = !!C.allowDemo && (local || localStorage.getItem("ce_demo") === "1");
   } catch (e) { demo = !!C.allowDemo && local; }
 
-  const CE = window.CE = Object.assign(window.CE || {}, { cfg: C, demo, subjects: [], categories: [], me: null });
+  const ROOT = /\/(student|teacher)\/[^/]*$/.test(location.pathname) ? "../" : "";
+  const CE = window.CE = Object.assign(window.CE || {}, { cfg: C, demo, subjects: [], categories: [], me: null, root: ROOT, PORTAL: { student: ROOT + "student/", teacher: ROOT + "teacher/" } });
 
   /* ---------- API ---------- */
   CE.api = async function (fn, args) {
@@ -63,17 +64,17 @@
   };
   CE.capi = async (fn, a) => {
     const r = await CE.api(fn, Object.assign(CE.auth.args(), a || {}));
-    if (r && r.error === "bad_key") { CE.auth.clear(); location.replace("signin.html"); throw new Error("bad_key"); }
+    if (r && r.error === "bad_key") { CE.auth.clear(); location.replace(ROOT + "signin.html"); throw new Error("bad_key"); }
     return r;
   };
-  CE.signOut = function () { const s = CE.auth.get(); if (s) CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); CE.auth.clear(); location.href = "signin.html"; };
+  CE.signOut = function () { const s = CE.auth.get(); if (s) CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); CE.auth.clear(); location.href = ROOT + "signin.html"; };
   /* Load the profile (and lists) for a portal page. Redirects to sign-in when there is no session or the wrong role. */
   CE.requireRole = async function (roles) {
     const s = CE.auth.get();
-    if (!s) { location.replace("signin.html?next=" + encodeURIComponent(location.pathname.split("/").pop() + location.hash)); return null; }
+    if (!s) { location.replace(ROOT + "signin.html?next=" + encodeURIComponent((/\/teacher\//.test(location.pathname) ? "teacher" : "student") + location.hash)); return null; }
     let me = s.me;
     try { const r = await CE.capi("ed_me"); if (r.ok) { me = r; CE.auth.set(s.tok, r); } } catch (e) { if (e.message === "bad_key") return null; }
-    if (!roles.includes(me.role)) { location.replace(me.role === "student" ? "app.html" : "teach.html"); return null; }
+    if (!roles.includes(me.role)) { location.replace(me.role === "student" ? CE.PORTAL.student : CE.PORTAL.teacher); return null; }
     CE.me = me; CE.subjects = me.subjects || []; CE.categories = me.categories || [];
     return me;
   };
@@ -246,7 +247,7 @@
   };
   CE.offline = on => { let b = CE.$("#offline"); if (on && !b) { b = CE.h("div", { id: "offline", class: "offline" }, "You're offline. Showing the last copy of this page; changes won't save until you're back online."); document.body.prepend(b); } if (!on && b) b.remove(); };
   addEventListener("online", () => CE.offline(false));
-  if ("serviceWorker" in navigator && !local) navigator.serviceWorker.register("sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && !local) navigator.serviceWorker.register(ROOT + "sw.js").catch(() => {});
 
   /* ---------- file uploads (Supabase Storage bucket "uploads"; preview mode keeps small files in the browser) ---------- */
   CE.upload = async function (file) {
@@ -279,6 +280,8 @@
   ];
   CE.badges = b => CE.BADGES.map(([id, name, desc, icon, test]) => ({ id, name, desc, icon, on: !!(b && test(b)) }));
   CE.HOUSE_NAMES = { N: "North", E: "East", S: "South", W: "West" };
+  CE.PAT = { 1: "hub", 2: "art", 3: "world", 4: "perform", 5: "words", 6: "impact", 7: "steam", 8: "sport" };
+  CE.emptyArt = (art, title, sub) => CE.h("div", { class: "empty art" }, CE.h("img", { src: ROOT + "assets/art/empty-" + art + ".svg", alt: "" }), CE.h("div", { class: "b" }, title), sub ? CE.h("div", { class: "sm" }, sub) : null);
 
   /* ---------- search (client-side over what the portal already loads) ---------- */
   CE.searchBox = (placeholder, onInput) => { const h = CE.h, i = h("input", { class: "in", placeholder, oninput: () => onInput(i.value.trim().toLowerCase()) }); return h("div", { class: "srch" }, CE.icon("explore"), i); };
@@ -292,13 +295,15 @@
     CE.markNav();
   };
   CE.markNav = () => { const h = (location.hash || "#/").split("?")[0].split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); };
+  /* sub-tabs under the top bar: a page group calls CE.subnav([[label, hash], ...]) */
+  CE.subnav = tabs => { let el = CE.$("#subnav"); if (!el) return; el.innerHTML = ""; if (!tabs || !tabs.length) { el.classList.add("hide"); return; } el.classList.remove("hide"); const cur = (location.hash || "#/").split("?")[0]; tabs.forEach(([l, hsh, m]) => el.append(CE.h("a", { class: "tab" + ((m ? m.test(cur) : cur === hsh) ? " on" : ""), href: hsh }, l))); };
   CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · CompassED"; };
   CE.loading = el => { el.innerHTML = ""; for (let i = 0; i < 3; i++) el.append(CE.h("div", { class: "card stack" }, CE.h("div", { class: "skel", style: { width: "40%" } }), CE.h("div", { class: "skel" }), CE.h("div", { class: "skel", style: { width: "70%" } }))); };
   CE.fail = (el, e) => { el.innerHTML = ""; el.append(CE.h("div", { class: "empty" }, CE.h("div", { class: "big" }, CE.icon("warn")), CE.h("div", { class: "b" }, CE.errText(e)), CE.h("div", { class: "sm", style: { marginTop: "8px" } }, CE.h("button", { class: "btn sm", onclick: () => location.reload() }, "Try again")))); };
   CE.demoBanner = () => {
     if (!demo) return;
     const b = CE.h("div", { class: "banner" }, CE.icon("eye"), " ", CE.h("span", {}, CE.h("b", {}, "Preview mode."), " This is a sample campus kept in your browser. Nothing here reaches the real database."),
-      CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample campus to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); CE.auth.clear(); location.href = "signin.html"; } } }, "Reset sample"));
+      CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample campus to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); CE.auth.clear(); location.href = ROOT + "signin.html"; } } }, "Reset sample"));
     document.body.prepend(b);
   };
 })();

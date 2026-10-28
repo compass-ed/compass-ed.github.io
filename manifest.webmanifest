@@ -2,7 +2,7 @@
   "name": "CompassED",
   "short_name": "CompassED",
   "description": "Schoolwork platform connected to Compass Dash.",
-  "start_url": "./app.html",
+  "start_url": "./student/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",

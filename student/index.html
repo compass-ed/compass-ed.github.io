@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; form-action 'self'; object-src 'none'; base-uri 'self'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>CompassED</title>
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../assets/icon-192.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#000000">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500&family=Lexend:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/app.css">
+</head>
+<body>
+<div class="shell">
+  <aside class="side" id="side">
+    <a class="brand" href="#/"><img src="../assets/logo-white.svg" alt="">Compass<b>ED</b></a>
+    <a class="nl" href="#/"><span data-icon="compass"></span>Home</a>
+    <a class="nl" href="#/explore"><span data-icon="explore"></span>Explore</a>
+    <a class="nl" href="#/subjects"><span data-icon="book"></span>Schoolwork <span class="n hide" id="nDue"></span></a>
+    <a class="nl" href="#/progress"><span data-icon="chart"></span>Progress</a>
+    <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
+    <a class="nl" href="#/news"><span data-icon="megaphone"></span>Notices <span class="n hide" id="nAnn"></span></a>
+    <div class="sp"></div>
+    <a class="nl" href="#/settings"><span data-icon="settings"></span>Settings</a>
+    <div class="me"><div class="av" id="meAv">?</div><div><div class="nm" id="meName">…</div><div class="rl" id="meClass"></div></div><button class="ib right" id="signout" title="Sign out" aria-label="Sign out" style="color:#9aa5a8"><span data-icon="exit"></span></button></div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+  <div class="main">
+    <div class="topbar">
+      <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
+      <h2 id="ptitle">Home</h2>
+      <a class="ib" href="#/search" aria-label="Search" style="margin-left:auto"><span data-icon="explore"></span></a>
+      <div class="bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop"></div></div>
+    </div>
+    <div class="subnav hide" id="subnav"></div>
+    <main class="page" id="page"></main>
+  </div>
+</div>
+<script src="../assets/config.js"></script>
+<script src="../assets/core.js"></script>
+<script src="../assets/icons.js"></script>
+<script src="../assets/demo.js"></script>
+<script src="../assets/student.js"></script>
+</body>
+</html>

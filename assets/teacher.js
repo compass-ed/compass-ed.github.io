@@ -615,6 +615,16 @@
     data = { c: c.ok ? c : { units: [], quizzes: [], activities: [], competitions: [], news: [] }, a: a.ok ? a : { rows: [] }, p: p2.ok ? p2 : { users: [], classes: [] }, b: b.ok ? b : { rows: [] } }; run(box.querySelector("input").value.trim().toLowerCase());
   }
 
+  const GROUPS = [
+    [["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["News", "#/news"]],
+    [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
+    [["Announcements", "#/announcements"], ["Calendar", "#/calendar"]],
+    [["People & classes", "#/people", /^#\/people/], ["House points", "#/points"]],
+    [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
+  ];
+  const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g && g.length > 1 ? g : []); };
+  addEventListener("hashchange", setSub); setSub();
+  CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/points", handler: points }, { path: "/clubs", handler: clubs }, { path: "/bank", handler: bank }, { path: "/search", handler: search },
     { path: "/", handler: dashboard }, { path: "/activities", handler: activities }, { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: compPage }, { path: "/news", handler: news },

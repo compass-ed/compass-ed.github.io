@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Versions · CompassED</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .ver-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:start}
+  .ver-row img{width:100%;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh)}
+  .ver-row ul{padding-left:20px;margin:0}
+  .ver-row li{margin:6px 0}
+  .ver-tag{font-family:var(--mono);background:var(--ink);color:#fff;padding:4px 10px;border-radius:999px;font-size:13px}
+  @media (max-width:900px){.ver-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="">Compass<b>ED</b></a>
+    <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
+    <nav id="pubnav">
+      <a href="index.html">Home</a>
+      <a href="index.html#explore">Explore</a>
+      <a href="about.html">About</a>
+      <a href="versions.html" class="on">Versions</a>
+    </nav>
+    <div class="cta">
+      <a class="btn ghost" href="signin.html?signup=1">Create account</a>
+      <a class="btn cyan" href="signin.html">Sign in</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" style="padding-bottom:16px">
+    <div class="wrap">
+      <span class="eyebrow">Version history</span>
+      <h1>What changed, and when</h1>
+      <p class="lead">Every new version gets an entry here with a short animated preview of what it looks like.</p>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:8px">
+    <div class="wrap stack" style="gap:28px">
+
+      <article class="card ver-row" id="v2-2">
+        <div>
+          <div class="row"><span class="ver-tag">v2.2</span><span class="mut sm">28 October 2026 · current</span></div>
+          <h2 style="margin-top:10px">Polish, directories and a content pack</h2>
+          <ul class="sm">
+            <li>Student and staff portals now live at <b>/student/</b> and <b>/teacher/</b>.</li>
+            <li>Navigation simplified to seven grouped sections per portal, with sub-tabs.</li>
+            <li>New graphics: animated compass hero, patterned category tiles, illustrated empty states.</li>
+            <li>Starter content pack: 16 activities across every category, four competitions, five clubs, news and a launch event.</li>
+            <li>This Versions page, with a changelog and animated previews from here on.</li>
+            <li>Bug fixes to stale preview data, the hero eyebrow and several empty states.</li>
+          </ul>
+        </div>
+        <img src="assets/versions/v2.2.webp" alt="Animated preview of CompassED version 2.2: home page, student portal, staff portal">
+      </article>
+
+      <article class="card flat" id="v2-1">
+        <div class="row"><span class="ver-tag">v2.1</span><span class="mut sm">28 October 2026</span></div>
+        <h3 style="margin-top:10px">Houses, clubs, uploads and accessibility</h3>
+        <p class="sm mut">House points and leaderboards, badges, file uploads, parent summary links, clubs, newsletter builder, winners' gallery, age bands, question bank with CSV import, topics view, timed assessments, peer review, register and seating, offline support, search, and settings for dark mode, dyslexia-friendly reading, detail level and transparency.</p>
+      </article>
+
+      <article class="card flat" id="v2-0">
+        <div class="row"><span class="ver-tag">v2.0</span><span class="mut sm">28 October 2026</span></div>
+        <h3 style="margin-top:10px">A standalone campus</h3>
+        <p class="sm mut">Own accounts, classes and content. Activity categories, competitions, news, calendar and announcements alongside the full schoolwork toolkit.</p>
+      </article>
+
+      <article class="card flat" id="v1-0">
+        <div class="row"><span class="ver-tag">v1.0</span><span class="mut sm">28 October 2026</span></div>
+        <h3 style="margin-top:10px">First build</h3>
+        <p class="sm mut">Student and teacher portals with lessons, playlists, quizzes, mastery checkpoints, assignments with drafts and rubrics, a review queue, class heatmap, calendar and announcements.</p>
+      </article>
+
+      <p class="sm mut">The full log is in <a href="CHANGELOG.md">CHANGELOG.md</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© <span id="yr"></span> CompassED</span>
+    <a href="about.html">About</a>
+    <a href="versions.html">Versions</a>
+    <a href="signin.html">Sign in</a>
+  </div>
+</footer>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/icons.js"></script>
+<script src="assets/public.js"></script>
+</body>
+</html>

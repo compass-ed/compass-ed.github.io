@@ -11,8 +11,9 @@ CompassED is standalone. It has its own accounts (username + password), its own 
 ```
 index.html            Public home page: categories, open competitions, whole-school events, news
 about.html            About page                 signin.html   Sign in / create account (students use a join code, staff an invite code)
-app.html              Student portal (hash-routed)              -> assets/student.js
-teach.html            Staff portal (teachers + administrator)   -> assets/teacher.js
+student/index.html    Student portal (hash-routed)              -> assets/student.js
+teacher/index.html    Staff portal (teachers + administrator)   -> assets/teacher.js
+versions.html         Version history with animated previews   CHANGELOG.md
 assets/app.css        Design system              assets/icons.js  Hand-drawn SVG icon set
 assets/core.js        API, sessions, router, block renderer, calendar + .ics export
 assets/config.js      Supabase URL / key, preview-mode switch
@@ -21,6 +22,7 @@ supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login
 supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues, gallery, parent links, uploads
 parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
 sw.js                           Offline support: keeps the app shell and pages you have opened
+supabase/content-pack.sql       Starter content: 16 activities, 4 competitions, 5 clubs, news, a launch event (run once on a fresh campus)
 supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: removes its tables
 ```
 
@@ -30,7 +32,8 @@ supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: r
 1. Open your Supabase project > **SQL Editor** > **New query**.
 2. Open `supabase/compassed-v2.0.sql`. **Change the three values in section 8** near the end: the admin password, the student join code and the teacher invite code.
 3. Paste the whole file and **Run**. It is safe to run again; it never deletes anything.
-3b. Then paste `supabase/compassed-v2.1.sql` and **Run** it too. It adds houses and points, clubs, the question bank, timed quizzes, peer review, newsletter issues, the winners' gallery, parent links and the `uploads` storage bucket (10 MB per file, images, PDFs, audio and MP4).
+3b. Then paste `supabase/compassed-v2.1.sql` and **Run** it too.
+3c. Optional but recommended: run `supabase/content-pack.sql` once so the campus starts with real activities, competitions, clubs and news instead of empty pages. It adds houses and points, clubs, the question bank, timed quizzes, peer review, newsletter issues, the winners' gallery, parent links and the `uploads` storage bucket (10 MB per file, images, PDFs, audio and MP4).
 4. `assets/config.js` must point at that project (`supabaseUrl` and the publishable/anon key from Project Settings > API). The key is safe to publish: every table is locked down and only the `ed_*` functions can be called.
 
 Then sign in at the site as `admin` with the password you chose. Under **People & classes** create classes, add staff (or give them the invite code), and hand students the join code (or create their accounts for them).

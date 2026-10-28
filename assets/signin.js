@@ -12,7 +12,7 @@
   $("#roleS").onclick = () => setRole("student"); $("#roleT").onclick = () => setRole("teacher"); setRole(role);
 
   const s = CE.auth.get();
-  if (s && s.me) location.replace(s.me.role === "student" ? "app.html" : "teach.html");
+  if (s && s.me) location.replace(s.me.role === "student" ? "student/" : "teacher/");
 
   if (CE.demo && window.CE_DEMO) {
     const a = window.CE_DEMO.accounts, box = $("#demoAccounts");
@@ -24,7 +24,7 @@
       CE.h("div", { class: "xs mut", style: { marginTop: "8px" } }, "Join code " + a.join + " · invite code " + a.invite + ". Preview mode keeps a sample campus in this browser; add ?demo=0 to turn it off.")));
   }
 
-  const go = (r) => { CE.auth.set(r.tok, r.me); const next = qs.get("next"); location.href = next && /^(app|teach)\.html/.test(next) ? next : (r.me.role === "student" ? "app.html" : "teach.html"); };
+  const go = (r) => { CE.auth.set(r.tok, r.me); const next = qs.get("next") || ""; const hash = next.includes("#") ? next.slice(next.indexOf("#")) : ""; location.href = (r.me.role === "student" ? "student/" : "teacher/") + hash; };
 
   fIn.onsubmit = async e => {
     e.preventDefault(); const b = $("#iBtn"), er = $("#iErr"); er.textContent = "";

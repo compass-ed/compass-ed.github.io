@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" fill="none">
+<circle cx="300.0" cy="300.0" r="276.0" stroke="#4cc4cf" stroke-opacity="0.25" stroke-width="1.5"/>
+<circle cx="300.0" cy="300.0" r="216.0" stroke="#4cc4cf" stroke-opacity="0.35" stroke-width="1.5"/>
+<circle cx="300.0" cy="300.0" r="162.0" stroke="#4cc4cf" stroke-opacity="0.5" stroke-width="2"/>
+<circle cx="300.0" cy="300.0" r="108.0" stroke="#4cc4cf" stroke-opacity="0.7" stroke-width="2"/>
+<line x1="576.0" y1="300.0" x2="540.0" y2="300.0" stroke="#4cc4cf" stroke-opacity="0.9" stroke-width="2"/>
+<line x1="571.8" y1="347.9" x2="560.0" y2="345.8" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="559.4" y1="394.4" x2="548.1" y2="390.3" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="539.0" y1="438.0" x2="528.6" y2="432.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="511.4" y1="477.4" x2="502.2" y2="469.7" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="477.4" y1="511.4" x2="469.7" y2="502.2" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="438.0" y1="539.0" x2="432.0" y2="528.6" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="394.4" y1="559.4" x2="390.3" y2="548.1" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="347.9" y1="571.8" x2="345.8" y2="560.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="300.0" y1="576.0" x2="300.0" y2="540.0" stroke="#4cc4cf" stroke-opacity="0.9" stroke-width="2"/>
+<line x1="252.1" y1="571.8" x2="254.2" y2="560.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="205.6" y1="559.4" x2="209.7" y2="548.1" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="162.0" y1="539.0" x2="168.0" y2="528.6" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="122.6" y1="511.4" x2="130.3" y2="502.2" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="88.6" y1="477.4" x2="97.8" y2="469.7" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="61.0" y1="438.0" x2="71.4" y2="432.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="40.6" y1="394.4" x2="51.9" y2="390.3" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="28.2" y1="347.9" x2="40.0" y2="345.8" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="24.0" y1="300.0" x2="60.0" y2="300.0" stroke="#4cc4cf" stroke-opacity="0.9" stroke-width="2"/>
+<line x1="28.2" y1="252.1" x2="40.0" y2="254.2" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="40.6" y1="205.6" x2="51.9" y2="209.7" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="61.0" y1="162.0" x2="71.4" y2="168.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="88.6" y1="122.6" x2="97.8" y2="130.3" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="122.6" y1="88.6" x2="130.3" y2="97.8" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="162.0" y1="61.0" x2="168.0" y2="71.4" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="205.6" y1="40.6" x2="209.7" y2="51.9" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="252.1" y1="28.2" x2="254.2" y2="40.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="300.0" y1="24.0" x2="300.0" y2="60.0" stroke="#4cc4cf" stroke-opacity="0.9" stroke-width="2"/>
+<line x1="347.9" y1="28.2" x2="345.8" y2="40.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="394.4" y1="40.6" x2="390.3" y2="51.9" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="438.0" y1="61.0" x2="432.0" y2="71.4" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="477.4" y1="88.6" x2="469.7" y2="97.8" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="511.4" y1="122.6" x2="502.2" y2="130.3" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="539.0" y1="162.0" x2="528.6" y2="168.0" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="559.4" y1="205.6" x2="548.1" y2="209.7" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<line x1="571.8" y1="252.1" x2="560.0" y2="254.2" stroke="#4cc4cf" stroke-opacity="0.4" stroke-width="1"/>
+<path d="M300.0 180.0 L321.0 300.0 L300.0 420.0 L279.0 300.0 Z" fill="#4cc4cf" fill-opacity=".9"/>
+<path d="M180.0 300.0 L300.0 279.0 L420.0 300.0 L300.0 321.0 Z" fill="#fff" fill-opacity=".85"/>
+<circle cx="300.0" cy="300.0" r="15.0" fill="#000" stroke="#fff" stroke-width="3"/>
+</svg>
