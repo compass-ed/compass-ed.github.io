@@ -39,7 +39,7 @@ supabase/functions/ce-teams/index.ts   Edge function: Microsoft token check, Gra
 Until the SQL has been run, every signed-in page shows "The CompassED database tables are not set up yet".
 
 ### 2. Hosting
-Push this folder to the repository `CompassED/CompassED.github.io` (an organisation called CompassED). For a repository named `<account>.github.io` GitHub Pages switches itself on, and the site lives at `https://compassed.github.io/`. If you host it anywhere else, add the new address to `ORIGINS` in `supabase/functions/ce-teams/index.ts` and to the Supabase edge function CORS list.
+Push this folder to the repository `compass-ed/compass-ed.github.io` (the organisation compass-ed). For a repository named `<account>.github.io` GitHub Pages switches itself on, and the site lives at `https://compass-ed.github.io/`. If you host it anywhere else, add the new address to `ORIGINS` in `supabase/functions/ce-teams/index.ts` and to the Supabase edge function CORS list.
 
 ### 3. Preview mode (no database needed)
 On `localhost` / `127.0.0.1`, or with `?demo=1` on any address, the site runs against a sample school kept in the browser (`assets/demo.js`). Sign in with the preview accounts shown on the sign-in page (students `alice_j` / 1234, `cara_m` / 3456, teacher `ms_khan` / teach1234). Add `?demo=0` to switch back. Set `allowDemo: false` in `assets/config.js` to remove preview mode entirely.
@@ -59,7 +59,7 @@ Everything runs as the signed-in teacher (delegated permissions), so no client s
 
 1. **Entra ID app registration** (admin): Azure portal > Microsoft Entra ID > App registrations > New.
    - Supported account types: *Accounts in this organizational directory only* (single tenant) is recommended.
-   - Platform: **Single-page application**, redirect URIs `https://compassed.github.io/signin.html`, `.../app.html` and `.../teach.html` (plus the localhost ones while testing).
+   - Platform: **Single-page application**, redirect URIs `https://compass-ed.github.io/signin.html`, `.../app.html` and `.../teach.html` (plus the localhost ones while testing).
    - API permissions (Microsoft Graph, **delegated**): `User.Read`, `Team.ReadBasic.All`, `EduRoster.ReadBasic`, `EduAssignments.ReadWrite`, `ChannelMessage.Send`, `Chat.Create`, `ChatMessage.Send`. Click **Grant admin consent**.
 2. **Config**: paste the Application (client) ID and Directory (tenant) ID into `assets/config.js` under `microsoft`.
 3. **Edge function**: install the Supabase CLI, then from this folder:

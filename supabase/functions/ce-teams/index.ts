@@ -20,7 +20,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5";
 
-const ORIGINS = ["https://compassed.github.io", "https://compassdash.github.io", "http://localhost:8766", "http://127.0.0.1:8766"];
+const ORIGINS = ["https://compass-ed.github.io", "https://compassdash.github.io", "http://localhost:8766", "http://127.0.0.1:8766"];
 const CLIENT_ID = Deno.env.get("MS_CLIENT_ID") ?? "";
 const TENANT = Deno.env.get("MS_TENANT_ID") ?? "organizations";
 const JWKS = createRemoteJWKSet(new URL("https://login.microsoftonline.com/common/discovery/v2.0/keys"));
