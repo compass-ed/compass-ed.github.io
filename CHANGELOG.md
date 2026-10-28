@@ -2,6 +2,12 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.5 — 29 October 2026
+- **The compass transition.** Moving between pages now has one cinematic beat: a black veil blurs the page away while the compass needle spins up and settles precisely on north, then the next page opens from the compass as the rose flies past the camera. It runs on every page-to-page link, after sign-in and on sign-out, on desktop, tablet and phone (about a second in all, with the page load hidden inside it). The compass rose and needle were designed in Moda (`assets/art/compass-rose.png`, `compass-needle.png`); the motion, easing and blur are CSS, because a video overlay cannot be transparent, flicker-free or reduced-motion aware.
+- **Route swaps inside the portals** use the browser's View Transitions API where available (Chrome, Edge, Safari 18, Firefox 144): the old content blurs and settles into the new one in a quarter of a second while the sidebar and top bar stay put. Older browsers keep the previous instant render.
+- **No flicker, no traps.** `assets/tx.js` runs before the arriving page's first paint, so the veil is already there; it clears itself after 900 ms, on back/forward restores, and never runs for `prefers-reduced-motion` users (who get instant navigation as before). Downloads, external links, in-page anchors, modifier clicks and hash routes are never intercepted.
+- Fixes: the Moda badge is painted out of the About page's band image; the calendar page no longer throws if you leave it before its events arrive.
+
 ## v2.4.4 — 28 October 2026
 - **Less empty space.** Grids are capped at four, three or two columns (no more seven-across category rows with one orphan tile on wide screens); section padding roughly halved so blocks sit closer; the numbers strip docks onto the bottom edge of the hero; recent winners and the school links share one two-column section. Home page height at laptop width went from about 6700 px to 5500 px with nothing removed.
 - **Polish pass.** One navigation on every public page (Home, Explore, Competitions, Calendar, Clubs, News, About); the Calendar and News links now land on their sections. Home page reordered so the school's own sections sit between the live campus blocks: hero, numbers, categories, the Principal's welcome, competitions, the learning journey, calendar and news, beyond the classroom, clubs, gallery, links, get started, schoolwork.

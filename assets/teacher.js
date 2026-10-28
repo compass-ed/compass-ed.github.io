@@ -409,7 +409,7 @@
       CE.calendar(grid, d.getFullYear(), d.getMonth(), r.rows, open);
       const month = r.rows.filter(e => new Date(e.starts).getMonth() === d.getMonth()); list.innerHTML = ""; if (!month.length) list.append(h("div", { class: "empty" }, "Nothing this month."));
       month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", due: "alarm", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + " · " + (e.class || "Whole school") + (e.place ? " · " + e.place : ""))), srcTag(e.src, e.src_name))));
-      $("#ics").onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString("en-GB", { month: "long" }));
+      const icsBtn = $("#ics"); if (icsBtn) icsBtn.onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString("en-GB", { month: "long" }));
     };
     render();
   }
