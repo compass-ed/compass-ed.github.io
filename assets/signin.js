@@ -39,7 +39,7 @@
     b.disabled = true;
     try {
       const r = await CE.api("cd_t_login", { p_user: u, p_pw: p });
-      if (!r.ok) { er.textContent = r.error === "locked" ? "Too many tries. Wait " + (r.mins || "a few") + " minutes." : r.error === "disabled" ? "This account has been switched off." : "That username and password do not match."; return; }
+      if (!r.ok) { er.textContent = r.error === "locked" ? "Too many tries. Wait 30 seconds, then try again." : r.error === "disabled" ? "This account has been switched off." : "That username and password do not match."; return; }
       const me = await CE.api("ce_t_me", { p_key: r.tok });
       if (!me.ok) { er.textContent = CE.errText(me); return; }
       CE.teacher.set(r.tok, me);

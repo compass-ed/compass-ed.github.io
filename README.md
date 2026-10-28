@@ -38,6 +38,9 @@ supabase/functions/ce-teams/index.ts   Edge function: Microsoft token check, Gra
 
 Until the SQL has been run, every signed-in page shows "The CompassED database tables are not set up yet".
 
+### 1b. Optional: shorter sign-in lockout
+Five wrong sign-ins lock a connection for 15 minutes (a Compass Dash rule shared by both sites). To make that 30 seconds, run `supabase/patches/lockout-30-seconds.sql` the same way.
+
 ### 2. Hosting
 Push this folder to the repository `compass-ed/compass-ed.github.io` (the organisation compass-ed). For a repository named `<account>.github.io` GitHub Pages switches itself on, and the site lives at `https://compass-ed.github.io/`. If you host it anywhere else, add the new address to `ORIGINS` in `supabase/functions/ce-teams/index.ts` and to the Supabase edge function CORS list.
 

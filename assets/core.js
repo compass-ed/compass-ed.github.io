@@ -31,7 +31,7 @@
     const m = typeof e === "string" ? e : (e && (e.error || e.message)) || "";
     return ({
       no_match: "That code and username do not go together.",
-      locked: "Too many tries. Wait a few minutes, then try again.",
+      locked: "Too many tries. Wait 30 seconds, then try again.",
       disabled: "This account has been switched off. Ask your school.",
       bad_key: "Your teacher session has ended. Sign in again.",
       forbidden: "You do not have access to that class.",
