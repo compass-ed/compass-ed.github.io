@@ -1,0 +1,13 @@
+{
+  "name": "compass-ed",
+  "version": "1.0.0",
+  "description": "Compass Ed: the campus platform for your school",
+  "private": true,
+  "scripts": {
+    "dev": "echo 'Static HTML site - open index.html in browser'",
+    "build": "echo 'No build step required for static site'"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^1.1.0"
+  }
+}
