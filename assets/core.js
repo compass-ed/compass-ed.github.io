@@ -292,7 +292,7 @@
   if (/\.vercel\.app$/.test(location.hostname)) {
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
     const s = document.createElement("script"); s.defer = true; s.src = "/_vercel/insights/script.js"; document.head.append(s);
-    addEventListener("hashchange", () => window.va("pageview", { route: location.pathname + location.hash, path: location.pathname + location.hash }));
+    addEventListener("hashchange", () => { if (location.hash.startsWith("#/")) window.va("pageview", { route: location.pathname + location.hash, path: location.pathname + location.hash }); });   // portal routes only, not in-page anchors
   }
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
