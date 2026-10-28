@@ -8,6 +8,7 @@
   const cta = document.querySelector(".nav .cta");
   if (cta && s && s.me) { cta.innerHTML = ""; cta.append(CE.h("a", { class: "btn cyan", href: s.me.role === "student" ? "student/" : "teacher/" }, s.me.role === "student" ? "Open my campus" : "Open staff portal")); }
 
-  const campus = document.getElementById("campus"); if (!campus) { CE.reveal && CE.reveal(); return; }
+  if (CE.reveal) CE.reveal(document);   /* static sections on this page */
+  const campus = document.getElementById("campus"); if (!campus) return;
   CE.campus(campus, { portal: s && s.me ? s.me.role : null, inPortal: false }).then(r => { const sn = document.getElementById("schoolName"); if (sn && r && r.school) sn.textContent = /^compass ?ed$/i.test(r.school) ? "Campus" : r.school + " campus"; });
 })();
