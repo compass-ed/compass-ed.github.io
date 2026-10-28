@@ -1,4 +1,4 @@
-/* CompassED configuration. Edit this file only. */
+/* Compass Ed configuration. Edit this file only. */
 window.CE_CONFIG = {
   // Your Supabase project (Project Settings > API). The publishable/anon key is safe to ship in the page:
   // every table is locked down and only the ed_* functions can be called.

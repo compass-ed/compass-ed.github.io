@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
-<meta name="description" content="CompassED: the campus platform for your school. Activities to explore, competitions and challenges, the school calendar and news, plus your lessons, homework and quizzes.">
-<title>CompassED · Your school campus online</title>
+<meta name="description" content="Compass Ed: the campus platform for your school. Activities to explore, competitions and challenges, the school calendar and news, plus your lessons, homework and quizzes.">
+<title>Compass Ed · Your school campus online</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -17,7 +17,7 @@
 <body>
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass<b>ED</b></a>
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass <b>Ed</b></a>
     <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
     <nav id="pubnav">
       <a href="index.html" class="on">Home</a>
@@ -39,6 +39,7 @@
   <section class="banner-hero">
     <div class="wrap">
       <div class="bh">
+        <video class="loop-bg" src="assets/art/hero-loop.mp4" poster="assets/art/signin-bg.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
         <div class="bh-art" aria-hidden="true"><img class="compass" src="assets/art/compass.svg" alt=""></div>
         <div class="bh-text">
           <span class="eyebrow eyebrow-dark"><span class="dot"></span> <span id="schoolName">Campus</span></span>
@@ -53,65 +54,7 @@
     </div>
   </section>
 
-  <section class="sec" id="explore">
-    <div class="wrap">
-      <div class="sec-head">
-        <div><div class="kicker">Explore</div><h2 style="margin:0">Pick a category</h2></div>
-        <div class="seg" id="ageSeg"><button class="on" data-age="all">All ages</button><button data-age="under11">Under 11</button><button data-age="11plus">11 and over</button></div>
-      </div>
-      <div class="grid g4" id="catGrid"></div>
-    </div>
-  </section>
-
-  <section class="sec alt" id="competitions">
-    <div class="wrap">
-      <div class="kicker">Competitions, challenges &amp; tournaments</div>
-      <h2>Open for entries</h2>
-      <div class="grid g3" id="compGrid" style="margin-top:22px"></div>
-    </div>
-  </section>
-
-  <section class="sec" id="calendar">
-    <div class="wrap grid g2">
-      <div>
-        <div class="kicker">Calendar</div>
-        <h2>Coming up across the school</h2>
-        <p class="mut">Whole-school events, trips and competition deadlines. Sign in to see your class's dates and add them to your phone.</p>
-        <div class="list" id="eventList"></div>
-      </div>
-      <div>
-        <div class="kicker">News</div>
-        <h2 id="news">Latest from campus</h2>
-        <div class="stack" id="newsList"></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec alt hide" id="links">
-    <div class="wrap">
-      <div class="kicker">Connected</div>
-      <h2>Other school services</h2>
-      <p class="mut">Shortcuts your school has added. Compass Dash and CompassED share one database, so house points and announcements line up.</p>
-      <div id="linkGrid" style="margin-top:18px"></div>
-    </div>
-  </section>
-
-  <section class="sec" id="gallery">
-    <div class="wrap">
-      <div class="kicker">Gallery</div>
-      <h2>Recent winners</h2>
-      <p class="mut">Entries from closed competitions, shown with the student's permission.</p>
-      <div class="gallery" id="galleryGrid"></div>
-    </div>
-  </section>
-
-  <section class="sec alt" id="clubs">
-    <div class="wrap">
-      <div class="kicker">Clubs</div>
-      <h2>Lunchtime and after school</h2>
-      <div class="grid g4" id="clubGrid" style="margin-top:22px"></div>
-    </div>
-  </section>
+  <section class="sec" style="padding-top:28px"><div class="wrap" id="campus"></div></section>
 
   <section class="sec ink art-dark">
     <div class="wrap">
@@ -137,14 +80,14 @@
         <div class="card"><div><h4>Explore the campus</h4><p class="sm mut">Try an activity, enter a competition, read the news and check the calendar.</p></div></div>
         <div class="card"><div><h4>Follow the compass</h4><p class="sm mut">Your home page tells you what to do next: lessons, homework, quizzes and review cards from your class.</p></div></div>
       </div>
-      <div class="row" style="margin-top:28px"><a class="btn cyan lg" href="signin.html?signup=1">Create account</a><a class="btn ghost lg" href="about.html">About CompassED</a></div>
+      <div class="row" style="margin-top:28px"><a class="btn cyan lg" href="signin.html?signup=1">Create account</a><a class="btn ghost lg" href="about.html">About Compass Ed</a></div>
     </div>
   </section>
 </main>
 
 <footer class="foot">
   <div class="wrap">
-    <span>© <span id="yr"></span> CompassED</span>
+    <span>© <span id="yr"></span> Compass Ed</span>
     <a href="about.html">About</a>
     <a href="versions.html">Versions</a>
     <a href="privacy.html">Privacy</a>
@@ -157,6 +100,7 @@
 <script src="assets/core.js"></script>
 <script src="assets/icons.js"></script>
 <script src="assets/demo.js"></script>
+<script src="assets/campus.js"></script>
 <script src="assets/public.js"></script>
 </body>
 </html>

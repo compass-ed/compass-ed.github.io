@@ -1,4 +1,4 @@
--- ===== CompassED v2.3: login codes, admin dashboard, consent, external calendar feeds, Compass Dash link =====
+-- ===== Compass Ed v2.3: login codes, admin dashboard, consent, external calendar feeds, Compass Dash link =====
 -- Run AFTER compassed-v2.0.sql and compassed-v2.1.sql. Safe to run again; it never deletes data.
 --
 -- What it adds
@@ -10,7 +10,7 @@
 --   3. External calendar feeds: subscribe to any iCalendar (.ics) address, e.g. a Global Campus or school
 --      calendar export, and mirror its events into the campus calendar. Needs the `http` extension (section 5).
 --   4. Compass Dash link: Compass Dash runs in this same database (its cd_* functions). Students can link their
---      Compass Dash student code + username; CompassED then shows their XP, mastery, assignments and teacher
+--      Compass Dash student code + username; Compass Ed then shows their XP, mastery, assignments and teacher
 --      announcements from Compass Dash, and everyone sees the Compass Dash house XP, challenges and cup.
 --   5. An admin overview (ed_a_dash) and "sign out everywhere" for any account.
 

@@ -1,4 +1,4 @@
-/* CompassED core: API access, sessions, small UI helpers, hash router. Shared by every page. */
+/* Compass Ed core: API access, sessions, small UI helpers, hash router. Shared by every page. */
 (function () {
   const C = window.CE_CONFIG || {};
   const qs = new URLSearchParams(location.search);
@@ -39,7 +39,7 @@
       taken: "That username is already taken. Try another.",
       no_class: "That class does not exist.",
       closed: "This competition is not open for entries.",
-      db_not_set_up: "The CompassED database is not set up yet. Run supabase/compassed-v2.0.sql in Supabase (see README).",
+      db_not_set_up: "The Compass Ed database is not set up yet. Run supabase/compassed-v2.0.sql in Supabase (see README).",
       not_configured: "No database configured. Add the Supabase URL and key in assets/config.js.",
       consent: "Tick the boxes to accept the Terms of Service and Privacy Policy first.",
       cd_no_match: "Compass Dash did not recognise that student code and username.",
@@ -100,7 +100,7 @@
   CE.gateConsent = (me) => new Promise(res => {
     const h = CE.h, t = h("input", { type: "checkbox" }), p = h("input", { type: "checkbox" }), par = h("input", { type: "checkbox" }), er = h("div", { class: "err" });
     const go = async () => { er.textContent = ""; if (!t.checked || !p.checked) return er.textContent = CE.errText("consent"); const r = await CE.capi("ed_consent", { p_terms: true, p_privacy: true, p_parent: par.checked }); if (!r.ok) return er.textContent = CE.errText(r); if (CE.me) CE.me.consent = r.consent; const s = CE.auth.get(); if (s && s.me) { s.me.consent = r.consent; CE.auth.set(s.tok, s.me); } CE.ungate(); res(); };
-    CE.gate(h("form", { class: "stack", onsubmit: e => { e.preventDefault(); go(); } }, h("span", { class: "kicker" }, "Before you carry on"), h("h2", { style: { margin: 0 } }, "A quick agreement"), h("p", { class: "sm mut", style: { margin: 0 } }, "CompassED keeps your name, username, class, work, points and uploads so the site can work. Nothing is sold or used for advertising. Please read and accept these two documents."),
+    CE.gate(h("form", { class: "stack", onsubmit: e => { e.preventDefault(); go(); } }, h("span", { class: "kicker" }, "Before you carry on"), h("h2", { style: { margin: 0 } }, "A quick agreement"), h("p", { class: "sm mut", style: { margin: 0 } }, "Compass Ed keeps your name, username, class, work, points and uploads so the site can work. Nothing is sold or used for advertising. Please read and accept these two documents."),
       h("label", { class: "chk" }, t, h("span", {}, "I accept the ", h("a", { href: ROOT + "terms.html", target: "_blank" }, "Terms of Service"))),
       h("label", { class: "chk" }, p, h("span", {}, "I have read the ", h("a", { href: ROOT + "privacy.html", target: "_blank" }, "Privacy Policy"))),
       me.role === "student" ? h("label", { class: "chk" }, par, h("span", { class: "sm" }, "I am under 13 and a parent or carer has agreed to this (", h("a", { href: ROOT + "consent.html", target: "_blank" }, "consent form"), ")")) : null,
@@ -110,7 +110,7 @@
   CE.cookieBanner = () => {
     if (LS.get("ce_cookie_ok") || /parent\.html$/.test(location.pathname)) return;
     const h = CE.h, b = h("div", { class: "cookie", role: "region", "aria-label": "Cookies and storage" },
-      h("div", { class: "grow" }, h("b", {}, "Only essential storage."), " CompassED uses your browser's storage to keep you signed in and remember your display settings. No advertising, no tracking cookies. ", h("a", { href: ROOT + "cookies.html" }, "Cookie Policy")),
+      h("div", { class: "grow" }, h("b", {}, "Only essential storage."), " Compass Ed uses your browser's storage to keep you signed in and remember your display settings. No advertising, no tracking cookies. ", h("a", { href: ROOT + "cookies.html" }, "Cookie Policy")),
       h("button", { class: "btn sm cyan", onclick: () => { LS.set("ce_cookie_ok", { at: Date.now(), v: 1 }); b.remove(); } }, "OK"));
     document.body.append(b);
   };
@@ -224,11 +224,11 @@
     const p = n => String(n).padStart(2, "0");
     const stamp = d => { d = new Date(d); return d.getUTCFullYear() + p(d.getUTCMonth() + 1) + p(d.getUTCDate()) + "T" + p(d.getUTCHours()) + p(d.getUTCMinutes()) + "00Z"; };
     const esc = s => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
-    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//CompassED//EN", "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + esc(calName || "CompassED")];
+    const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Compass Ed//EN", "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + esc(calName || "Compass Ed")];
     events.forEach(e => {
       const s = new Date(e.starts), en = e.ends ? new Date(e.ends) : new Date(s.getTime() + 3600000);
       lines.push("BEGIN:VEVENT", "UID:" + (e.id || Math.random().toString(36).slice(2)) + "@compassed", "DTSTAMP:" + stamp(new Date()), "DTSTART:" + stamp(s), "DTEND:" + stamp(en),
-        "SUMMARY:" + esc((e.kind === "due" ? "Due: " : e.kind === "exam" ? "Exam: " : "") + e.title), e.place ? "LOCATION:" + esc(e.place) : null, "DESCRIPTION:" + esc((e.class ? e.class + ". " : "") + "From CompassED"), "END:VEVENT");
+        "SUMMARY:" + esc((e.kind === "due" ? "Due: " : e.kind === "exam" ? "Exam: " : "") + e.title), e.place ? "LOCATION:" + esc(e.place) : null, "DESCRIPTION:" + esc((e.class ? e.class + ". " : "") + "From Compass Ed"), "END:VEVENT");
     });
     lines.push("END:VCALENDAR");
     const blob = new Blob([lines.filter(Boolean).join("\r\n")], { type: "text/calendar" });
@@ -349,7 +349,7 @@
   CE.markNav = () => { const h = (location.hash || "#/").split("?")[0].split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); };
   /* sub-tabs under the top bar: a page group calls CE.subnav([[label, hash], ...]) */
   CE.subnav = tabs => { let el = CE.$("#subnav"); if (!el) return; el.innerHTML = ""; if (!tabs || !tabs.length) { el.classList.add("hide"); return; } el.classList.remove("hide"); const cur = (location.hash || "#/").split("?")[0]; tabs.forEach(([l, hsh, m]) => el.append(CE.h("a", { class: "tab" + ((m ? m.test(cur) : cur === hsh) ? " on" : ""), href: hsh }, l))); };
-  CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · CompassED"; };
+  CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · Compass Ed"; };
   CE.loading = el => { el.innerHTML = ""; for (let i = 0; i < 3; i++) el.append(CE.h("div", { class: "card stack" }, CE.h("div", { class: "skel", style: { width: "40%" } }), CE.h("div", { class: "skel" }), CE.h("div", { class: "skel", style: { width: "70%" } }))); };
   CE.fail = (el, e) => { el.innerHTML = ""; el.append(CE.h("div", { class: "empty" }, CE.h("div", { class: "big" }, CE.icon("warn")), CE.h("div", { class: "b" }, CE.errText(e)), CE.h("div", { class: "sm", style: { marginTop: "8px" } }, CE.h("button", { class: "btn sm", onclick: () => location.reload() }, "Try again")))); };
   CE.demoBanner = () => {

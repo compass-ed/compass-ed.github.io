@@ -1,6 +1,15 @@
-# CompassED version history
+# Compass Ed version history
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
+
+## v2.4 — 28 October 2026
+- **Compass Ed** is the name everywhere (pages, portals, policies, manifest, sample data); run `supabase/patches/rename-compass-ed.sql` once to rename the live school record.
+- **ECA**: the Clubs section says "ECA and after school" and "ECA (extra-curricular activities)" instead of "Lunchtime".
+- **The campus home page inside both portals** (`#/campus`): the same page as the public site, rendered by one shared module (`assets/campus.js`), so students and staff browse it without signing out. Links go to the right place in each portal.
+- **Motion**: "Welcome to campus" rises in word by word with an underline sweep on the sign-in page; sections reveal as you scroll; cards, tiles and list rows lift on hover; buttons press; nav links underline; inputs glow on focus. All of it respects "reduce motion".
+- **Ambient loops designed in Moda**: a looping hero animation behind the home-page banner and the campus header in both portals, and a looping panel animation behind the sign-in page, both as small muted videos with a still fallback.
+- **Tighter layouts**: smaller section padding, a stat strip under the hero, compact gallery tiles, consistent card and grid gaps, less dead space on the home page and in the portals.
+- **Version preview** for this release is hand-coded as an animated SVG (no Moda), as requested.
 
 ## v2.3 — 28 October 2026
 - **Login codes** in the exact form `1234-5678`: made by staff, unique, printable as cut-out cards, revocable, with a tidy-up for old ones. A blank code creates an account on first use; a code made for an existing account signs them in and asks for a new password (credential reset). New "Use a code" tab on the sign-in page.
@@ -8,7 +17,7 @@ Each new version from v2.2 onwards ships with an animated preview in `assets/ver
 - **Privacy Policy, Terms of Service, Cookie Policy**, a printable parent/carer **consent form**, consent tick boxes on sign-up and code set-up, a one-time consent step for existing accounts, and a cookie notice.
 - **Houses** coloured North red, East green, South blue, West yellow everywhere (leaderboards, pills, admin).
 - **Global Campus and other calendars**: subscribe to any iCalendar (.ics) feed; events are mirrored into every calendar with a source tag and refreshed on sync (`ed_feeds_sync_all()` for pg_cron). Global Campus has no public API, so the feed is the supported route; the admin can also add Global Campus as a link.
-- **Compass Dash connection**: both sites share one database, so CompassED calls Compass Dash's own functions. Students link their Compass Dash code and username in Settings and see XP, this week's XP, mastery, assignments and teacher announcements from Compass Dash on Home and Notices; everyone sees the Compass Dash house cup, challenges and leaderboard under House points.
+- **Compass Dash connection**: both sites share one database, so Compass Ed calls Compass Dash's own functions. Students link their Compass Dash code and username in Settings and see XP, this week's XP, mastery, assignments and teacher announcements from Compass Dash on Home and Notices; everyone sees the Compass Dash house cup, challenges and leaderboard under House points.
 - **Graphics made in Moda**: sign-in page artwork (dot grid, geometric shapes, gradients), a light abstract band for the About page and dark sections, and this version's animated preview. The brand kit (palette, fonts, logos) lives in Moda.
 - **Fixes**: sign-in page logo alignment (white logo on the dark panel, no inverted filter); the staff sidebar logo was black on black; the public header logo now flips to white in dark mode; mirrored events cannot be deleted by hand.
 - **Security**: the committed SQL no longer contains a real administrator password (placeholder only; change yours under Settings if it was ever committed); `supabase/local/` is git-ignored for local secrets.

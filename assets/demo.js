@@ -1,4 +1,4 @@
-/* CompassED preview backend. Implements the same ed_* functions as supabase/compassed-v2.0.sql over a sample campus
+/* Compass Ed preview backend. Implements the same ed_* functions as supabase/compassed-v2.0.sql over a sample campus
    kept in localStorage, so every page can be tried without a database. Only loaded when CE.demo is true. */
 (function () {
   const KEY = "ce_demo_v23";
@@ -14,7 +14,7 @@
     const mcq = (q, a, c, why, topic) => ({ q, a, c, why, topic });
     const T = (text) => ({ t: "text", text }), K = (q, text) => ({ t: "key", q, text }), L = (...items) => ({ t: "list", items }), H = text => ({ t: "heading", text }), CK = (q, a, c) => ({ t: "check", q, a, c });
     return {
-      school: { name: "CompassED", join_code: "COMPASS-2026", invite_code: "TEACH-2026", houses: { N: "North", E: "East", S: "South", W: "West" } },
+      school: { name: "Compass Ed", join_code: "COMPASS-2026", invite_code: "TEACH-2026", houses: { N: "North", E: "East", S: "South", W: "West" } },
       subjects: [[0,"Maths","maths"],[1,"English","english"],[2,"Science","science"],[3,"Geography","geography"],[4,"History","history"],[5,"Computing","computing"],[6,"Art & Design","art"],[7,"Music","music"],[8,"Languages","french"],[9,"PE & Wellbeing","sport"],[10,"Drama","drama"]].map(([id, name, icon], ord) => ({ id, name, icon, ord })),
       categories: [[1,"Campus Hub","compass","Start here: what is on this month, how the campus works and the latest news."],[2,"Art, Design & Media","art","Drawing, design, photography, film and making things that look good."],[3,"Our World","geography","Geography, environment, cultures and the big questions about the planet."],[4,"Performing Arts","drama","Drama, music, dance and performance."],[5,"Read, Write, Speak","english","Reading challenges, creative writing, debating and public speaking."],[6,"Social Impact","users","Projects that help people: volunteering, campaigns and leadership."],[7,"STEAM","science","Science, technology, engineering, art and maths challenges."],[8,"Wellbeing & Sport","sport","Sport, mindfulness, healthy habits and looking after yourself."]].map(([id, name, icon, blurb], ord) => ({ id, name, icon, blurb, ord })),
       classes: [{ id: 1, name: "7A", year: 7, subj: null, seating: [] }, { id: 2, name: "8B Science", year: 8, subj: 2, seating: [] }],
@@ -61,7 +61,7 @@
         { id: 4, comp_id: 1, uid: 103, body: "Concertina deck with two folded tube supports. Held the mug for 2 minutes. The folds give the paper depth so it resists bending.", links: ["https://example.com/bridge"], at: day(-1), place: null, note: null }
       ],
       news: [
-        { id: 1, title: "Welcome to the new CompassED campus", body: "CompassED now has everything in one place: activities to explore in your own time, competitions and challenges with real prizes, the school calendar, and your class's lessons and homework.\n\nStart with **How the campus works** in the Campus Hub, then pick a category that interests you.", cover: "", featured: true, uid: 1, created: day(-7) },
+        { id: 1, title: "Welcome to the new Compass Ed campus", body: "Compass Ed now has everything in one place: activities to explore in your own time, competitions and challenges with real prizes, the school calendar, and your class's lessons and homework.\n\nStart with **How the campus works** in the Campus Hub, then pick a category that interests you.", cover: "", featured: true, uid: 1, created: day(-7) },
         { id: 2, title: "Autumn photo competition: results", body: "Thank you to everyone who entered. First place goes to Cara Mensah for 'Peel', second to Alice Johnson for 'Leaving'. Both photos will be printed for the main corridor.", cover: "", featured: false, uid: 2, created: day(-2) },
         { id: 3, issue: "Autumn 1 2026", title: "Student newsletter: half term", body: "This half term's newsletter covers the STEAM build-off, the table tennis tournament and the kindness campaign ideas sent in by 7A.\n\n- STEAM build-off closes next week\n- Table tennis draw out soon\n- New activities in Our World", cover: "", featured: false, uid: 2, created: day(-1) }
       ],
@@ -119,7 +119,7 @@
         { id: 5, class_id: null, kind: "competition", title: "Table tennis: first round", starts: dayAt(11, 12), ends: dayAt(11, 13), place: "Sports hall", uid: 3 }
       ],
       anns: [
-        { id: 1, class_id: null, targets: {}, title: "Welcome to CompassED", body: "Activities, competitions, the calendar and your schoolwork all live here now. If anything looks wrong, tell your teacher.", pinned: true, uid: 1, created: day(-7), ends: day(60) },
+        { id: 1, class_id: null, targets: {}, title: "Welcome to Compass Ed", body: "Activities, competitions, the calendar and your schoolwork all live here now. If anything looks wrong, tell your teacher.", pinned: true, uid: 1, created: day(-7), ends: day(60) },
         { id: 2, class_id: 1, targets: {}, title: "Bring calculators on Thursday", body: "We start the indices unit this week. Please bring a scientific calculator to every lesson from Thursday.", pinned: false, uid: 2, created: day(-2), ends: day(12) },
         { id: 3, class_id: null, targets: { year: 7 }, title: "Year 7 parents' evening booking open", body: "Bookings for parents' evening are open on the school website until Monday.", pinned: false, uid: 2, created: day(-1), ends: day(5) }
       ],

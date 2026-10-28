@@ -1,4 +1,4 @@
--- ===== CompassED starter content pack =====
+-- ===== Compass Ed starter content pack =====
 -- Run ONCE after compassed-v2.1.sql, on a fresh campus. It only inserts when the activities table is empty,
 -- so running it again (or on a campus that already has content) does nothing.
 do $$ begin
@@ -28,9 +28,9 @@ do $$ begin
   insert into public.ed_club (cat, title, blurb, day, time, place, capacity, ages) values (8, 'Running club', 'A gentle 2 km around the field, all paces welcome.', 'Friday', '07:45', 'Front gate', 30, 'all');
   insert into public.ed_club (cat, title, blurb, day, time, place, capacity, ages) values (5, 'Debate society', 'Argue the big questions.', 'Thursday', '12:30', 'Library', 12, '11plus');
   insert into public.ed_club (cat, title, blurb, day, time, place, capacity, ages) values (2, 'Art club', 'Open studio: bring a project or start one.', 'Monday', '15:30', 'Art room', 20, 'all');
-  insert into public.ed_news (title, body, featured) values ('Welcome to the CompassED campus', 'CompassED has everything in one place: activities to explore in your own time, competitions and challenges with real prizes, the school calendar, and your class''s lessons and homework.
+  insert into public.ed_news (title, body, featured) values ('Welcome to the Compass Ed campus', 'Compass Ed has everything in one place: activities to explore in your own time, competitions and challenges with real prizes, the school calendar, and your class''s lessons and homework.
 
 Start with **How the campus works** in the Campus Hub, then pick a category that interests you. Every activity you finish earns house points.', true);
   insert into public.ed_news (title, body, featured) values ('Clubs are open for sign-up', 'Five clubs are listed under Explore. Places are first come, first served, and you can leave a club at any time from the same page.', false);
-  insert into public.ed_event (kind, title, starts, ends, place) values ('event', 'CompassED launch assembly', date_trunc('day', now()) + interval '7 days 9 hours', date_trunc('day', now()) + interval '7 days 9 hours 30 minutes', 'Main hall');
+  insert into public.ed_event (kind, title, starts, ends, place) values ('event', 'Compass Ed launch assembly', date_trunc('day', now()) + interval '7 days 9 hours', date_trunc('day', now()) + interval '7 days 9 hours 30 minutes', 'Main hall');
 end $$;

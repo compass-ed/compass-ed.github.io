@@ -1,9 +1,9 @@
--- ===== CompassED v2.0: a standalone campus platform =====
+-- ===== Compass Ed v2.0: a standalone campus platform =====
 -- Run this ONCE in your Supabase project (SQL Editor > New query > paste > Run). Safe to run again.
 --
 -- BEFORE YOU RUN IT, change the three values in section 8 (admin password, student join code, teacher invite code).
 --
--- Everything is prefixed ed_ and is self-contained: CompassED has its own accounts (username + password,
+-- Everything is prefixed ed_ and is self-contained: Compass Ed has its own accounts (username + password,
 -- bcrypt-hashed, with session tokens), its own classes, subjects, units, lessons, quizzes, playlists,
 -- assignments, rubrics, activities, competitions, news, calendar and announcements. It does not read or
 -- write any other application's tables. If the earlier ce_ tables from v1.0 exist, they are left alone;
@@ -19,7 +19,7 @@ create extension if not exists pgcrypto;
 -- ---------- 1. Accounts ----------
 create table if not exists public.ed_school (
   id          int primary key default 1 check (id = 1),
-  name        text not null default 'CompassED',
+  name        text not null default 'Compass Ed',
   join_code   text not null,                  -- students use it to create an account
   invite_code text not null,                  -- teachers use it to create an account
   updated     timestamptz not null default now()
@@ -1092,7 +1092,7 @@ declare admin_pw text := 'change-me-now';        -- the admin's password (8 to 7
         join_code text := 'COMPASS-2026';           -- students type this to create an account
         invite_code text := 'TEACH-2026';           -- teachers type this to create an account
 begin
-  insert into public.ed_school (id, name, join_code, invite_code) values (1, 'CompassED', upper(join_code), upper(invite_code)) on conflict (id) do nothing;
+  insert into public.ed_school (id, name, join_code, invite_code) values (1, 'Compass Ed', upper(join_code), upper(invite_code)) on conflict (id) do nothing;
   if not exists (select 1 from public.ed_user where role = 'admin') then
     insert into public.ed_user (role, username, name, pw) values ('admin', 'admin', 'Administrator', crypt(admin_pw, gen_salt('bf', 10)));
   end if;

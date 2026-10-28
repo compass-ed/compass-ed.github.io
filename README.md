@@ -1,10 +1,10 @@
-# CompassED
+# Compass Ed
 
 **The online campus for a school.** Activities to explore by category, competitions and challenges with judging, the school calendar and news, announcements with read receipts, and a full schoolwork toolkit (units, lessons, playlists, quizzes, mastery checkpoints, homework with drafts and rubric marking, a spaced-repetition review queue and a class overview heatmap). A student portal, a separate staff portal, and a public home page.
 
 Colours: white `#ffffff`, cyan `#4cc4cf`, black `#000000`. No build step: plain HTML, CSS and JavaScript, hosted on GitHub Pages at **https://compass-ed.github.io/**.
 
-CompassED is standalone. It has its own accounts (username + password), its own classes and its own content; it does not depend on any other site or service apart from one Supabase database.
+Compass Ed is standalone. It has its own accounts (username + password), its own classes and its own content; it does not depend on any other site or service apart from one Supabase database.
 
 ## Files
 
@@ -16,6 +16,7 @@ teacher/index.html    Staff portal (teachers + administrator)   -> assets/teache
 versions.html         Version history with animated previews   CHANGELOG.md
 assets/app.css        Design system              assets/icons.js  Hand-drawn SVG icon set
 assets/core.js        API, sessions, router, block renderer, calendar + .ics export
+assets/campus.js      The campus home page as one renderer: used by index.html and by #/campus in both portals
 assets/config.js      Supabase URL / key, preview-mode switch
 assets/demo.js        Preview mode: a sample campus in the browser that mirrors every database function
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
@@ -72,8 +73,11 @@ then open http://127.0.0.1:8766/.
 - All `ed_*` tables have row-level security on with no policies, so the only way in is through the `security definer` functions, each of which checks the caller's token and role.
 - Students can only read and write their own submissions, entries, review cards and completions, and only see assignments for their class.
 
+## v2.4
+- Name: **Compass Ed**. Clubs are **ECA** (extra-curricular activities). The campus home page is also inside both portals at `#/campus`. Motion everywhere, with ambient loops designed in Moda (`assets/art/*-loop.mp4`), all honouring reduced-motion settings.
+
 ## Integrations (v2.3)
-- **Compass Dash** shares this Supabase project. CompassED calls its public `cd_*` functions (never its tables): students link their Compass Dash code + username in Settings; everyone sees the Compass Dash house cup under House points.
+- **Compass Dash** shares this Supabase project. Compass Ed calls its public `cd_*` functions (never its tables): students link their Compass Dash code + username in Settings; everyone sees the Compass Dash house cup under House points.
 - **Global Campus** (Nord Anglia) has no public API. The supported route is its calendar's iCalendar export: Admin > Calendar feeds > add the .ics address > Sync. The same works for Google, Outlook or any school calendar. Add Global Campus as a link under Admin > Links so it shows on home pages.
 
 ## Settings every user has

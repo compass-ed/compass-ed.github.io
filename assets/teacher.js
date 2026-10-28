@@ -1,4 +1,4 @@
-/* CompassED staff portal (teachers and the administrator). */
+/* Compass Ed staff portal (teachers and the administrator). */
 (async function () {
   const $ = CE.$, h = CE.h, D = CE.date, page = $("#page");
   let me = await CE.requireRole(["teacher", "admin"]); if (!me) return;
@@ -408,7 +408,7 @@
       CE.calendar(grid, d.getFullYear(), d.getMonth(), r.rows, open);
       const month = r.rows.filter(e => new Date(e.starts).getMonth() === d.getMonth()); list.innerHTML = ""; if (!month.length) list.append(h("div", { class: "empty" }, "Nothing this month."));
       month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", due: "alarm", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + " · " + (e.class || "Whole school") + (e.place ? " · " + e.place : ""))), srcTag(e.src, e.src_name))));
-      $("#ics").onclick = () => CE.ics(r.rows, "CompassED " + d.toLocaleDateString("en-GB", { month: "long" }));
+      $("#ics").onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString("en-GB", { month: "long" }));
     };
     render();
   }
@@ -710,8 +710,8 @@
     if (!rows.length) return CE.toast("Nothing to print. Select some codes first.", "bad");
     CE.$$(".print-only", page).forEach(x => x.remove());
     const addr = location.host + "/signin.html";
-    const sheet = h("div", { class: "print-only hide" }, h("div", { class: "print-head" }, h("b", {}, (CE.me && CE.me.school) || "CompassED"), " · login codes · printed " + D.long(new Date().toISOString()) + " · " + rows.length + " code" + (rows.length > 1 ? "s" : "") + ". Cut along the dashed lines. Keep this sheet somewhere safe."),
-      h("div", { class: "codesheet" }, ...rows.map(c => h("div", { class: "cc" }, h("div", { class: "t" }, c.user ? c.user.name : "Your CompassED login"), h("img", { src: CE.root + "assets/logo.svg", alt: "" }), h("div", { class: "s" }, c.user ? "Username " + c.user.username + " · this code also resets your password" : [c.role === "teacher" ? "Staff account" : "Student account", c.class, c.year ? "Year " + c.year : null, c.label].filter(Boolean).join(" · ")), h("div", { class: "code" }, c.code), h("div", { class: "how" }, "1. Go to ", h("b", {}, addr), " and choose \"Use a code\". 2. Type the code. 3. " + (c.user ? "Set your new password." : "Pick a username and password.") + " Do not share this code.")))));
+    const sheet = h("div", { class: "print-only hide" }, h("div", { class: "print-head" }, h("b", {}, (CE.me && CE.me.school) || "Compass Ed"), " · login codes · printed " + D.long(new Date().toISOString()) + " · " + rows.length + " code" + (rows.length > 1 ? "s" : "") + ". Cut along the dashed lines. Keep this sheet somewhere safe."),
+      h("div", { class: "codesheet" }, ...rows.map(c => h("div", { class: "cc" }, h("div", { class: "t" }, c.user ? c.user.name : "Your Compass Ed login"), h("img", { src: CE.root + "assets/logo.svg", alt: "" }), h("div", { class: "s" }, c.user ? "Username " + c.user.username + " · this code also resets your password" : [c.role === "teacher" ? "Staff account" : "Student account", c.class, c.year ? "Year " + c.year : null, c.label].filter(Boolean).join(" · ")), h("div", { class: "code" }, c.code), h("div", { class: "how" }, "1. Go to ", h("b", {}, addr), " and choose \"Use a code\". 2. Type the code. 3. " + (c.user ? "Set your new password." : "Pick a username and password.") + " Do not share this code.")))));
     page.append(sheet); sheet.classList.remove("hide");
     const after = () => { sheet.remove(); removeEventListener("afterprint", after); }; addEventListener("afterprint", after);
     setTimeout(() => print(), 50);
@@ -723,7 +723,7 @@
     page.innerHTML = "";
     page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Calendar feeds"), h("div", { class: "sm mut" }, "Subscribe to any iCalendar (.ics) address. Its events are mirrored into the campus calendar, tagged with where they came from, and refreshed each time you sync.")), h("button", { class: "btn cyan", onclick: () => feedEditor(null) }, "+ Add feed")));
     if (!r.http) page.append(h("div", { class: "card tint" }, h("b", {}, "One thing to switch on first. "), "Feeds are fetched by the database, which needs the ", h("span", { class: "kbd" }, "http"), " extension. In Supabase open Database > Extensions, search for http and enable it. Then come back and click Sync."));
-    page.append(h("div", { class: "card stack" }, h("h3", {}, "Global Campus and other calendars"), h("p", { class: "sm mut", style: { margin: 0 } }, "Global Campus (Nord Anglia) has no public API, so CompassED uses the one method every calendar service supports: an iCalendar feed. In Global Campus (or the school's Google/Outlook calendar), find the calendar's \"export\", \"subscribe\" or \"iCal\" link, paste it here and pick the source. Events stay in sync whenever a sync runs; to run it automatically, schedule ", h("span", { class: "kbd" }, "select public.ed_feeds_sync_all();"), " hourly with pg_cron in Supabase.")));
+    page.append(h("div", { class: "card stack" }, h("h3", {}, "Global Campus and other calendars"), h("p", { class: "sm mut", style: { margin: 0 } }, "Global Campus (Nord Anglia) has no public API, so Compass Ed uses the one method every calendar service supports: an iCalendar feed. In Global Campus (or the school's Google/Outlook calendar), find the calendar's \"export\", \"subscribe\" or \"iCal\" link, paste it here and pick the source. Events stay in sync whenever a sync runs; to run it automatically, schedule ", h("span", { class: "kbd" }, "select public.ed_feeds_sync_all();"), " hourly with pg_cron in Supabase.")));
     const list = h("div", { class: "stack" }); page.append(list);
     if (!r.rows.length) list.append(CE.emptyArt("inbox", "No feeds yet", "Add the Global Campus calendar or any .ics link."));
     r.rows.forEach(f => list.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("div", { class: "row" }, srcTag(f.source, f.name), h("h3", { style: { margin: 0 } }, f.name), f.class ? h("span", { class: "badge" }, f.class) : h("span", { class: "badge" }, "Whole school")), h("div", { class: "row" }, h("button", { class: "btn sm cyan", onclick: async e => { e.target.disabled = true; const x = await api("ed_a_feed_sync", { p_id: f.id }); CE.toast(x.ok ? x.n + " events in sync" : CE.errText(x) + (x.detail ? " (" + x.detail + ")" : ""), x.ok ? "ok" : "bad"); feedsTab(); } }, "Sync now"), h("button", { class: "btn sm ghost", onclick: () => feedEditor(f) }, "Edit"))),
@@ -741,7 +741,7 @@
     const r = await api("ed_a_dash"); if (!r.ok) return CE.fail(page, r);
     page.innerHTML = ""; let links = (r.school.links || []).map(l => Object.assign({}, l));
     page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Links & integrations"), h("div", { class: "sm mut" }, "Shortcuts shown on the public home page and in both portals: Global Campus, Compass Dash, the library, anything with a web address.")), h("button", { class: "btn", onclick: () => { links.push({ name: "", url: "https://", blurb: "" }); draw(); } }, "+ Add link")));
-    page.append(h("div", { class: "card stack" }, h("h3", {}, "Compass Dash"), h("div", { class: "row between" }, h("span", { class: "sm" }, "Compass Dash shares this database, so the connection is automatic: students link their Compass Dash code and username from their Settings, and their XP, mastery, assignments and announcements appear in CompassED. Everyone sees the Compass Dash house cup under House points."), h("span", { class: "badge " + (r.compassdash ? "ok" : "") }, r.compassdash ? "Connected" : "Not installed"))));
+    page.append(h("div", { class: "card stack" }, h("h3", {}, "Compass Dash"), h("div", { class: "row between" }, h("span", { class: "sm" }, "Compass Dash shares this database, so the connection is automatic: students link their Compass Dash code and username from their Settings, and their XP, mastery, assignments and announcements appear in Compass Ed. Everyone sees the Compass Dash house cup under House points."), h("span", { class: "badge " + (r.compassdash ? "ok" : "") }, r.compassdash ? "Connected" : "Not installed"))));
     const list = h("div", { class: "stack" }), er = h("div", { class: "err" }); page.append(h("div", { class: "card stack" }, list, er, h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { er.textContent = ""; const x = await api("ed_a_links_save", { p_links: links.filter(l => l.name.trim() || l.url !== "https://") }); if (!x.ok) return er.textContent = CE.errText(x); CE.toast("Saved", "ok"); linksTab(); } }, "Save links"))));
     const draw = () => { list.innerHTML = ""; if (!links.length) list.append(h("div", { class: "empty" }, "No links yet. Add Global Campus or Compass Dash."));
       links.forEach((l, i) => list.append(h("div", { class: "grid", style: { gridTemplateColumns: "1fr 1.4fr 1.6fr auto", gap: "8px", alignItems: "center" } }, h("input", { class: "in", value: l.name, placeholder: "Name", maxlength: 40, oninput: e => l.name = e.target.value }), h("input", { class: "in", value: l.url, placeholder: "https://…", oninput: e => l.url = e.target.value }), h("input", { class: "in", value: l.blurb, placeholder: "One line about it", maxlength: 120, oninput: e => l.blurb = e.target.value }), h("button", { class: "ib", title: "Remove", onclick: () => { links.splice(i, 1); draw(); } }, CE.icon("cross"))))); };
@@ -753,6 +753,14 @@
   const cdHousesCard = cd => CE.cdHousesCard(cd);
 
 
+  /* ---------- the campus home page, inside the portal ---------- */
+  async function campusPage() {
+    CE.title("Campus"); page.innerHTML = "";
+    const vid = h("video", { class: "loop-bg", src: CE.root + "assets/art/hero-loop.mp4", poster: CE.root + "assets/art/signin-bg.jpg", loop: true, playsinline: true, "aria-hidden": "true" }); vid.muted = true; vid.autoplay = true; if (matchMedia("(prefers-reduced-motion: reduce)").matches) vid.remove(); else setTimeout(() => vid.play().catch(() => {}), 50);
+    page.append(h("div", { class: "campus-head" }, vid, h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
+    const root = h("div", { id: "campus" }); page.append(root);
+    await CE.campus(root, { portal: "teacher", inPortal: true });
+  }
   const GROUPS = [
     [["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["News", "#/news"]],
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
@@ -766,7 +774,7 @@
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/points", handler: points }, { path: "/clubs", handler: clubs }, { path: "/bank", handler: bank }, { path: "/search", handler: search },
-    { path: "/", handler: dashboard }, { path: "/activities", handler: activities }, { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: compPage }, { path: "/news", handler: news },
+    { path: "/", handler: dashboard }, { path: "/campus", handler: campusPage }, { path: "/activities", handler: activities }, { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: compPage }, { path: "/news", handler: news },
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignmentPage },

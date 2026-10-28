@@ -1,4 +1,4 @@
-/* CompassED icon set: hand-drawn 24-unit stroke icons, one accent weight, no emoji.
+/* Compass Ed icon set: hand-drawn 24-unit stroke icons, one accent weight, no emoji.
    CE.icon(name) returns an inline <svg>. Any element with data-icon="name" is filled on load. */
 (function () {
   const P = {

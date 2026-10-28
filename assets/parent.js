@@ -5,7 +5,7 @@
   CE.loading(page);
   try {
     const r = await CE.api("ed_parent", { p_tok: tok });
-    if (!r.ok) { page.innerHTML = ""; return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("key")), h("div", { class: "b" }, "This link is not valid"), h("div", { class: "sm" }, "Ask your child to make a new link from Settings in CompassED."))); }
+    if (!r.ok) { page.innerHTML = ""; return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("key")), h("div", { class: "b" }, "This link is not valid"), h("div", { class: "sm" }, "Ask your child to make a new link from Settings in Compass Ed."))); }
     page.innerHTML = "";
     const card = (t, b) => h("div", { class: "card" }, h("h3", {}, t), b);
     page.append(h("div", {}, h("div", { class: "kicker" }, r.school + " · weekly summary"), h("h1", { style: { fontSize: "32px" } }, r.name), h("div", { class: "mut" }, [r.class, r.year ? "Year " + r.year : null, r.house ? "House " + r.house : null].filter(Boolean).join(" · ") + " · as of " + D.long(new Date()))));

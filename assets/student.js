@@ -1,4 +1,4 @@
-/* CompassED student portal. */
+/* Compass Ed student portal. */
 (async function () {
   const $ = CE.$, h = CE.h, D = CE.date, page = $("#page");
   const me = await CE.requireRole(["student"]); if (!me) return;
@@ -332,7 +332,7 @@
       CE.calendar(grid, d.getFullYear(), d.getMonth(), r.rows, open);
       const month = r.rows.filter(e => new Date(e.starts).getMonth() === d.getMonth()); list.innerHTML = ""; if (!month.length) list.append(h("div", { class: "empty" }, "Nothing this month."));
       month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, kindIcon(e.kind)), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + (e.place ? " · " + e.place : ""))), CE.srcTag(e.src, e.src_name))));
-      $("#ics").onclick = () => CE.ics(r.rows, "CompassED " + d.toLocaleDateString("en-GB", { month: "long" }));
+      $("#ics").onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString("en-GB", { month: "long" }));
     };
     render();
   }
@@ -358,7 +358,7 @@
     const drawCd = async () => { const cd = await CE.capi("ed_s_cd").catch(() => null); cdBox.innerHTML = ""; if (!cd || !cd.ok || !cd.on) return cdBox.append(h("p", { class: "sm mut", style: { margin: 0 } }, "Compass Dash is not connected to this campus."));
       if (cd.linked) return cdBox.append(h("p", { class: "sm", style: { margin: 0 } }, "Linked as ", h("span", { class: "kbd" }, cd.cd_user), ". Your XP, mastery, assignments and teacher notes from Compass Dash show on your Home and Notices pages."), h("div", { class: "row" }, h("button", { class: "btn sm ghost", onclick: async () => { const x = await CE.capi("ed_s_cd_unlink"); CE.toast(x.ok ? "Unlinked" : CE.errText(x), x.ok ? "ok" : "bad"); drawCd(); } }, "Unlink")));
       const code = h("input", { class: "in", placeholder: "Student code (e.g. 7K3Q)", autocapitalize: "characters", style: { maxWidth: "200px" } }), user = h("input", { class: "in", placeholder: "Compass Dash username", autocapitalize: "off" }), er = h("div", { class: "err" });
-      cdBox.append(h("p", { class: "sm mut", style: { margin: 0 } }, "Link the student code and username you use on Compass Dash. CompassED stores them to show your XP, mastery, assignments and announcements from there; unlink any time."), h("div", { class: "row" }, code, user), er, h("button", { class: "btn sm", onclick: async () => { er.textContent = ""; const x = await CE.capi("ed_s_cd_link", { p_code: code.value.trim(), p_user: user.value.trim() }); if (!x.ok) return er.textContent = CE.errText(x); CE.toast("Linked to " + x.cd_user, "ok"); drawCd(); } }, "Link Compass Dash")); };
+      cdBox.append(h("p", { class: "sm mut", style: { margin: 0 } }, "Link the student code and username you use on Compass Dash. Compass Ed stores them to show your XP, mastery, assignments and announcements from there; unlink any time."), h("div", { class: "row" }, code, user), er, h("button", { class: "btn sm", onclick: async () => { er.textContent = ""; const x = await CE.capi("ed_s_cd_link", { p_code: code.value.trim(), p_user: user.value.trim() }); if (!x.ok) return er.textContent = CE.errText(x); CE.toast("Linked to " + x.cd_user, "ok"); drawCd(); } }, "Link Compass Dash")); };
     drawCd();
     const old = h("input", { class: "in", type: "password", autocomplete: "current-password" }), nw = h("input", { class: "in", type: "password", autocomplete: "new-password", minlength: 8 }), er = h("div", { class: "err" });
     page.append(card("Change password", h("div", { class: "stack", style: { maxWidth: "420px" } }, h("label", { class: "f" }, "Current password", old), h("label", { class: "f" }, "New password (8+ characters)", nw), er, h("button", { class: "btn", onclick: async () => { er.textContent = ""; const r = await CE.capi("ed_pw", { p_old: old.value, p_new: nw.value }); if (!r.ok) return er.textContent = CE.errText(r); CE.toast("Password changed ✓", "ok"); old.value = nw.value = ""; } }, "Change password"))));
@@ -433,6 +433,14 @@
     data = { ex: ex.ok ? ex : { activities: [], competitions: [] }, sub: sub.ok ? sub : { units: [] }, news: news.ok ? news : { rows: [] }, clubs: clubs.ok ? clubs : { rows: [] }, asg: asg.ok ? asg : { rows: [] } }; run(box.querySelector("input").value.trim().toLowerCase());
   }
 
+  /* ---------- the campus home page, inside the portal ---------- */
+  async function campusPage() {
+    CE.title("Campus"); page.innerHTML = "";
+    const vid = h("video", { class: "loop-bg", src: CE.root + "assets/art/hero-loop.mp4", poster: CE.root + "assets/art/signin-bg.jpg", loop: true, playsinline: true, "aria-hidden": "true" }); vid.muted = true; vid.autoplay = true; if (matchMedia("(prefers-reduced-motion: reduce)").matches) vid.remove(); else setTimeout(() => vid.play().catch(() => {}), 50);
+    page.append(h("div", { class: "campus-head" }, vid, h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
+    const root = h("div", { id: "campus" }); page.append(root);
+    await CE.campus(root, { portal: "student", inPortal: true });
+  }
   const GROUPS = [
     [["Activities", "#/explore", /^#\/(explore|activity)/], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"]],
     [["Subjects", "#/subjects", /^#\/(subjects|subject|lesson|quiz)/], ["Assignments", "#/assignments", /^#\/assignment/], ["Review queue", "#/review"]],
@@ -444,7 +452,7 @@
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/house", handler: house }, { path: "/clubs", handler: clubs }, { path: "/search", handler: search },
-    { path: "/", handler: home }, { path: "/explore", handler: explore }, { path: "/explore/:cat", handler: explore }, { path: "/activity/:id", handler: activity },
+    { path: "/", handler: home }, { path: "/campus", handler: campusPage }, { path: "/explore", handler: explore }, { path: "/explore/:cat", handler: explore }, { path: "/activity/:id", handler: activity },
     { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: competition }, { path: "/news", handler: news },
     { path: "/subjects", handler: subjects }, { path: "/subject/:id", handler: subject }, { path: "/lesson/:id", handler: lesson }, { path: "/quiz/:id", handler: quiz },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignment }, { path: "/review", handler: review }, { path: "/progress", handler: progress },

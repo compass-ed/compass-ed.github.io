@@ -1,4 +1,4 @@
--- ===== CompassED v2.1: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues,
+-- ===== Compass Ed v2.1: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues,
 -- gallery permission, parent summary links, file uploads =====
 -- Run ONCE after compassed-v2.0.sql (SQL Editor > New query > paste > Run). Safe to run again.
 

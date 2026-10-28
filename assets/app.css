@@ -1,4 +1,4 @@
-/* CompassED design system: white, cyan (#4cc4cf) and black. */
+/* Compass Ed design system: white, cyan (#4cc4cf) and black. */
 :root{
   --bg:#ffffff; --bg2:#f6f9fa; --bg3:#eef4f5; --ink:#000000; --ink2:#2b3335; --mute:#5c6b6e; --line:#e1e8ea; --line2:#cfd9dc;
   --cyan:#4cc4cf; --cyan2:#2fa9b5; --cyan3:#1b8e99; --cyan-soft:#e3f6f8; --cyan-tint:#f0fbfc;
@@ -350,3 +350,44 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 :root[data-theme="dark"] .art-band{background-color:var(--bg)} :root[data-theme="dark"] .art-band::after{background:linear-gradient(90deg,rgba(15,18,19,.97) 0%,rgba(15,18,19,.92) 48%,rgba(15,18,19,.55) 100%)}
 .sec.art-dark,.art-dark{background:#000 url("art/signin-bg.jpg") center/cover no-repeat;position:relative} .art-dark::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.92) 0%,rgba(0,0,0,.78) 60%,rgba(0,0,0,.55) 100%)} .art-dark .wrap{position:relative}
 @media (prefers-reduced-motion:no-preference){.art-band{animation:artPan 40s ease-in-out infinite alternate}@keyframes artPan{from{background-position:right 0% center}to{background-position:right 100% center}}}
+
+/* ===== v2.4: motion, effects, tighter layouts, the campus page everywhere ===== */
+.sec{padding:clamp(32px,5vw,64px) 0}
+.hero{padding:clamp(40px,7vw,88px) 0 clamp(24px,4vw,56px)}
+.sec-head{margin-bottom:16px}
+.gallery{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))} .gallery .g img,.gallery .g .ph{width:100%;aspect-ratio:16/10;object-fit:cover} .gallery .g .ph{display:grid;place-items:center;background:var(--bg3);color:var(--mute)} .gallery .g .ph .i{width:28px;height:28px}
+.csec{margin-top:clamp(28px,4vw,48px)} .csec:first-child{margin-top:0}
+#campus{display:block} .page #campus .csec{margin-top:8px} .page #campus .stat-strip{display:none}
+/* lift + press: cards and tiles respond to hover, buttons to press */
+.lift{transition:transform .18s cubic-bezier(.2,.7,.2,1),box-shadow .18s,border-color .18s} .lift:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.10);border-color:var(--line2)} .lift:active{transform:translateY(-1px) scale(.995)}
+:root[data-theme="dark"] .lift:hover{box-shadow:0 14px 34px rgba(0,0,0,.5)}
+.btn{transition:transform .12s,background .15s,color .15s,border-color .15s,box-shadow .15s} .btn:active{transform:scale(.97)} .btn.cyan:hover{box-shadow:0 8px 20px rgba(76,196,207,.35)}
+.subj,.card.feat,.item,.ext{transition:transform .18s cubic-bezier(.2,.7,.2,1),box-shadow .18s,border-color .18s}
+.item.click:hover,a.item:hover{transform:translateX(2px);border-color:var(--line2)}
+.side a.nl{transition:background .15s,color .15s,transform .15s} .side a.nl:hover{transform:translateX(2px)}
+.nav nav a{position:relative} .nav nav a::after{content:"";position:absolute;left:12px;right:12px;bottom:4px;height:2px;border-radius:2px;background:var(--cyan);transform:scaleX(0);transform-origin:left;transition:transform .2s} .nav nav a:hover::after,.nav nav a.on::after{transform:scaleX(1)}
+.in,textarea.in,select.in{transition:border-color .15s,box-shadow .15s} .in:focus{box-shadow:0 0 0 4px var(--cyan-soft)}
+.tabs button,.seg button,.subnav .tab{transition:background .15s,color .15s}
+.badge{transition:transform .15s} .stat .n{transition:transform .2s} .card.stat:hover .n{transform:scale(1.04)}
+/* reveal on scroll */
+.reveal{opacity:0;transform:translateY(14px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)} .reveal.in{opacity:1;transform:none}
+/* welcome text entrance (sign-in) */
+.wel{display:inline-block;overflow:hidden;padding-bottom:.08em} .wel span{display:inline-block} .motion .wel span{transform:translateY(110%);opacity:0;animation:welUp .7s cubic-bezier(.2,.7,.2,1) forwards} .wel span:nth-child(1){animation-delay:.15s} .wel span:nth-child(2){animation-delay:.25s} .wel span:nth-child(3){animation-delay:.35s} .wel span:nth-child(4){animation-delay:.45s}
+.wel b{color:var(--cyan);font-weight:inherit} .wel-line{display:block;height:4px;width:min(220px,60%);border-radius:2px;background:linear-gradient(90deg,var(--cyan),transparent);margin-top:8px} .motion .wel-line{width:0;animation:welLine 1s .7s cubic-bezier(.2,.7,.2,1) forwards}
+@keyframes welUp{to{transform:none;opacity:1}} @keyframes welLine{to{width:min(220px,60%)}}
+.motion .si .art p,.motion .si .art #demoAccounts{opacity:0;animation:fadeUp .7s 1s cubic-bezier(.2,.7,.2,1) forwards} @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* ambient loops made in Moda: muted looping video behind the hero and the sign-in panel, poster as fallback */
+.loop-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;pointer-events:none}
+.bh{isolation:isolate} .bh .loop-bg{opacity:.9} .bh-text,.bh-art{position:relative;z-index:1}
+.si .art .loop-bg{z-index:-2} .si .art::after{z-index:-1}
+@media (prefers-reduced-motion:reduce){.loop-bg{display:none} .reveal{opacity:1;transform:none} .wel span{animation:none;transform:none;opacity:1} .wel-line{animation:none;width:min(220px,60%)}}
+/* portal: campus page header */
+.campus-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 20px;border-radius:var(--r);background:var(--ink);color:#fff;position:relative;overflow:hidden;isolation:isolate}
+.campus-head .loop-bg{opacity:.8} .campus-head>*:not(.loop-bg){position:relative;z-index:1} .campus-head h2{color:#fff;margin:0} .campus-head p{color:#c9d2d4;margin:4px 0 0}
+:root[data-theme="dark"] .campus-head{background:#000}
+/* tighter portal stacks */
+.page{gap:16px} .card{padding:18px} .grid{gap:14px}
+@media (max-width:640px){.sec{padding:28px 0} .stat-strip{grid-template-columns:1fr 1fr} .campus-head{padding:14px 16px}}
+.bh::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.15) 0%,rgba(0,0,0,.5) 50%,rgba(0,0,0,.78) 100%);z-index:0;pointer-events:none}
+@media (max-width:980px){.bh::after{background:linear-gradient(180deg,rgba(0,0,0,.2) 0%,rgba(0,0,0,.8) 100%)}}
+@media (max-width:560px){.nav .wrap{gap:10px} .nav .brand{font-size:17px} .nav .brand img{width:28px} .nav .cta{gap:6px} .nav .cta .btn{padding:7px 11px;font-size:13px} .nav .cta .btn.ghost{display:none}}

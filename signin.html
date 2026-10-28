@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; form-action 'self'; object-src 'none'; base-uri 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Sign in · CompassED</title>
+<title>Sign in · Compass Ed</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,9 +13,9 @@
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .si{min-height:calc(100dvh - var(--nav));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .si .art{position:relative;overflow:hidden;background:#000 url("assets/art/signin-bg.jpg") center/cover no-repeat;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px;isolation:isolate}
+  .si .art{position:relative;overflow:hidden;background:#000 url("assets/art/signin-bg.jpg") center/cover no-repeat;z-index:0;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px;isolation:isolate}
   .si .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.72) 100%);z-index:-1}
-  .si .art .brand-lg{display:flex;align-items:center;gap:12px;font-family:var(--head);font-weight:800;font-size:26px;letter-spacing:-.02em;color:#fff;margin-bottom:auto}
+  .si .art .brand-lg{position:relative;display:flex;align-items:center;gap:12px;font-family:var(--head);font-weight:800;font-size:26px;letter-spacing:-.02em;color:#fff;margin-bottom:auto}
   .si .art .brand-lg img{width:44px;height:44px;display:block}
   .si .art .brand-lg b{color:var(--cyan)}
   .si .art h2{color:#fff;font-size:clamp(26px,3.4vw,40px);margin:0;max-width:16ch}
@@ -36,14 +36,15 @@
 <body>
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass<b>ED</b></a>
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass <b>Ed</b></a>
     <div class="cta"><a class="btn ghost" href="index.html">← Back to campus</a></div>
   </div>
 </header>
 <main class="si">
   <aside class="art" aria-hidden="false">
-    <div class="brand-lg"><img src="assets/logo-white.svg" alt="">Compass<b>ED</b></div>
-    <h2>Welcome to campus.</h2>
+    <video class="loop-bg" src="assets/art/signin-loop.mp4" poster="assets/art/signin-bg.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
+    <div class="brand-lg"><img src="assets/logo-white.svg" alt="">Compass <b>Ed</b></div>
+    <h2><span class="wel"><span>Welcome</span> <span>to</span> <span><b>campus.</b></span></span><span class="wel-line"></span></h2>
     <p>Sign in with your username and password, or with the 8-digit code your school gave you. New here? A code or the school's join code creates your account in a minute.</p>
     <div id="demoAccounts"></div>
   </aside>
@@ -99,7 +100,7 @@
         <p class="help">Have a login code instead? Use the <a href="#" id="toCode2">Use a code</a> tab.</p>
       </form>
 
-      <p class="legal">By using CompassED you agree to the <a href="terms.html">Terms of Service</a>. See the <a href="privacy.html">Privacy Policy</a> and <a href="cookies.html">Cookie Policy</a>.</p>
+      <p class="legal">By using Compass Ed you agree to the <a href="terms.html">Terms of Service</a>. See the <a href="privacy.html">Privacy Policy</a> and <a href="cookies.html">Cookie Policy</a>.</p>
     </div>
   </section>
 </main>
