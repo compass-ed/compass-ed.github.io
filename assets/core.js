@@ -287,9 +287,9 @@
   };
   CE.offline = on => { let b = CE.$("#offline"); if (on && !b) { b = CE.h("div", { id: "offline", class: "offline" }, "You're offline. Showing the last copy of this page; changes won't save until you're back online."); document.body.prepend(b); } if (!on && b) b.remove(); };
   addEventListener("online", () => CE.offline(false));
-  /* Vercel Web Analytics (cookieless page counts), only where Vercel serves the script: the GitHub Pages copy has no such file.
-     Vercel's script counts the portal's hash routes by itself, one view per change. */
-  if (/\.vercel\.app$/.test(location.hostname)) { const s = document.createElement("script"); s.defer = true; s.src = "/_vercel/insights/script.js"; document.head.append(s); }
+  /* Vercel Web Analytics (cookieless page counts) and Speed Insights (load-time measurements), only where Vercel serves the
+     scripts: the GitHub Pages copy has no such files. Vercel's script counts the portal's hash routes by itself, one view per change. */
+  if (/\.vercel\.app$/.test(location.hostname)) ["/_vercel/insights/script.js", "/_vercel/speed-insights/script.js"].forEach(src => { const s = document.createElement("script"); s.defer = true; s.src = src; document.head.append(s); });
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
     let had = !!navigator.serviceWorker.controller;
