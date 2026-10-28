@@ -287,6 +287,13 @@
   };
   CE.offline = on => { let b = CE.$("#offline"); if (on && !b) { b = CE.h("div", { id: "offline", class: "offline" }, "You're offline. Showing the last copy of this page; changes won't save until you're back online."); document.body.prepend(b); } if (!on && b) b.remove(); };
   addEventListener("online", () => CE.offline(false));
+  /* Vercel Web Analytics (cookieless page counts), only where Vercel serves the script: the GitHub Pages copy has no such file.
+     Portal pages route by hash, so each hash change is reported as a page view too. */
+  if (/\.vercel\.app$/.test(location.hostname)) {
+    window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    const s = document.createElement("script"); s.defer = true; s.src = "/_vercel/insights/script.js"; document.head.append(s);
+    addEventListener("hashchange", () => window.va("pageview", { route: location.pathname + location.hash, path: location.pathname + location.hash }));
+  }
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
     let had = !!navigator.serviceWorker.controller;
