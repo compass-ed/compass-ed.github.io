@@ -282,6 +282,7 @@
     try {
       const r = await CE.capi("ed_s_review"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Review queue"), h("div", { class: "sm mut" }, "Flashcards made from anything you got wrong, spaced out so it sticks. Each one you clear earns points."))));
       if (!r.due.length) return page.append(CE.emptyArt("sprout", r.total ? "Nothing due today" : "Your review queue is empty", r.total ? "You have " + r.total + " cards. The next one is due " + (r.next ? D.short(r.next) : "soon") + "." : "Wrong quiz answers and lesson key points become flashcards here, spaced out so they stick."));
       let i = 0, flipped = false, done = 0; const q = r.due.slice(); const box = h("div", { style: { maxWidth: "640px" } }); page.append(box);
       const render = () => {
@@ -407,6 +408,7 @@
     try {
       const r = await CE.capi("ed_s_clubs"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Clubs"), h("div", { class: "sm mut" }, "ECA and after-school clubs. Sign up here; places are limited."))));
       const mine = r.rows.filter(c => c.joined);
       page.append(h("p", { class: "mut", style: { margin: 0 } }, mine.length ? "You're in " + mine.map(c => c.title).join(", ") + "." : "Sign up to a club: places are first come, first served."));
       if (!r.rows.length) return page.append(h("div", { class: "empty" }, "No clubs yet."));
@@ -418,6 +420,7 @@
   /* ---------- search ---------- */
   async function search() {
     CE.title("Search"); page.innerHTML = "";
+    page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Search"), h("div", { class: "sm mut" }, "Activities, competitions, lessons, news, clubs and assignments."))));
     const res = h("div", { class: "stack" }); let data = null;
     const run = q => { res.innerHTML = ""; if (!data) return res.append(h("div", { class: "skel" })); if (q.length < 2) return res.append(h("div", { class: "empty" }, "Type at least two letters.")); const hit = t => String(t || "").toLowerCase().includes(q); const rows = [];
       data.ex.activities.forEach(a => { if (hit(a.title) || hit(a.blurb)) rows.push(["explore", a.title, CE.catName(a.cat) + " · activity", "#/activity/" + a.id]); });

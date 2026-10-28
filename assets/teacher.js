@@ -156,6 +156,7 @@
   /* ---------- classes ---------- */
   async function classes() {
     CE.title("Classes"); page.innerHTML = "";
+    page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Classes"), h("div", { class: "sm mut" }, "Your classes: students, register and seating, the overview heatmap, topics and progress.")), h("a", { class: "btn ghost", href: "#/people/classes" }, "Manage classes")));
     if (!(me.classes || []).length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("users")), h("div", { class: "b" }, "No classes yet"), h("div", { class: "sm" }, "Create classes and add students under People & classes."), h("a", { class: "btn", href: "#/people", style: { marginTop: "10px" } }, "People & classes")));
     page.append(h("div", { class: "grid g3" }, ...me.classes.map(c => h("a", { class: "subj", href: "#/class/" + c.id }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon("users")), c.subj != null ? h("span", { class: "badge" }, CE.subjName(c.subj)) : null), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, (c.n || 0) + " students" + (c.year ? " · Year " + c.year : ""))))));
   }
@@ -609,6 +610,7 @@
   /* ---------- search ---------- */
   async function search() {
     CE.title("Search"); page.innerHTML = "";
+    page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Search"), h("div", { class: "sm mut" }, "Lessons, quizzes, activities, competitions, news, assignments, people and the question bank."))));
     const res = h("div", { class: "stack" }); let data = null;
     const run = q => { res.innerHTML = ""; if (!data) return res.append(h("div", { class: "skel" })); if (q.length < 2) return res.append(h("div", { class: "empty" }, "Type at least two letters.")); const hit = t => String(t || "").toLowerCase().includes(q); const rows = [];
       data.c.units.forEach(u => { if (hit(u.title)) rows.push(["book", u.title, CE.subjName(u.subj) + " · unit", "#/content/" + u.subj]); u.lessons.forEach(l => { if (hit(l.title)) rows.push(["lesson", l.title, u.title, "#/content/" + u.subj]); }); });

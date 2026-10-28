@@ -415,3 +415,14 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 .stage{text-decoration:none;color:inherit} .stage-age{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan3);background:var(--cyan-soft);padding:4px 10px;border-radius:999px;width:max-content}
 .steps-grid .step{position:relative;padding-top:26px} .step .num{position:absolute;top:-14px;left:16px;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;font-weight:800;display:grid;place-items:center;font-family:var(--head)} .step h4{margin:0 0 6px}
 :root[data-theme="dark"] .step .num{background:#fff;color:#000}
+/* polish pass */
+.trailer.vwrap video{aspect-ratio:16/9;object-fit:cover;background:#000}
+.ver-row .vwrap video{aspect-ratio:16/10;object-fit:cover}
+.page>*,.card,.grid>*{min-width:0} .tbw{max-width:100%} .page{overflow-x:clip}
+.sec.slim{padding:24px 0 0} .sec.slim:empty{display:none}
+[data-campus]:empty{display:none} section:has(>[data-campus]:empty){display:none}
+.csec{margin-top:0} .csec .sec-head{margin-bottom:18px}
+.page-lead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap} .page-lead h2{margin:0} .page-lead .sm{margin-top:2px}
+section:has(>[data-campus]>.hide:only-child){display:none}
+#campus .csec+.csec{margin-top:28px} .page #campus .csec{margin-top:0} .page #campus .csec+.csec{margin-top:16px}
+@media (max-width:640px){.seg{flex-wrap:wrap;max-width:100%} .row.between>.seg{width:100%}}

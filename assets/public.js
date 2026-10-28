@@ -9,6 +9,8 @@
   if (cta && s && s.me) { cta.innerHTML = ""; cta.append(CE.h("a", { class: "btn cyan", href: s.me.role === "student" ? "student/" : "teacher/" }, s.me.role === "student" ? "Open my campus" : "Open staff portal")); }
 
   if (CE.reveal) CE.reveal(document);   /* static sections on this page */
-  const campus = document.getElementById("campus"); if (!campus) return;
-  CE.campus(campus, { portal: s && s.me ? s.me.role : null, inPortal: false }).then(r => { const sn = document.getElementById("schoolName"); if (sn && r && r.school) sn.textContent = /^compass ?ed$/i.test(r.school) ? "Campus" : r.school + " campus"; });
+  const slots = {}; document.querySelectorAll("[data-campus]").forEach(el => slots[el.dataset.campus] = el);
+  if (!Object.keys(slots).length) return;
+  const campus = document.createElement("div");
+  CE.campus(campus, { portal: s && s.me ? s.me.role : null, inPortal: false, slots }).then(r => { const sn = document.getElementById("schoolName"); if (sn && r && r.school) sn.textContent = /^compass ?ed$/i.test(r.school) ? "Campus" : r.school + " campus"; });
 })();

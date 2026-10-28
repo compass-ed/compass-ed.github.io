@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.4.4 — 28 October 2026
+- **Polish pass.** One navigation on every public page (Home, Explore, Competitions, Calendar, Clubs, News, About); the Calendar and News links now land on their sections. Home page reordered so the school's own sections sit between the live campus blocks: hero, numbers, categories, the Principal's welcome, competitions, the learning journey, calendar and news, beyond the classroom, clubs, gallery, links, get started, schoolwork.
+- Fixes: the About trailer no longer stretches to the poster's portrait shape; tables (class students, login codes) scroll inside their card on phones instead of pushing the page sideways; filter segments wrap on small screens; the portal campus page no longer keeps its loading skeleton; Clubs, Review queue, Search and Classes pages got the same header line as every other page.
+
 ## v2.4.3 — 28 October 2026
 - Home page sections modelled on the Compass International School Doha site: a welcome from the Principal with the quote "Every child is different. Every path should be too." (Jamie Hughes, Principal), the learning journey by stage (Early Years, Primary, Secondary, Sixth Form), "Beyond the classroom" (arts, STEAM, sport and wellbeing, social purpose, with the Global Campus collaborations), and "Four steps to get started". The About page lists the Themaid and Madinat Khalifa campuses. Reveal-on-scroll now covers the whole home page.
 
