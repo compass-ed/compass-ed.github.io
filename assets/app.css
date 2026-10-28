@@ -32,7 +32,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap} .between{justify-content:space-between} .grow{flex:1 1 auto} .right{margin-left:auto}
 .stack{display:grid;gap:12px}
 .hide{display:none!important}
-.grid{display:grid;gap:16px} .g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))} .g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))} .g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr))}
+.grid{display:grid;gap:16px} .g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(3,minmax(0,1fr))}} @media (max-width:820px){.g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr))}} @media (max-width:520px){.g4,.g3,.g2{grid-template-columns:1fr}}
 
 /* ---- buttons, badges, forms ---- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--ink);background:var(--ink);color:#fff;border-radius:var(--r3);padding:10px 18px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;line-height:1.2;text-decoration:none}
@@ -426,3 +427,14 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 section:has(>[data-campus]>.hide:only-child){display:none}
 #campus .csec+.csec{margin-top:28px} .page #campus .csec{margin-top:0} .page #campus .csec+.csec{margin-top:16px}
 @media (max-width:640px){.seg{flex-wrap:wrap;max-width:100%} .row.between>.seg{width:100%}}
+/* density pass: tighter vertical rhythm, no orphan rows, nothing floating in space */
+.sec{padding:clamp(26px,3.6vw,44px) 0} .sec.alt{padding:clamp(26px,3.6vw,44px) 0}
+.sec-head{margin-bottom:14px} .csec .sec-head{margin-bottom:14px}
+.quote-band{padding:clamp(28px,4vw,48px) 0}
+.banner-hero{padding-bottom:0} .sec.slim{padding:0;margin-top:-34px;position:relative;z-index:2} .stat-strip .card{box-shadow:0 10px 30px rgba(0,0,0,.10)}
+:root[data-theme="dark"] .stat-strip .card{box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.showcase{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px;align-items:start} .showcase.solo{grid-template-columns:1fr}
+.showcase .gallery{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))} .showcase.solo .gallery{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+.showcase .ext{padding:10px 12px} .showcase .grid.g2{grid-template-columns:1fr}
+@media (max-width:860px){.showcase{grid-template-columns:1fr}}
+.sec.ink{padding:clamp(32px,4vw,52px) 0}

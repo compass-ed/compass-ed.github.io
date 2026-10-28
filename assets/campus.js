@@ -1,6 +1,6 @@
 /* The campus home page as one reusable renderer. Used by index.html (public) and by both portals (#/campus),
    so a signed-in student or teacher browses the same home page without leaving their session.
-   Sections: stats, explore, competitions, calendar (calendar + news), links, gallery, clubs.
+   Sections: stats, explore, competitions, calendar (calendar + news), showcase (gallery + links), clubs.
    opts.slots = { explore: el, ... } places a section into a given container instead of root, so a host page can
    interleave its own sections between them. */
 (function () {
@@ -49,16 +49,15 @@
     r.news.slice(0, 3).forEach(x => nl.append(h("a", { class: "card lift", href: link("#/news", "#/news"), style: { textDecoration: "none", color: "inherit" } }, x.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("h4", { style: { marginTop: "6px" } }, x.title), h("p", { class: "sm mut", style: { margin: 0 } }, x.body.replace(/\*\*/g, "").slice(0, 160) + (x.body.length > 160 ? "…" : "")), h("div", { class: "xs mut", style: { marginTop: "8px" } }, D.ago(x.created)))));
     place("calendar", two);
 
-    /* links (hidden until the school has added some) */
-    const linkSec = sec("links", "Connected", "Other school services", "Shortcuts your school has added. Compass Dash and Compass Ed share one database, so house points and announcements line up."); linkSec.classList.add("hide");
-    place("links", linkSec);
-    CE.api("ed_links").then(l => { if (!l.ok || !(l.links || []).length) return; linkSec.append(CE.linkTiles(l.links)); linkSec.classList.remove("hide"); }).catch(() => {});
-
-    /* gallery */
+    /* showcase: recent winners beside the school's links (links column disappears when there are none) */
     const gal = r.gallery || [], gg = h("div", { class: "gallery" });
-    const galSec = sec("gallery", "Gallery", "Recent winners", "Entries from closed competitions, shown with the student's permission."); galSec.append(gg); place("gallery", galSec);
+    const galCol = h("div", { id: "gallery" }, h("div", { class: "kicker" }, "Gallery"), h("h2", { style: { margin: "0 0 6px" } }, "Recent winners"), h("p", { class: "mut sm" }, "Entries from closed competitions, shown with the student's permission."), gg);
+    const linkCol = h("div", { id: "links", class: "hide" }, h("div", { class: "kicker" }, "Connected"), h("h2", { style: { margin: "0 0 6px" } }, "Other school services"), h("p", { class: "mut sm" }, "Shortcuts your school has added. Compass Dash and Compass Ed share one database, so house points and announcements line up."));
+    const show = h("div", { class: "showcase solo" }, galCol, linkCol);
+    place("showcase", h("section", { class: "csec reveal", id: "showcase" }, show));
     if (!gal.length) gg.append(CE.emptyArt("trophy", "Winners appear here once competitions close"));
     gal.slice(0, 8).forEach(g => { const img = (g.links || []).find(l => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(l) || /\/uploads\//.test(l)); gg.append(h("div", { class: "g lift" }, img ? h("img", { src: img, alt: "", loading: "lazy" }) : h("div", { class: "ph" }, CE.icon("medal")), h("div", { class: "b" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, ["", "1st", "2nd", "3rd"][g.place] || g.place + "th"), h("span", { class: "xs mut" }, g.comp)), h("div", { class: "b sm", style: { marginTop: "6px" } }, g.name), h("div", { class: "xs mut" }, g.body)))); });
+    CE.api("ed_links").then(l => { if (!l.ok || !(l.links || []).length) return; linkCol.append(CE.linkTiles(l.links)); linkCol.classList.remove("hide"); show.classList.remove("solo"); }).catch(() => {});
 
     /* clubs */
     place("clubs", clubSec);
