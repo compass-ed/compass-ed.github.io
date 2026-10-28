@@ -393,3 +393,5 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 @media (max-width:560px){.nav .wrap{gap:10px} .nav .brand{font-size:17px} .nav .brand img{width:28px} .nav .cta{gap:6px} .nav .cta .btn{padding:7px 11px;font-size:13px} .nav .cta .btn.ghost{display:none}}
 /* crop the export badge out of the version preview video */
 .ver-row .vwrap{overflow:hidden;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh)} .ver-row .vwrap video{display:block;width:112%;height:auto;margin:-3% 0 -9% -3%;border:0;border-radius:0;box-shadow:none}
+/* trailer: cropped wrapper hides the export badge in the corner */
+.trailer.vwrap{overflow:hidden;border-radius:20px;border:1px solid var(--line);box-shadow:var(--sh);background:#000;max-width:1100px} .trailer.vwrap video{display:block;width:108%;height:auto;margin:-2% 0 -5% -4%}
