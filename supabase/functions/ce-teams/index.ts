@@ -20,7 +20,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { createRemoteJWKSet, jwtVerify } from "npm:jose@5";
 
-const ORIGINS = ["https://compassdash.github.io", "http://localhost:8766", "http://127.0.0.1:8766"];
+const ORIGINS = ["https://compassed.github.io", "https://compassdash.github.io", "http://localhost:8766", "http://127.0.0.1:8766"];
 const CLIENT_ID = Deno.env.get("MS_CLIENT_ID") ?? "";
 const TENANT = Deno.env.get("MS_TENANT_ID") ?? "organizations";
 const JWKS = createRemoteJWKSet(new URL("https://login.microsoftonline.com/common/discovery/v2.0/keys"));
@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
       const subs = await rpc("ce_t_subs", { p_key: key, p_assign: assignId });
       if (!subs.ok) return reply(origin, subs);
       const a = subs.assign as Json; const team = await teamFor(Number(a.class_id));
-      const siteUrl = ORIGINS[0] + "/CompassED/app.html#/assignment/" + assignId;
+      const siteUrl = ORIGINS[0] + "/app.html#/assignment/" + assignId;
       const created = await graph(msToken, `/education/classes/${team}/assignments`, { method: "POST", body: JSON.stringify({
         displayName: String(a.title), instructions: { contentType: "text", content: String(a.instr ?? "") + "\n\nOpen in CompassED: " + siteUrl },
         dueDateTime: a.due ? new Date(String(a.due)).toISOString() : null, allowStudentsToAddResourcesToSubmission: false,
