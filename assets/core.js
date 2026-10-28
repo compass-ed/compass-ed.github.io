@@ -88,6 +88,7 @@
     CE.me = me; CE.subjects = me.subjects || []; CE.categories = me.categories || [];
     if (me.must_pw) await CE.gatePassword();
     if (!(me.consent && me.consent.terms)) await CE.gateConsent(me);
+    setTimeout(() => CE.feedbackButton && CE.feedbackButton(), 0);
     return me;
   };
   /* ---------- gates: full-screen steps that must be completed before the portal opens ---------- */
@@ -286,7 +287,13 @@
   };
   CE.offline = on => { let b = CE.$("#offline"); if (on && !b) { b = CE.h("div", { id: "offline", class: "offline" }, "You're offline. Showing the last copy of this page; changes won't save until you're back online."); document.body.prepend(b); } if (!on && b) b.remove(); };
   addEventListener("online", () => CE.offline(false));
-  if ("serviceWorker" in navigator && !local) navigator.serviceWorker.register(ROOT + "sw.js").catch(() => {});
+  if ("serviceWorker" in navigator && !local) {
+    /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
+    let had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !sessionStorage.getItem("ce_reloaded")) { sessionStorage.setItem("ce_reloaded", "1"); location.reload(); } had = true; });
+    navigator.serviceWorker.register(ROOT + "sw.js").then(r => { r.update().catch(() => {}); }).catch(() => {});
+    setTimeout(() => sessionStorage.removeItem("ce_reloaded"), 15000);
+  }
 
   /* ---------- file uploads (Supabase Storage bucket "uploads"; preview mode keeps small files in the browser) ---------- */
   CE.upload = async function (file) {
