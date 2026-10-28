@@ -403,3 +403,15 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 @media print{.fab-fb{display:none!important}}
 .stars{display:inline-flex;gap:2px} .stars button{border:0;background:none;font-size:30px;line-height:1;color:var(--line2);cursor:pointer;padding:0 2px;transition:transform .12s,color .12s} .stars button.on{color:#f5c518} .stars button:hover{transform:scale(1.15)}
 .fb-card{border-left:4px solid var(--line)} .fb-card.new{border-left-color:var(--cyan)} .fb-card .fb-stars{color:#f5c518;letter-spacing:1px;font-size:15px} .fb-card .fb-body{white-space:pre-wrap;line-height:1.55}
+/* welcome quote band + journey + steps (home page) */
+.quote-band{background:#000;color:#fff;position:relative;overflow:hidden} .quote-band::before{content:"";position:absolute;inset:auto -10% -40% auto;width:60vw;height:60vw;max-width:640px;max-height:640px;border-radius:50%;background:radial-gradient(closest-side,rgba(76,196,207,.35),transparent 70%)}
+.quote-grid{display:grid;grid-template-columns:120px minmax(0,1fr);gap:24px;align-items:start;position:relative}
+.quote-mark{font-family:var(--head);font-size:200px;line-height:.7;color:var(--cyan);font-weight:800;margin-top:14px}
+.quote{font-family:var(--head);font-weight:800;font-size:clamp(28px,4.2vw,56px);line-height:1.05;letter-spacing:-.02em;margin:0 0 14px;max-width:18ch;color:#fff}
+.quote-by{font-size:15px;color:#c9d2d4;margin-bottom:16px} .quote-by b{color:#fff}
+.quote-lead{color:#c9d2d4;max-width:60ch;margin:0 0 18px}
+:root[data-theme="dark"] .quote-band{background:#000}
+@media (max-width:720px){.quote-grid{grid-template-columns:1fr}.quote-mark{font-size:120px;line-height:.6;margin:0}}
+.stage{text-decoration:none;color:inherit} .stage-age{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan3);background:var(--cyan-soft);padding:4px 10px;border-radius:999px;width:max-content}
+.steps-grid .step{position:relative;padding-top:26px} .step .num{position:absolute;top:-14px;left:16px;width:32px;height:32px;border-radius:50%;background:var(--ink);color:#fff;font-weight:800;display:grid;place-items:center;font-family:var(--head)} .step h4{margin:0 0 6px}
+:root[data-theme="dark"] .step .num{background:#fff;color:#000}
