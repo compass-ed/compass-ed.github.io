@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co https://login.microsoftonline.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; form-action 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; form-action 'self'; object-src 'none'; base-uri 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>CompassED</title>
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -17,24 +17,26 @@
 <div class="shell">
   <aside class="side" id="side">
     <a class="brand" href="#/"><img src="assets/logo-white.svg" alt="">Compass<b>ED</b></a>
-    <div class="sw" id="portalSwitch"><a class="on" href="#/">Student</a><a href="signin.html?role=teacher">Teacher</a></div>
-    <a class="nl" href="#/"><span data-icon="compass"></span>Dashboard</a>
+    <a class="nl" href="#/"><span data-icon="compass"></span>Home</a>
+    <a class="nl" href="#/explore"><span data-icon="explore"></span>Explore</a>
+    <a class="nl" href="#/competitions"><span data-icon="trophy"></span>Competitions</a>
+    <a class="nl" href="#/news"><span data-icon="news"></span>News</a>
+    <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
+    <div class="sec-l">My schoolwork</div>
     <a class="nl" href="#/subjects"><span data-icon="book"></span>Subjects</a>
     <a class="nl" href="#/assignments"><span data-icon="pencil"></span>Assignments <span class="n hide" id="nDue"></span></a>
     <a class="nl" href="#/review"><span data-icon="repeat"></span>Review queue <span class="n hide" id="nRev"></span></a>
     <a class="nl" href="#/progress"><span data-icon="chart"></span>Progress</a>
-    <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
     <a class="nl" href="#/announcements"><span data-icon="megaphone"></span>Announcements <span class="n hide" id="nAnn"></span></a>
-    <a class="nl" href="#/settings"><span data-icon="settings"></span>Settings</a>
     <div class="sp"></div>
-    <a class="nl" id="cdLink" href="https://compassdash.github.io/Compassdash/" target="_blank" rel="noopener"><span data-icon="game"></span>Compass Dash ↗</a>
+    <a class="nl" href="#/settings"><span data-icon="settings"></span>Settings</a>
     <div class="me"><div class="av" id="meAv">?</div><div><div class="nm" id="meName">…</div><div class="rl" id="meClass"></div></div><button class="ib right" id="signout" title="Sign out" aria-label="Sign out" style="color:#9aa5a8"><span data-icon="exit"></span></button></div>
   </aside>
   <div class="scrim" id="scrim"></div>
   <div class="main">
     <div class="topbar">
       <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
-      <h2 id="ptitle">Dashboard</h2>
+      <h2 id="ptitle">Home</h2>
       <div class="right bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop"></div></div>
     </div>
     <main class="page" id="page"></main>
@@ -44,7 +46,6 @@
 <script src="assets/core.js"></script>
 <script src="assets/icons.js"></script>
 <script src="assets/demo.js"></script>
-<script src="assets/ms.js"></script>
 <script src="assets/student.js"></script>
 </body>
 </html>

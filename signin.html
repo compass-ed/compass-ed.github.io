@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co https://login.microsoftonline.com; form-action 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; form-action 'self'; object-src 'none'; base-uri 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sign in · CompassED</title>
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
@@ -15,7 +15,7 @@
   .si .art{background:var(--ink);color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:center;gap:18px}
   .si .art img{width:160px;filter:invert(1)}
   .si .form{display:grid;place-items:center;padding:clamp(20px,4vw,56px)}
-  .si .box{width:min(440px,100%);display:grid;gap:16px}
+  .si .box{width:min(460px,100%);display:grid;gap:16px}
   @media (max-width:900px){.si{grid-template-columns:1fr}.si .art{padding:24px 20px}.si .art img{width:90px}}
 </style>
 </head>
@@ -23,44 +23,47 @@
 <header class="nav">
   <div class="wrap">
     <a class="brand" href="index.html"><img src="assets/logo.svg" alt="">Compass<b>ED</b></a>
-    <div class="cta"><a class="btn ghost" href="index.html">← Back to site</a></div>
+    <div class="cta"><a class="btn ghost" href="index.html">← Back to campus</a></div>
   </div>
 </header>
 <main class="si">
   <aside class="art">
     <img src="assets/logo.svg" alt="">
-    <h2 style="color:#fff">Welcome back.</h2>
-    <p class="mut">Students use the same 4-digit code and username as Compass Dash. Teachers use their Compass Dash teacher login. Nothing new to remember.</p>
+    <h2 style="color:#fff">Welcome to campus.</h2>
+    <p class="mut">Sign in with your CompassED username. New here? Students create an account with the school's join code; teachers use the invite code from the office.</p>
     <div id="demoAccounts"></div>
   </aside>
   <section class="form">
     <div class="box">
       <div class="seg" role="tablist">
-        <button id="tabS" class="on" role="tab">Student</button>
-        <button id="tabT" role="tab">Teacher</button>
+        <button id="tabIn" class="on" role="tab">Sign in</button>
+        <button id="tabUp" role="tab">Create account</button>
       </div>
 
-      <form id="fS" class="stack" autocomplete="off">
-        <h2>Student sign in</h2>
-        <label class="f">Your 4-digit code<input class="in big" id="sCode" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="0000" required></label>
-        <label class="f">Username<input class="in" id="sUser" maxlength="16" placeholder="e.g. alice_j" autocapitalize="off" required></label>
-        <div class="err" id="sErr"></div>
-        <button class="btn cyan lg w" id="sBtn" type="submit">Sign in</button>
-        <p class="help">Lost your code? Ask your teacher: they can look it up in the Compass Dash Teacher Panel.</p>
+      <form id="fIn" class="stack" autocomplete="on">
+        <h2>Sign in</h2>
+        <label class="f">Username<input class="in" id="iUser" autocomplete="username" autocapitalize="off" required></label>
+        <label class="f">Password<input class="in" id="iPw" type="password" autocomplete="current-password" required></label>
+        <div class="err" id="iErr"></div>
+        <button class="btn cyan lg w" id="iBtn" type="submit">Sign in</button>
+        <p class="help">Forgotten your password? A teacher can reset it from the People page.</p>
       </form>
 
-      <form id="fT" class="stack hide" autocomplete="on">
-        <h2>Teacher sign in</h2>
-        <label class="f">Username<input class="in" id="tUser" autocomplete="username" required></label>
-        <label class="f">Password<input class="in" id="tPw" type="password" autocomplete="current-password" required></label>
-        <div class="err" id="tErr"></div>
-        <button class="btn lg w" id="tBtn" type="submit">Sign in to the teacher portal</button>
-        <p class="help">Your teacher account comes from Compass Dash. Not set up yet? Claim your invite code in the Compass Dash Teacher Panel first.</p>
+      <form id="fUp" class="stack hide" autocomplete="off">
+        <h2>Create an account</h2>
+        <div class="seg"><button type="button" id="roleS" class="on">I'm a student</button><button type="button" id="roleT">I'm a teacher</button></div>
+        <label class="f"><span id="codeLabel">School join code</span><input class="in big" id="uCode" placeholder="e.g. COMPASS-2026" autocapitalize="characters" required></label>
+        <label class="f">Your name<input class="in" id="uName" maxlength="60" placeholder="e.g. Alice Johnson" required></label>
+        <label class="f">Choose a username<input class="in" id="uUser" maxlength="24" placeholder="e.g. alice.j" autocapitalize="off" required></label>
+        <label class="f">Choose a password<input class="in" id="uPw" type="password" minlength="8" autocomplete="new-password" required><span class="help">At least 8 characters.</span></label>
+        <div class="grid g2" id="studentFields">
+          <label class="f">Year group<select class="in" id="uYear"><option value="0">Choose…</option><option value="7">Year 7</option><option value="8">Year 8</option><option value="9">Year 9</option><option value="10">Year 10</option><option value="11">Year 11</option><option value="12">Year 12</option><option value="13">Year 13</option></select></label>
+          <label class="f">Class (optional)<input class="in" id="uClass" placeholder="Ask your teacher for the class number"></label>
+        </div>
+        <label class="f hide" id="teacherFields">Main subject<select class="in" id="uSubj"><option value="-1">All subjects</option></select></label>
+        <div class="err" id="uErr"></div>
+        <button class="btn lg w" id="uBtn" type="submit">Create account</button>
       </form>
-
-      <div class="row" style="justify-content:center;gap:16px"><span class="mut sm">or</span></div>
-      <button class="btn ghost w" id="msBtn"><span class="ms"><i></i><i></i><i></i><i></i></span> Sign in with Microsoft</button>
-      <div class="help" id="msHelp" style="text-align:center"></div>
     </div>
   </section>
 </main>
@@ -68,7 +71,6 @@
 <script src="assets/core.js"></script>
 <script src="assets/icons.js"></script>
 <script src="assets/demo.js"></script>
-<script src="assets/ms.js"></script>
 <script src="assets/signin.js"></script>
 </body>
 </html>

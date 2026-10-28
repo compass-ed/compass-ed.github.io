@@ -10,11 +10,7 @@
     demo = !!C.allowDemo && (local || localStorage.getItem("ce_demo") === "1");
   } catch (e) { demo = !!C.allowDemo && local; }
 
-  const CE = window.CE = {
-    cfg: C, demo,
-    subjects: [],                         // filled after sign-in
-    SUBJ_FALLBACK: [["Maths","maths"],["English","english"],["Science","science"],["Geography","geography"],["French","french"],["Computing","computing"],["Art & Design","art"],["Music","music"],["History","history"],["Spanish","spanish"],["Arabic","arabic"]]
-  };
+  const CE = window.CE = Object.assign(window.CE || {}, { cfg: C, demo, subjects: [], categories: [], me: null });
 
   /* ---------- API ---------- */
   CE.api = async function (fn, args) {
@@ -30,49 +26,56 @@
   CE.errText = function (e) {
     const m = typeof e === "string" ? e : (e && (e.error || e.message)) || "";
     return ({
-      no_match: "That code and username do not go together.",
-      locked: "Too many tries. Wait 30 seconds, then try again.",
-      disabled: "This account has been switched off. Ask your school.",
-      bad_key: "Your teacher session has ended. Sign in again.",
-      forbidden: "You do not have access to that class.",
+      no_match: "That username and password do not match.",
+      locked: "Too many tries. Wait a minute, then try again.",
+      disabled: "This account has been switched off. Ask a teacher.",
+      bad_key: "Your session has ended. Sign in again.",
+      forbidden: "You do not have access to that.",
       not_found: "That item is no longer available.",
-      not_linked: "That Microsoft account is not linked to a CompassED account yet. Sign in the usual way first, then link it from Settings.",
-      db_not_set_up: "The CompassED database tables are not set up yet. Run supabase/compassed-v1.0.sql in Supabase (see README).",
+      bad_code: "That code is not right. Check it with your teacher.",
+      bad_user: "Usernames are 3 to 24 letters, numbers, dots or underscores.",
+      bad_pw: "Passwords need at least 8 characters.",
+      taken: "That username is already taken. Try another.",
+      no_class: "That class does not exist.",
+      closed: "This competition is not open for entries.",
+      db_not_set_up: "The CompassED database is not set up yet. Run supabase/compassed-v2.0.sql in Supabase (see README).",
       not_configured: "No database configured. Add the Supabase URL and key in assets/config.js.",
-      too_big: "That is too long to save.", empty: "Write something or add a link before handing in.",
+      too_big: "That is too long to save.", empty: "Write something or add a link first.",
       graded: "This work has been marked. Hand in a new version if your teacher asked for one.",
       bad_text: "Please check the text: something is missing or too long.",
       "Failed to fetch": "No connection. Check your internet and try again."
     })[m] || (m ? "Something went wrong (" + m + ")." : "Something went wrong.");
   };
 
-  /* ---------- sessions ---------- */
+  /* ---------- session (one model for every role) ---------- */
   const LS = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
-  const SS = { get(k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { sessionStorage.removeItem(k); } catch (e) {} } };
   CE.LS = LS;
-  CE.student = {
-    get() { return LS.get("ce_student"); },
-    set(p) { LS.set("ce_student", p); },
-    clear() { LS.del("ce_student"); },
-    args() { const s = LS.get("ce_student"); return s ? { p_code: s.code, p_user: s.username } : {}; }
-  };
-  const T_IDLE = 20 * 60 * 1000;   // same 20-minute lock as the Compass Dash Teacher Panel
-  CE.teacher = {
+  const IDLE = 20 * 60 * 1000;   // staff sessions lock in this browser after 20 minutes without use
+  CE.auth = {
     get() {
-      const t = SS.get("ce_teacher"); if (!t) return null;
-      if (Date.now() - (t.at || 0) > T_IDLE) { SS.del("ce_teacher"); return null; }
-      t.at = Date.now(); SS.set("ce_teacher", t); return t;
+      const s = LS.get("ce_auth"); if (!s || !s.tok) return null;
+      if (s.me && s.me.role !== "student" && Date.now() - (s.at || 0) > IDLE) { LS.del("ce_auth"); return null; }
+      s.at = Date.now(); LS.set("ce_auth", s); return s;
     },
-    set(tok, me) { SS.set("ce_teacher", { tok, me, at: Date.now() }); },
-    clear() { SS.del("ce_teacher"); },
-    args() { const t = CE.teacher.get(); return t ? { p_key: t.tok } : {}; }
+    set(tok, me) { LS.set("ce_auth", { tok, me, at: Date.now() }); },
+    clear() { LS.del("ce_auth"); },
+    args() { const s = CE.auth.get(); return s ? { p_key: s.tok } : {}; }
   };
-  CE.sapi = (fn, a) => CE.api(fn, Object.assign(CE.student.args(), a || {}));
-  CE.tapi = (fn, a) => CE.api(fn, Object.assign(CE.teacher.args(), a || {}));
-  CE.signOut = function (role) {
-    if (role === "teacher") { const t = CE.teacher.get(); if (t && !demo) CE.api("cd_t_logout", { p_key: t.tok }).catch(() => {}); CE.teacher.clear(); }
-    else CE.student.clear();
-    location.href = "signin.html";
+  CE.capi = async (fn, a) => {
+    const r = await CE.api(fn, Object.assign(CE.auth.args(), a || {}));
+    if (r && r.error === "bad_key") { CE.auth.clear(); location.replace("signin.html"); throw new Error("bad_key"); }
+    return r;
+  };
+  CE.signOut = function () { const s = CE.auth.get(); if (s) CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); CE.auth.clear(); location.href = "signin.html"; };
+  /* Load the profile (and lists) for a portal page. Redirects to sign-in when there is no session or the wrong role. */
+  CE.requireRole = async function (roles) {
+    const s = CE.auth.get();
+    if (!s) { location.replace("signin.html?next=" + encodeURIComponent(location.pathname.split("/").pop() + location.hash)); return null; }
+    let me = s.me;
+    try { const r = await CE.capi("ed_me"); if (r.ok) { me = r; CE.auth.set(s.tok, r); } } catch (e) { if (e.message === "bad_key") return null; }
+    if (!roles.includes(me.role)) { location.replace(me.role === "student" ? "app.html" : "teach.html"); return null; }
+    CE.me = me; CE.subjects = me.subjects || []; CE.categories = me.categories || [];
+    return me;
   };
 
   /* ---------- helpers ---------- */
@@ -85,8 +88,10 @@
     for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
     return el;
   };
-  CE.subj = id => { const s = CE.subjects.find(x => x.id === id); if (s) return s; const f = CE.SUBJ_FALLBACK[id] || ["Subject", "book"]; return { id, name: f[0], icon: f[1] }; };
-  CE.subjName = id => CE.subj(id).name; CE.subjIcon = id => CE.icon(CE.subjKey(id));
+  CE.subj = id => CE.subjects.find(x => x.id === id) || { id, name: "Subject", icon: "book" };
+  CE.subjName = id => CE.subj(id).name; CE.subjIcon = id => CE.icon(CE.subj(id).icon);
+  CE.cat = id => CE.categories.find(x => x.id === id) || { id, name: "Campus", icon: "compass" };
+  CE.catName = id => CE.cat(id).name; CE.catIcon = id => CE.icon(CE.cat(id).icon);
   const D = CE.date = {
     parse: v => v ? new Date(v) : null,
     short: v => { const d = D.parse(v); return d ? d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : ""; },
@@ -95,6 +100,7 @@
     dt: v => { const d = D.parse(v); if (!d) return ""; const t = D.time(v); return D.short(v) + (t === "00:00" || t === "23:59" ? "" : ", " + t); },
     ago: v => { const d = D.parse(v); if (!d) return "never"; const m = Math.round((Date.now() - d) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " h ago"; const dd = Math.round(h / 24); if (dd < 7) return dd + " day" + (dd > 1 ? "s" : "") + " ago"; return D.short(v); },
     until: v => { const d = D.parse(v); if (!d) return ""; const ms = d - Date.now(); const h = Math.round(ms / 3600000); if (ms < 0) return "overdue"; if (h < 1) return "due within the hour"; if (h < 24) return "due in " + h + " h"; const dd = Math.round(h / 24); return "due in " + dd + " day" + (dd > 1 ? "s" : ""); },
+    left: v => { const d = D.parse(v); if (!d) return ""; const ms = d - Date.now(); if (ms < 0) return "closed"; const h = Math.round(ms / 3600000); if (h < 24) return h + " h left"; const dd = Math.round(h / 24); return dd + " day" + (dd > 1 ? "s" : "") + " left"; },
     ymd: d => { d = d instanceof Date ? d : new Date(d); const p = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()); },
     local: v => { const d = D.parse(v); if (!d) return ""; const p = n => String(n).padStart(2, "0"); return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes()); }
   };
@@ -117,14 +123,31 @@
   };
   CE.closeModal = () => { const m = CE.$("#modal"); if (m) { m.classList.remove("show"); m.innerHTML = ""; } };
   CE.confirm = (text, okLabel) => new Promise(res => {
-    const box = CE.modal(CE.h("div", { class: "stack" }, CE.h("h3", {}, "Are you sure?"), CE.h("p", {}, text),
+    CE.modal(CE.h("div", { class: "stack" }, CE.h("h3", {}, "Are you sure?"), CE.h("p", {}, text),
       CE.h("div", { class: "row" }, CE.h("button", { class: "btn bad", onclick: () => { CE.closeModal(); res(true); } }, okLabel || "Yes, do it"), CE.h("button", { class: "btn ghost", onclick: () => { CE.closeModal(); res(false); } }, "Cancel"))));
   });
   document.addEventListener("keydown", e => { if (e.key === "Escape") CE.closeModal(); });
 
-  /* tiny markdown-ish text: paragraphs, **bold**, bullet lines, links */
   CE.rich = s => CE.esc(s || "").replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>')
     .split(/\n{2,}/).map(p => /^(- |• )/m.test(p) ? "<ul>" + p.split(/\n/).map(l => "<li>" + l.replace(/^(- |• )/, "") + "</li>").join("") + "</ul>" : "<p>" + p.replace(/\n/g, "<br>") + "</p>").join("");
+
+  /* Render lesson / activity blocks (text, heading, list, key, check, video, link, image) */
+  CE.blocks = blocks => {
+    const h = CE.h, wrap = h("div", { class: "lesson" });
+    (blocks || []).forEach(b => {
+      const el = h("div", { class: "blk" });
+      if (b.t === "heading") el.append(h("h3", {}, b.text));
+      else if (b.t === "text") el.innerHTML = CE.rich(b.text);
+      else if (b.t === "list") el.append(h("ul", {}, ...(b.items || []).map(i => h("li", { html: CE.rich(i).replace(/^<p>|<\/p>$/g, "") }))));
+      else if (b.t === "key") el.append(h("div", { class: "key" }, h("b", {}, "Key point" + (b.q ? ": " + b.q : "")), h("div", {}, b.text)));
+      else if (b.t === "image") { const u = String(b.url || ""); if (/^https:\/\//.test(u)) el.append(h("figure", { class: "fig" }, h("img", { src: u, alt: b.text || "", loading: "lazy" }), b.text ? h("figcaption", { class: "sm mut" }, b.text) : null)); }
+      else if (b.t === "video") { const u = String(b.url || ""); const ok = /^https:\/\/(www\.youtube(-nocookie)?\.com\/embed\/|player\.vimeo\.com\/video\/)/.test(u); el.append(ok ? h("div", { class: "vid" }, h("iframe", { src: u, title: b.text || "Video", allow: "accelerometer; encrypted-media; picture-in-picture", allowfullscreen: true, loading: "lazy" })) : h("a", { class: "item", href: u, target: "_blank", rel: "noopener" }, CE.icon("play"), b.text || u), b.text && ok ? h("div", { class: "sm mut", style: { marginTop: "6px" } }, b.text) : null); }
+      else if (b.t === "link") el.append(h("a", { class: "item", href: b.url, target: "_blank", rel: "noopener" }, h("div", { class: "ico sm" }, CE.icon("link")), h("div", { class: "grow" }, h("div", { class: "t" }, b.text || b.url), h("div", { class: "s" }, b.url))));
+      else if (b.t === "check") { const q = h("div", { class: "card flat q" }, h("div", { class: "b" }, "Quick check: " + b.q)); (b.a || []).forEach((opt, i) => q.append(h("button", { class: "opt", onclick: () => { if (q.dataset.done) return; q.dataset.done = 1; CE.$$(".opt", q).forEach((o, j) => o.classList.add(j === b.c ? "ok" : j === i ? "bad" : "x")); q.append(h("div", { class: "sm " + (i === b.c ? "cy b" : "mut") }, i === b.c ? "Correct!" : "Not quite. The answer is " + b.a[b.c] + ".")); } }, h("span", { class: "k" }, "ABCD"[i]), opt))); el.append(q); }
+      wrap.append(el);
+    });
+    return wrap;
+  };
 
   /* ---------- hash router ---------- */
   CE.router = function (routes, notFound) {
@@ -143,6 +166,7 @@
     addEventListener("hashchange", go); go();
   };
   CE.nav = h => { location.hash = h; };
+  CE.q = k => new URLSearchParams(location.hash.split("?")[1] || "").get(k);
 
   /* ---------- shared calendar grid + ICS export ---------- */
   CE.calendar = function (el, year, month, events, onPick) {
@@ -153,7 +177,7 @@
     for (let i = 0; i < 42; i++) {
       const d = new Date(start); d.setDate(start.getDate() + i); const key = D.ymd(d);
       const cell = CE.h("div", { class: "d" + (d.getMonth() !== month ? " o" : "") + (key === today ? " today" : "") }, CE.h("div", { class: "n" }, d.getDate()));
-      events.filter(e => D.ymd(e.starts) === key).forEach(e => cell.append(CE.h("div", { class: "ev " + (e.kind || ""), title: e.title, onclick: () => onPick && onPick(e) }, (e.kind === "due" ? "Due: " : "") + e.title)));
+      events.filter(e => D.ymd(e.starts) === key).forEach(e => cell.append(CE.h("div", { class: "ev " + (e.kind || ""), title: e.title, onclick: () => onPick && onPick(e) }, e.title)));
       el.append(cell);
       if (i >= 34 && d.getMonth() !== month && d.getDay() === 0) break;
     }
@@ -178,21 +202,21 @@
   document.addEventListener("visibilitychange", vis); if (document.body) vis(); else document.addEventListener("DOMContentLoaded", vis);
 
   /* ---------- shell (sidebar + topbar) ---------- */
-  CE.shell = function (opts) {
+  CE.shell = function () {
     const side = CE.$("#side"), scrim = CE.$("#scrim");
     CE.$$("[data-burger]").forEach(b => b.onclick = () => { side.classList.toggle("open"); scrim.classList.toggle("show"); });
     if (scrim) scrim.onclick = () => { side.classList.remove("open"); scrim.classList.remove("show"); };
     addEventListener("hashchange", () => { side.classList.remove("open"); if (scrim) scrim.classList.remove("show"); CE.markNav(); });
     CE.markNav();
   };
-  CE.markNav = () => { const h = (location.hash || "#/").split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); };
+  CE.markNav = () => { const h = (location.hash || "#/").split("?")[0].split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); };
   CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · CompassED"; };
   CE.loading = el => { el.innerHTML = ""; for (let i = 0; i < 3; i++) el.append(CE.h("div", { class: "card stack" }, CE.h("div", { class: "skel", style: { width: "40%" } }), CE.h("div", { class: "skel" }), CE.h("div", { class: "skel", style: { width: "70%" } }))); };
   CE.fail = (el, e) => { el.innerHTML = ""; el.append(CE.h("div", { class: "empty" }, CE.h("div", { class: "big" }, CE.icon("warn")), CE.h("div", { class: "b" }, CE.errText(e)), CE.h("div", { class: "sm", style: { marginTop: "8px" } }, CE.h("button", { class: "btn sm", onclick: () => location.reload() }, "Try again")))); };
   CE.demoBanner = () => {
     if (!demo) return;
-    const b = CE.h("div", { class: "banner" }, CE.icon("eye"), " ", CE.h("span", {}, CE.h("b", {}, "Preview mode."), " This is a sample school kept in your browser. Nothing here reaches the real database."),
-      CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample school to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); location.reload(); } } }, "Reset sample"));
+    const b = CE.h("div", { class: "banner" }, CE.icon("eye"), " ", CE.h("span", {}, CE.h("b", {}, "Preview mode."), " This is a sample campus kept in your browser. Nothing here reaches the real database."),
+      CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample campus to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); CE.auth.clear(); location.href = "signin.html"; } } }, "Reset sample"));
     document.body.prepend(b);
   };
 })();

@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co https://login.microsoftonline.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; object-src 'none'; base-uri 'self'; form-action 'self'">
-<meta name="description" content="CompassED: the schoolwork platform connected to Compass Dash. Lessons, homework, quizzes, mastery checkpoints and a teacher portal, all in one place.">
-<title>CompassED · Schoolwork, connected to Compass Dash</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'">
+<meta name="description" content="CompassED: the campus platform for your school. Activities to explore, competitions and challenges, the school calendar and news, plus your lessons, homework and quizzes.">
+<title>CompassED · Your school campus online</title>
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#4cc4cf">
@@ -20,92 +20,82 @@
     <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
     <nav id="pubnav">
       <a href="index.html" class="on">Home</a>
-      <a href="index.html#features">Features</a>
-      <a href="index.html#teachers">For teachers</a>
+      <a href="#explore">Explore</a>
+      <a href="#competitions">Competitions</a>
+      <a href="#calendar">Calendar</a>
+      <a href="#news">News</a>
       <a href="about.html">About</a>
-      <a href="https://compassdash.github.io/Compassdash/" target="_blank" rel="noopener">Compass Dash ↗</a>
     </nav>
     <div class="cta">
-      <a class="btn ghost" href="signin.html?role=teacher">Teacher sign in</a>
-      <a class="btn cyan" href="signin.html">Student sign in</a>
+      <a class="btn ghost" href="signin.html?signup=1">Create account</a>
+      <a class="btn cyan" href="signin.html">Sign in</a>
     </div>
   </div>
 </header>
 
 <main>
-  <section class="hero">
-    <div class="wrap hero-grid">
+  <section class="banner-hero">
+    <div class="wrap">
+      <div class="bh">
+        <div class="bh-art" aria-hidden="true"><img src="assets/logo-white.svg" alt=""></div>
+        <div class="bh-text">
+          <span class="eyebrow eyebrow-dark"><span class="dot"></span> <span id="schoolName">Campus</span></span>
+          <h1>Welcome to<br>the campus.</h1>
+          <p class="lead">See what's on this month, explore activities by category, enter competitions and challenges, and keep up with your lessons and homework, all in one place.</p>
+          <div class="row">
+            <a class="btn cyan lg" href="signin.html">Sign in</a>
+            <a class="btn lg bh-ghost" href="#explore">Explore the campus</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="explore">
+    <div class="wrap">
+      <div class="row between" style="align-items:flex-end;margin-bottom:22px">
+        <div><div class="kicker">Explore</div><h2 style="margin:0">Pick a category</h2></div>
+        <a class="btn sm ghost" href="signin.html">Sign in to open activities</a>
+      </div>
+      <div class="grid g4" id="catGrid"></div>
+    </div>
+  </section>
+
+  <section class="sec alt" id="competitions">
+    <div class="wrap">
+      <div class="kicker">Competitions, challenges &amp; tournaments</div>
+      <h2>Open for entries</h2>
+      <div class="grid g3" id="compGrid" style="margin-top:22px"></div>
+    </div>
+  </section>
+
+  <section class="sec" id="calendar">
+    <div class="wrap grid g2">
       <div>
-        <span class="eyebrow"><span class="dot"></span> Connected to Compass Dash</span>
-        <h1>All your schoolwork.<br>One clear compass.</h1>
-        <p class="lead">CompassED brings lessons, homework, quizzes and progress into one calm place for students, with a separate portal where teachers set work, mark it and see at a glance who needs help.</p>
-        <div class="row">
-          <a class="btn cyan lg" href="signin.html">Sign in as a student</a>
-          <a class="btn ghost lg" href="signin.html?role=teacher">I'm a teacher</a>
-        </div>
-        <p class="sm mut" style="margin-top:16px">Use the same 4-digit code and username as Compass Dash. Your XP and mastery carry across automatically.</p>
+        <div class="kicker">Calendar</div>
+        <h2>Coming up across the school</h2>
+        <p class="mut">Whole-school events, trips and competition deadlines. Sign in to see your class's dates and add them to your phone.</p>
+        <div class="list" id="eventList"></div>
       </div>
-      <div class="mock" aria-hidden="true">
-        <div class="top"><i></i><i></i><i></i></div>
-        <div class="stack">
-          <div class="card tint next" style="padding:16px">
-            <div class="big"><span data-icon="compass"></span></div>
-            <div><div class="xs cy b" style="letter-spacing:.08em;text-transform:uppercase">What to do next</div><div class="b">Finish "Two-step equations" (10 min)</div><div class="sm mut">Then the Algebra mastery checkpoint unlocks</div></div>
-            <span class="btn sm">Start</span>
-          </div>
-          <div class="grid g3" style="gap:10px">
-            <div class="card flat stat" style="padding:14px"><span class="n">3</span><span class="l">Due this week</span></div>
-            <div class="card flat stat" style="padding:14px"><span class="n">82%</span><span class="l">Quiz average</span></div>
-            <div class="card flat stat" style="padding:14px"><span class="n">2,140</span><span class="l">Compass Dash XP</span></div>
-          </div>
-          <div class="list">
-            <div class="item"><div class="ico"><span data-icon="maths"></span></div><div class="grow"><div class="t">Equations worksheet (Q1–10)</div><div class="s">Maths · due Thursday</div></div><span class="badge warn">Draft saved</span></div>
-            <div class="item"><div class="ico"><span data-icon="science"></span></div><div class="grow"><div class="t">pH quick check</div><div class="s">Science · 3 questions</div></div><span class="badge ok">Returned · 90%</span></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec" id="features">
-    <div class="wrap">
-      <div class="kicker">For students</div>
-      <h2>Learning that tells you what to do next</h2>
-      <p class="mut" style="max-width:640px">No more guessing. CompassED looks at what's due, what you've mastered and what you're forgetting, and puts the one most useful thing at the top of your dashboard.</p>
-      <div class="grid g3" style="margin-top:28px">
-        <div class="card feat"><div class="ico"><span data-icon="compass"></span></div><h4>"What to do next" card</h4><p class="sm mut">One suggested task, chosen from your deadlines, playlists and review queue. Do it, then the next one appears.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="book"></span></div><h4>Lessons &amp; playlists</h4><p class="sm mut">Short lessons with key points and quick checks, lined up by your teacher in the order to work through them.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="flag"></span></div><h4>Mastery checkpoints</h4><p class="sm mut">Short tests at the end of each unit. Pass the bar and the unit is yours; miss it and you get told exactly what to revisit.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="repeat"></span></div><h4>Review queue</h4><p class="sm mut">Anything you get wrong comes back as a flashcard, spaced out so it moves into long-term memory with a few minutes a day.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="pencil"></span></div><h4>Draft, then hand in</h4><p class="sm mut">Save drafts as you go. Every version is kept, so nothing is lost and teachers can see how your work developed.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="calendar"></span></div><h4>One calendar</h4><p class="sm mut">Deadlines, exams, trips and events together, with one tap to add them to your phone's calendar.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec alt" id="teachers">
-    <div class="wrap">
-      <div class="kicker">For teachers</div>
-      <h2>A separate portal, built for the job</h2>
-      <p class="mut" style="max-width:640px">Switch to the teacher portal and the whole interface changes: your classes, your content, your marking. Students never see it.</p>
-      <div class="grid g3" style="margin-top:28px">
-        <div class="card feat"><div class="ico ink"><span data-icon="grid"></span></div><h4>Class overview heatmap</h4><p class="sm mut">Every student against every unit on one screen. Spot the gaps in seconds, including Compass Dash mastery.</p></div>
-        <div class="card feat"><div class="ico ink"><span data-icon="ruler"></span></div><h4>Rubric builder</h4><p class="sm mut">Build a marking grid once, attach it to any assignment and mark by clicking the level each piece of work reaches.</p></div>
-        <div class="card feat"><div class="ico ink"><span data-icon="megaphone"></span></div><h4>Targeted announcements</h4><p class="sm mut">Send to a class, a year group or named students, and see who has read it.</p></div>
-        <div class="card feat"><div class="ico ink"><span data-icon="inbox"></span></div><h4>Assignments &amp; quizzes</h4><p class="sm mut">Homework, longer assignments and auto-marked quizzes, with submissions, versions and feedback in one view.</p></div>
-        <div class="card feat"><div class="ico ink"><span data-icon="puzzle"></span></div><h4>Lesson &amp; playlist editor</h4><p class="sm mut">Write lessons from simple blocks, then line them up into a playlist for a class.</p></div>
-        <div class="card feat"><div class="ico ink"><span data-icon="teams"></span></div><h4>Microsoft Teams</h4><p class="sm mut">Sign in with the school account, import class rosters, post reminders to Teams and sync assignments and grades.</p></div>
+      <div>
+        <div class="kicker">News</div>
+        <h2 id="news">Latest from campus</h2>
+        <div class="stack" id="newsList"></div>
       </div>
     </div>
   </section>
 
   <section class="sec ink">
     <div class="wrap">
-      <div class="kicker">Compass Dash connection</div>
-      <h2>Two platforms, one student</h2>
-      <div class="grid g2" style="margin-top:24px">
-        <div class="card"><h4>Same account</h4><p class="sm mut">Students sign in with the 4-digit code and username they already use on Compass Dash. Teachers use their Compass Dash teacher account. No new passwords to remember.</p></div>
-        <div class="card"><h4>Progress flows one way</h4><p class="sm mut">CompassED reads XP, topic mastery and activity from Compass Dash and shows it beside schoolwork. It never changes anything on Compass Dash, so the games and leaderboards carry on exactly as they are.</p></div>
+      <div class="kicker">Schoolwork, too</div>
+      <h2>Lessons, homework and quizzes in the same place</h2>
+      <div class="grid g3" style="margin-top:24px">
+        <div class="card feat"><div class="ico"><span data-icon="compass"></span></div><h4>"What to do next" card</h4><p class="sm mut">One suggested task chosen from your deadlines, playlists and review queue.</p></div>
+        <div class="card feat"><div class="ico"><span data-icon="flag"></span></div><h4>Mastery checkpoints</h4><p class="sm mut">Short tests at the end of each unit, with a pass mark, so you know a topic is yours.</p></div>
+        <div class="card feat"><div class="ico"><span data-icon="repeat"></span></div><h4>Review queue</h4><p class="sm mut">Anything you got wrong comes back as a flashcard, spaced out so it sticks.</p></div>
+        <div class="card feat"><div class="ico"><span data-icon="pencil"></span></div><h4>Draft, then hand in</h4><p class="sm mut">Save drafts as you go. Every version is kept and teachers mark with a rubric.</p></div>
+        <div class="card feat"><div class="ico"><span data-icon="grid"></span></div><h4>Class overview for teachers</h4><p class="sm mut">Every student against every unit on one screen, so gaps are obvious.</p></div>
+        <div class="card feat"><div class="ico"><span data-icon="megaphone"></span></div><h4>Announcements with receipts</h4><p class="sm mut">Sent to a class, a year group or named students, with who-has-read-it.</p></div>
       </div>
     </div>
   </section>
@@ -115,25 +105,27 @@
       <div class="kicker">Getting started</div>
       <h2>Three steps</h2>
       <div class="steps" style="margin-top:24px">
-        <div class="card"><div><h4>Sign in</h4><p class="sm mut">Students: your Compass Dash code and username. Teachers: your Compass Dash teacher login. Schools on Microsoft 365 can switch on "Sign in with Microsoft".</p></div></div>
-        <div class="card"><div><h4>Teachers set the work</h4><p class="sm mut">Create units, lessons and quizzes, line them into playlists, and set homework with a due date and an optional rubric.</p></div></div>
-        <div class="card"><div><h4>Students follow the compass</h4><p class="sm mut">The dashboard shows what to do next. Work gets handed in, marked and returned with feedback, and progress shows on the heatmap.</p></div></div>
+        <div class="card"><div><h4>Create your account</h4><p class="sm mut">Students use the school's join code; teachers use the invite code from the office. Pick a username and a password.</p></div></div>
+        <div class="card"><div><h4>Explore the campus</h4><p class="sm mut">Try an activity, enter a competition, read the news and check the calendar.</p></div></div>
+        <div class="card"><div><h4>Follow the compass</h4><p class="sm mut">Your home page tells you what to do next: lessons, homework, quizzes and review cards from your class.</p></div></div>
       </div>
-      <div class="row" style="margin-top:28px"><a class="btn cyan lg" href="signin.html">Sign in</a><a class="btn ghost lg" href="about.html">Read more about CompassED</a></div>
+      <div class="row" style="margin-top:28px"><a class="btn cyan lg" href="signin.html?signup=1">Create account</a><a class="btn ghost lg" href="about.html">About CompassED</a></div>
     </div>
   </section>
 </main>
 
 <footer class="foot">
   <div class="wrap">
-    <span>© <span id="yr"></span> CompassED · Made by Rondellgames inc.</span>
+    <span>© <span id="yr"></span> CompassED</span>
     <a href="about.html">About</a>
     <a href="about.html#privacy">Privacy &amp; safety</a>
-    <a href="https://compassdash.github.io/Compassdash/" target="_blank" rel="noopener">Compass Dash</a>
-    <a href="https://compassdash.github.io/Compass-GCSE/" target="_blank" rel="noopener">Compass GCSE</a>
+    <a href="signin.html">Sign in</a>
   </div>
 </footer>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
 <script src="assets/icons.js"></script>
+<script src="assets/demo.js"></script>
 <script src="assets/public.js"></script>
 </body>
 </html>

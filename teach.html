@@ -3,22 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co https://login.microsoftonline.com https://graph.microsoft.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; form-action 'self' https://login.microsoftonline.com; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com; form-action 'self'; object-src 'none'; base-uri 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
-<title>Teacher portal · CompassED</title>
+<title>Staff portal · CompassED</title>
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
 <style>
-  /* The teacher portal is a separate, website-style interface: white sidebar, black accents. */
   .side.teach{background:#fff;color:var(--ink);border-right:1px solid var(--line)}
   .side.teach .brand{color:var(--ink)} .side.teach .brand b{color:var(--cyan3)}
   .side.teach a.nl{color:var(--ink2)} .side.teach a.nl:hover{background:var(--bg3);color:var(--ink)} .side.teach a.nl.on{background:var(--ink);color:#fff}
   .side.teach a.nl .n{background:var(--cyan);color:#000} .side.teach .me{background:var(--bg2)} .side.teach .me .nm{color:var(--ink)} .side.teach .me .av{background:var(--ink);color:#fff}
-  .side.teach .sw{background:var(--bg3)} .side.teach .sw a.on{background:var(--ink);color:#fff}
-  .side.teach .sec-l{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);padding:14px 12px 4px}
+  .side.teach .sec-l{color:var(--mute)}
   .topbar.teach{background:var(--ink);color:#fff;border-color:#000} .topbar.teach .ib{color:#fff} .topbar.teach .ib:hover{background:#222}
   body{background:var(--bg2)}
 </style>
@@ -27,8 +25,13 @@
 <div class="shell">
   <aside class="side teach" id="side">
     <a class="brand" href="#/"><img src="assets/logo.svg" alt="">Compass<b>ED</b></a>
-    <div class="sw" id="portalSwitch"><a href="app.html">Student</a><a class="on" href="#/">Teacher</a></div>
     <a class="nl" href="#/"><span data-icon="home"></span>Dashboard</a>
+    <div class="sec-l">Campus</div>
+    <a class="nl" href="#/activities"><span data-icon="explore"></span>Activities</a>
+    <a class="nl" href="#/competitions"><span data-icon="trophy"></span>Competitions</a>
+    <a class="nl" href="#/news"><span data-icon="news"></span>News</a>
+    <a class="nl" href="#/announcements"><span data-icon="megaphone"></span>Announcements</a>
+    <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
     <div class="sec-l">Teaching</div>
     <a class="nl" href="#/classes"><span data-icon="users"></span>Classes</a>
     <a class="nl" href="#/assignments"><span data-icon="pencil"></span>Assignments <span class="n hide" id="nGrade"></span></a>
@@ -36,12 +39,9 @@
     <a class="nl" href="#/playlists"><span data-icon="play"></span>Playlists</a>
     <a class="nl" href="#/rubrics"><span data-icon="ruler"></span>Rubrics</a>
     <div class="sec-l">School</div>
-    <a class="nl" href="#/announcements"><span data-icon="megaphone"></span>Announcements</a>
-    <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
-    <a class="nl" href="#/teams"><span data-icon="teams"></span>Microsoft Teams</a>
+    <a class="nl" href="#/people"><span data-icon="people"></span>People &amp; classes</a>
     <a class="nl" href="#/settings"><span data-icon="settings"></span>Settings</a>
     <div class="sp"></div>
-    <a class="nl" id="cdLink" href="https://compassdash.github.io/Compassdash/" target="_blank" rel="noopener"><span data-icon="game"></span>Compass Dash Teacher Panel ↗</a>
     <div class="me"><div class="av" id="meAv">?</div><div><div class="nm" id="meName">…</div><div class="rl" id="meRole"></div></div><button class="ib right" id="signout" title="Sign out" aria-label="Sign out"><span data-icon="exit"></span></button></div>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -49,7 +49,7 @@
     <div class="topbar teach">
       <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
       <h2 id="ptitle">Dashboard</h2>
-      <span class="badge" style="background:#222;color:#fff">Teacher portal</span>
+      <span class="badge" style="background:#222;color:#fff">Staff portal</span>
       <div class="right bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop" style="color:var(--ink)"></div></div>
     </div>
     <main class="page" id="page"></main>
@@ -59,7 +59,6 @@
 <script src="assets/core.js"></script>
 <script src="assets/icons.js"></script>
 <script src="assets/demo.js"></script>
-<script src="assets/ms.js"></script>
 <script src="assets/teacher.js"></script>
 </body>
 </html>
