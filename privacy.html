@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Privacy Policy · CompassED</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass<b>ED</b></a>
+    <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
+    <nav id="pubnav"><a href="index.html">Home</a><a href="index.html#explore">Explore</a><a href="about.html">About</a><a href="versions.html">Versions</a></nav>
+    <div class="cta"><a class="btn ghost" href="signin.html?signup=1">Create account</a><a class="btn cyan" href="signin.html">Sign in</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="hero legal-hero">
+    <div class="wrap">
+      <span class="eyebrow">Privacy Policy</span>
+      <h1>What CompassED keeps, and why</h1>
+      <p class="lead">Short version: the campus stores what it needs to run a school site and nothing else. No advertising, no tracking, no selling of data.</p>
+      <p class="sm mut">Last updated 28 October 2026 · version 1</p>
+    </div>
+  </section>
+
+  <section class="sec legal-body">
+    <div class="wrap">
+      <nav class="toc" aria-label="On this page">
+        <a href="#who">Who runs the site</a><a href="#what">What we store</a><a href="#why">Why we store it</a><a href="#where">Where it is kept</a><a href="#share">Who can see it</a><a href="#links">Compass Dash and other links</a><a href="#keep">How long we keep it</a><a href="#rights">Your rights</a><a href="#children">Children</a><a href="#contact">Contact</a>
+      </nav>
+      <article class="prose">
+        <h2 id="who">Who runs the site</h2>
+        <p>CompassED is run by the school that set it up (the "school"), using software made by Rondellgames inc. The school is the data controller: it decides who gets an account and what the site is used for. Rondellgames inc. does not receive your data.</p>
+
+        <h2 id="what">What we store</h2>
+        <ul>
+          <li><b>Account details:</b> your name, username, role (student, teacher or administrator), year group and class. Passwords are stored only as a bcrypt hash, so nobody, including the school, can read them.</li>
+          <li><b>Login codes:</b> the 8-digit code printed for you, when it was made, used and revoked, and which account it belongs to.</li>
+          <li><b>Your work:</b> lessons and activities you mark as done, quiz answers and scores, homework drafts and hand-ins, peer reviews, competition entries, club sign-ups, house points and badges.</li>
+          <li><b>Uploads:</b> photos and files you attach to work or entries.</li>
+          <li><b>Messages:</b> announcements sent to you and whether you have read them, and notifications.</li>
+          <li><b>Consent:</b> the date you accepted the Terms and this policy, and, if given, parental consent.</li>
+          <li><b>Technical:</b> your session token (as a hash), when you last used the site, and, for up to one day, the network address of any connection that makes too many wrong sign-in attempts. We do not keep a log of pages you visit.</li>
+          <li><b>Optional links:</b> if you link a Compass Dash account, its student code and username (see below). If you make a parent link, a random token for it.</li>
+        </ul>
+
+        <h2 id="why">Why we store it</h2>
+        <p>To run the campus: to sign you in, show your class the right lessons and homework, let teachers mark work and give feedback, run competitions, clubs and house points, and keep the site secure. We do not use your data for advertising, profiling or anything unrelated to school.</p>
+
+        <h2 id="where">Where it is kept</h2>
+        <p>The database is hosted by Supabase in the region the school chose when it created the project. The site's pages are served by GitHub Pages. Fonts are loaded from Google Fonts, which means Google receives your browser's request for the font files (your IP address and browser type) but no account information. Nothing else leaves the site.</p>
+
+        <h2 id="share">Who can see it</h2>
+        <ul>
+          <li><b>You</b> see your own work, points and messages.</li>
+          <li><b>Teachers</b> see the work, progress and details of students in their classes.</li>
+          <li><b>The administrator</b> sees every account, class and setting, and can reset credentials and revoke codes.</li>
+          <li><b>Other students</b> can see your name and house on leaderboards, your name on a competition entry only if you chose to show it in the gallery, and your work only when they are asked to peer review it.</li>
+          <li><b>A parent or carer</b> sees a weekly summary only if you give them your private parent link.</li>
+          <li><b>Nobody else.</b> We do not sell, rent or share data with advertisers or data brokers.</li>
+        </ul>
+
+        <h2 id="links">Compass Dash and other links</h2>
+        <p>Compass Dash is a sister site that shares the school's database. If you choose to link your Compass Dash account from Settings, CompassED stores your Compass Dash student code and username and uses them to show your XP, mastery, assignments and teacher announcements from Compass Dash inside CompassED. Unlink at any time from Settings, which removes the stored code and username.</p>
+        <p>The administrator can add links to other school services (for example Global Campus) and subscribe the calendar to external calendar feeds. Those services have their own privacy policies; CompassED only reads public event titles, dates and places from a feed and sends nothing about you to them.</p>
+
+        <h2 id="keep">How long we keep it</h2>
+        <p>For as long as you have an account. When the administrator deletes an account, everything it did is deleted with it. Sessions end after 30 days without use (12 hours for staff). Lock-out records are removed after one day. Revoked and expired codes can be purged by the administrator at any time.</p>
+
+        <h2 id="rights">Your rights</h2>
+        <p>You can see what is stored about you in your portal, change your display name and password, and unlink Compass Dash yourself. Ask the school to correct anything else, to export your data, or to delete your account. If you think the school has handled your data badly you can complain to it, and, in the UK, to the Information Commissioner's Office.</p>
+
+        <h2 id="children">Children</h2>
+        <p>CompassED is made for school students, including those under 13. Accounts are created only with a code or join code issued by the school, which is responsible for obtaining parental consent where it is required. Students who are under 13 can record that a parent or carer has agreed when they first sign in; the school keeps the signed <a href="consent.html">consent form</a>.</p>
+
+        <h2 id="contact">Contact</h2>
+        <p>Questions about this policy go to the school office or the CompassED administrator at your school. Questions about the software can be sent to Rondellgames inc. through the <a href="about.html">About</a> page.</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© <span id="yr"></span> CompassED</span>
+    <a href="about.html">About</a><a href="versions.html">Versions</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="cookies.html">Cookies</a><a href="signin.html">Sign in</a>
+  </div>
+</footer>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/icons.js"></script>
+<script src="assets/public.js"></script>
+</body>
+</html>

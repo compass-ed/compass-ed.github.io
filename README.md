@@ -20,6 +20,8 @@ assets/config.js      Supabase URL / key, preview-mode switch
 assets/demo.js        Preview mode: a sample campus in the browser that mirrors every database function
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
 supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues, gallery, parent links, uploads
+supabase/compassed-v2.3.sql     Run after v2.1: login codes, consent, admin overview, calendar feeds (.ics), Compass Dash link
+privacy.html terms.html cookies.html consent.html   Legal pages and the printable parent/carer consent form
 parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
 sw.js                           Offline support: keeps the app shell and pages you have opened
 supabase/content-pack.sql       Starter content: 16 activities, 4 competitions, 5 clubs, news, a launch event (run once on a fresh campus)
@@ -32,11 +34,12 @@ supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: r
 1. Open your Supabase project > **SQL Editor** > **New query**.
 2. Open `supabase/compassed-v2.0.sql`. **Change the three values in section 8** near the end: the admin password, the student join code and the teacher invite code.
 3. Paste the whole file and **Run**. It is safe to run again; it never deletes anything.
-3b. Then paste `supabase/compassed-v2.1.sql` and **Run** it too.
+3b. Then paste `supabase/compassed-v2.1.sql` and **Run** it too, then `supabase/compassed-v2.3.sql`.
+3d. For calendar feeds (Global Campus etc.) enable the **http** extension: Database > Extensions > search "http" > enable. Optional: schedule `select public.ed_feeds_sync_all();` hourly with pg_cron.
 3c. Optional but recommended: run `supabase/content-pack.sql` once so the campus starts with real activities, competitions, clubs and news instead of empty pages. It adds houses and points, clubs, the question bank, timed quizzes, peer review, newsletter issues, the winners' gallery, parent links and the `uploads` storage bucket (10 MB per file, images, PDFs, audio and MP4).
 4. `assets/config.js` must point at that project (`supabaseUrl` and the publishable/anon key from Project Settings > API). The key is safe to publish: every table is locked down and only the `ed_*` functions can be called.
 
-Then sign in at the site as `admin` with the password you chose. Under **People & classes** create classes, add staff (or give them the invite code), and hand students the join code (or create their accounts for them).
+Then sign in at the site as `admin` with the password you chose. Keep that password out of git: the committed file only ever holds the placeholder `change-me-now`; if a real one was ever committed, change it under Settings straight away. Under **People & classes** create classes, add staff (or give them the invite code), and hand students the join code (or create their accounts for them).
 
 If you ran the earlier `compassed-v1.0.sql`, also run `supabase/patches/drop-v1-tables.sql` once to tidy up.
 
@@ -63,9 +66,15 @@ then open http://127.0.0.1:8766/.
 | Administrator | Created by the SQL script (username `admin`) | Everything, plus staff accounts, every class, the school name and both codes |
 
 - Passwords are stored as bcrypt hashes. Sessions are random tokens (hashed in the database); student sessions last 30 days idle, staff sessions 12 hours in the database and lock after 20 minutes without use in the browser.
-- Five wrong sign-ins from one connection lock it for one minute.
+- Five wrong sign-ins (or wrong codes) from one connection lock it for one minute.
+- **Login codes** (`1234-5678`) are made by staff under Admin > Login codes or inside an account editor. A blank code creates one account on first use; a code made for an existing account signs them in and forces a new password. Codes can be printed as cut-out cards and revoked at any time.
+- **Consent**: accounts record when the Terms and Privacy Policy were accepted (and parental consent if given). Existing accounts are asked once at sign-in.
 - All `ed_*` tables have row-level security on with no policies, so the only way in is through the `security definer` functions, each of which checks the caller's token and role.
 - Students can only read and write their own submissions, entries, review cards and completions, and only see assignments for their class.
+
+## Integrations (v2.3)
+- **Compass Dash** shares this Supabase project. CompassED calls its public `cd_*` functions (never its tables): students link their Compass Dash code + username in Settings; everyone sees the Compass Dash house cup under House points.
+- **Global Campus** (Nord Anglia) has no public API. The supported route is its calendar's iCalendar export: Admin > Calendar feeds > add the .ics address > Sync. The same works for Google, Outlook or any school calendar. Add Global Campus as a link under Admin > Links so it shows on home pages.
 
 ## Settings every user has
 Under Settings in either portal: **light / dark / auto** theme, a **dyslexia-friendly** reading mode (Lexend typeface, wider spacing, shorter lines, warmer page), a **detail level** (compact, standard, detailed) and an **interface transparency** slider. They are kept in the browser.

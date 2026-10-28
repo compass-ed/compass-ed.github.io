@@ -1,2 +1,5 @@
 .DS_Store
 .claude/launch.json
+.mcp.json
+# local-only database secrets (admin password, codes): never committed
+supabase/local/

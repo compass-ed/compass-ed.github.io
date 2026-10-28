@@ -41,6 +41,14 @@
       closed: "This competition is not open for entries.",
       db_not_set_up: "The CompassED database is not set up yet. Run supabase/compassed-v2.0.sql in Supabase (see README).",
       not_configured: "No database configured. Add the Supabase URL and key in assets/config.js.",
+      consent: "Tick the boxes to accept the Terms of Service and Privacy Policy first.",
+      cd_no_match: "Compass Dash did not recognise that student code and username.",
+      no_compassdash: "Compass Dash is not installed in this database.",
+      no_http: "Calendar feeds need the database's http extension. In Supabase open Database > Extensions, enable \"http\", then try again.",
+      feed_fetch: "The feed could not be fetched. Check that the address opens in a browser and is an .ics calendar link.",
+      feed_format: "That address is not an iCalendar (.ics) feed.",
+      mirrored: "This event comes from a calendar feed. Change it in the source calendar, or remove the feed.",
+      no_free_codes: "No free codes are left.",
       too_big: "That is too long to save.", empty: "Write something or add a link first.",
       graded: "This work has been marked. Hand in a new version if your teacher asked for one.",
       bad_text: "Please check the text: something is missing or too long.",
@@ -76,8 +84,37 @@
     try { const r = await CE.capi("ed_me"); if (r.ok) { me = r; CE.auth.set(s.tok, r); } } catch (e) { if (e.message === "bad_key") return null; }
     if (!roles.includes(me.role)) { location.replace(me.role === "student" ? CE.PORTAL.student : CE.PORTAL.teacher); return null; }
     CE.me = me; CE.subjects = me.subjects || []; CE.categories = me.categories || [];
+    if (me.must_pw) await CE.gatePassword();
+    if (!(me.consent && me.consent.terms)) await CE.gateConsent(me);
     return me;
   };
+  /* ---------- gates: full-screen steps that must be completed before the portal opens ---------- */
+  CE.gate = (content) => { let g = CE.$("#gate"); if (!g) { g = CE.h("div", { id: "gate", class: "gate" }); document.body.append(g); } g.innerHTML = ""; g.append(CE.h("div", { class: "box", role: "dialog", "aria-modal": "true" }, content)); return g; };
+  CE.ungate = () => { const g = CE.$("#gate"); if (g) g.remove(); };
+  CE.gatePassword = () => new Promise(res => {
+    const h = CE.h, pw = h("input", { class: "in", type: "password", autocomplete: "new-password", minlength: 8, placeholder: "At least 8 characters" }), pw2 = h("input", { class: "in", type: "password", autocomplete: "new-password" }), er = h("div", { class: "err" });
+    const go = async () => { er.textContent = ""; if (pw.value.length < 8) return er.textContent = CE.errText("bad_pw"); if (pw.value !== pw2.value) return er.textContent = "The two passwords are not the same."; const r = await CE.capi("ed_pw_set", { p_new: pw.value }); if (!r.ok) return er.textContent = CE.errText(r); CE.toast("Password set", "ok"); CE.ungate(); res(); };
+    CE.gate(h("form", { class: "stack", onsubmit: e => { e.preventDefault(); go(); } }, h("span", { class: "kicker" }, "One more step"), h("h2", { style: { margin: 0 } }, "Set a new password"), h("p", { class: "sm mut", style: { margin: 0 } }, "You signed in with a code, so choose the password you will use from now on. Your code keeps working too, until a teacher revokes it."), h("label", { class: "f" }, "New password", pw), h("label", { class: "f" }, "Type it again", pw2), er, h("button", { class: "btn cyan lg w", type: "submit" }, "Save password"), h("button", { class: "btn ghost w", type: "button", onclick: CE.signOut }, "Sign out instead")));
+    pw.focus();
+  });
+  CE.gateConsent = (me) => new Promise(res => {
+    const h = CE.h, t = h("input", { type: "checkbox" }), p = h("input", { type: "checkbox" }), par = h("input", { type: "checkbox" }), er = h("div", { class: "err" });
+    const go = async () => { er.textContent = ""; if (!t.checked || !p.checked) return er.textContent = CE.errText("consent"); const r = await CE.capi("ed_consent", { p_terms: true, p_privacy: true, p_parent: par.checked }); if (!r.ok) return er.textContent = CE.errText(r); if (CE.me) CE.me.consent = r.consent; const s = CE.auth.get(); if (s && s.me) { s.me.consent = r.consent; CE.auth.set(s.tok, s.me); } CE.ungate(); res(); };
+    CE.gate(h("form", { class: "stack", onsubmit: e => { e.preventDefault(); go(); } }, h("span", { class: "kicker" }, "Before you carry on"), h("h2", { style: { margin: 0 } }, "A quick agreement"), h("p", { class: "sm mut", style: { margin: 0 } }, "CompassED keeps your name, username, class, work, points and uploads so the site can work. Nothing is sold or used for advertising. Please read and accept these two documents."),
+      h("label", { class: "chk" }, t, h("span", {}, "I accept the ", h("a", { href: ROOT + "terms.html", target: "_blank" }, "Terms of Service"))),
+      h("label", { class: "chk" }, p, h("span", {}, "I have read the ", h("a", { href: ROOT + "privacy.html", target: "_blank" }, "Privacy Policy"))),
+      me.role === "student" ? h("label", { class: "chk" }, par, h("span", { class: "sm" }, "I am under 13 and a parent or carer has agreed to this (", h("a", { href: ROOT + "consent.html", target: "_blank" }, "consent form"), ")")) : null,
+      er, h("button", { class: "btn cyan lg w", type: "submit" }, "Agree and continue"), h("button", { class: "btn ghost w", type: "button", onclick: CE.signOut }, "Sign out")));
+  });
+  /* ---------- cookie notice (essential storage only; shown once) ---------- */
+  CE.cookieBanner = () => {
+    if (LS.get("ce_cookie_ok") || /parent\.html$/.test(location.pathname)) return;
+    const h = CE.h, b = h("div", { class: "cookie", role: "region", "aria-label": "Cookies and storage" },
+      h("div", { class: "grow" }, h("b", {}, "Only essential storage."), " CompassED uses your browser's storage to keep you signed in and remember your display settings. No advertising, no tracking cookies. ", h("a", { href: ROOT + "cookies.html" }, "Cookie Policy")),
+      h("button", { class: "btn sm cyan", onclick: () => { LS.set("ce_cookie_ok", { at: Date.now(), v: 1 }); b.remove(); } }, "OK"));
+    document.body.append(b);
+  };
+
 
   /* ---------- helpers ---------- */
   CE.$ = (s, r) => (r || document).querySelector(s);
@@ -280,6 +317,21 @@
   ];
   CE.badges = b => CE.BADGES.map(([id, name, desc, icon, test]) => ({ id, name, desc, icon, on: !!(b && test(b)) }));
   CE.HOUSE_NAMES = { N: "North", E: "East", S: "South", W: "West" };
+  CE.HOUSE_COLORS = { N: "red", E: "green", S: "blue", W: "yellow" };
+  CE.srcTag = (src, name) => src ? CE.h("span", { class: "src-tag " + src, title: name || "" }, CE.icon("link"), { globalcampus: "Global Campus", compassdash: "Compass Dash" }[src] || (name || "Feed")) : null;
+  /* a card of Compass Dash house XP, challenges and the top of its leaderboard (data from ed_s_cd / ed_t_cd) */
+  CE.cdHousesCard = (cd, myHouse) => {
+    if (!cd || !cd.on || !cd.houses) return null;
+    const h = CE.h, D = CE.date, hs = (cd.houses.houses || []).slice().sort((a, b) => b.xp - a.xp), top = Math.max(1, ...hs.map(x => x.xp)), ch = cd.houses.chal || [], cup = (cd.houses.cups || [])[0];
+    return h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, "Compass Dash house cup"), CE.srcTag("compassdash", "Compass Dash")), h("div", { class: "stack" },
+      h("div", { class: "sm mut" }, "XP earned on Compass Dash counts for your house there." + (cup ? " Last week's cup: " + (CE.HOUSE_NAMES[cup.house] || cup.house) + " with " + (cup.xp || 0).toLocaleString() + " XP." : "") + (cd.linked != null && typeof cd.linked === "number" ? " " + cd.linked + " student" + (cd.linked === 1 ? "" : "s") + " linked." : "")),
+      ...hs.map((x, i) => h("div", { class: "house-" + x.h }, h("div", { class: "row between sm" }, h("b", {}, (i + 1) + ". " + (CE.HOUSE_NAMES[x.h] || x.h) + (x.h === myHouse ? " (mine)" : "") + " · " + (x.members || 0) + " member" + (x.members === 1 ? "" : "s")), h("span", {}, (x.xp || 0).toLocaleString() + " XP · " + (x.wk || 0).toLocaleString() + " this week")), h("div", { class: "hbar" }, h("i", { style: { width: CE.pct(x.xp || 0, top) + "%" } })))),
+      ch.length ? h("div", {}, h("h4", {}, "House challenges"), h("div", { class: "list" }, ...ch.map(c => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, [c.kind === "class" ? (c.class || "class") + " challenge" : "Whole-school challenge", c.goal ? (c.done != null ? c.done + " of " : "goal ") + c.goal + " " + (c.metric || "") : null, c.ends ? D.left(c.ends) : null].filter(Boolean).join(" · "))))))) : null,
+      cd.board && cd.board.length ? h("div", {}, h("h4", {}, "Top on Compass Dash"), h("div", { class: "list" }, ...cd.board.slice(0, 5).map((b, i) => h("div", { class: "item" }, h("span", { class: "badge" + (i < 3 ? " cyan" : "") }, i + 1), h("div", { class: "grow" }, h("div", { class: "t sm" }, b.name), h("div", { class: "s xs" }, (b.xp || 0).toLocaleString() + " XP · " + (b.mast || 0) + " topics mastered")))))) : null,
+      h("a", { class: "btn sm ghost", href: "https://compassdash.github.io/Compassdash/", target: "_blank", rel: "noopener" }, "Open Compass Dash")));
+  };
+  /* school links (Global Campus, Compass Dash, ...) as tiles */
+  CE.linkTiles = links => { const h = CE.h; return (links || []).length ? h("div", { class: "grid g2" }, ...links.map(l => { let host = ""; try { host = new URL(l.url).hostname.replace(/^www\./, ""); } catch (e) {} return h("a", { class: "ext", href: l.url, target: "_blank", rel: "noopener" }, h("div", { class: "lg" }, (l.name || "?").trim().slice(0, 2).toUpperCase()), h("div", { class: "grow" }, h("div", { class: "t" }, l.name), h("div", { class: "s" }, l.blurb || host)), CE.icon("ext")); })) : null; };
   CE.PAT = { 1: "hub", 2: "art", 3: "world", 4: "perform", 5: "words", 6: "impact", 7: "steam", 8: "sport" };
   CE.emptyArt = (art, title, sub) => CE.h("div", { class: "empty art" }, CE.h("img", { src: ROOT + "assets/art/empty-" + art + ".svg", alt: "" }), CE.h("div", { class: "b" }, title), sub ? CE.h("div", { class: "sm" }, sub) : null);
 
@@ -306,4 +358,5 @@
       CE.h("button", { class: "btn sm ghost right", onclick: () => { if (confirm("Reset the sample campus to its starting point?")) { window.CE_DEMO && window.CE_DEMO.reset(); CE.auth.clear(); location.href = ROOT + "signin.html"; } } }, "Reset sample"));
     document.body.prepend(b);
   };
+  if (document.body) CE.cookieBanner(); else document.addEventListener("DOMContentLoaded", CE.cookieBanner);
 })();

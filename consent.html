@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Consent form · CompassED</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+<style>
+  .sheet{max-width:800px;margin:0 auto;background:#fff;color:#000;border:1px solid var(--line);border-radius:16px;padding:clamp(24px,4vw,48px)}
+  .sheet h1{font-size:28px;margin:0 0 4px}
+  .sheet h2{font-size:17px;margin:26px 0 8px}
+  .sheet p,.sheet li{font-size:14px;line-height:1.6}
+  .sheet .tick{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:14px}
+  .sheet .tick i{width:18px;height:18px;border:2px solid #000;border-radius:4px;flex:none;margin-top:2px}
+  .sig{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:28px}
+  .sig div{border-top:1px solid #000;padding-top:6px;font-size:12px}
+  .fill{border-bottom:1px solid #000;display:inline-block;min-width:220px;height:20px;vertical-align:bottom}
+  @media print{body{background:#fff}.sheet{border:0;border-radius:0;padding:0;max-width:none}.noprint{display:none!important}.sheet p,.sheet li,.sheet .tick{font-size:12.5px}}
+</style>
+</head>
+<body>
+<header class="nav noprint">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass<b>ED</b></a>
+    <div class="cta"><button class="btn cyan" id="printBtn">Print this form</button><a class="btn ghost" href="privacy.html">Privacy Policy</a></div>
+  </div>
+</header>
+
+<main class="sec" style="padding-top:28px">
+  <div class="wrap">
+    <div class="sheet">
+      <div class="row between" style="align-items:flex-start">
+        <div><h1>Parent or carer consent form</h1><p class="mut" style="margin:0">CompassED: the school's online campus</p></div>
+        <img src="assets/logo.svg" alt="" style="width:44px;height:44px">
+      </div>
+
+      <h2>What CompassED is</h2>
+      <p>CompassED is the school's own website for lessons, homework, quizzes, activities, competitions, clubs, house points, the school calendar and announcements. Students sign in with a login code issued by the school, or a username and password, and see only their own class's work and whole-school items. The site is used for school purposes only.</p>
+
+      <h2>What is stored about your child</h2>
+      <ul>
+        <li>Name, username, year group and class; a scrambled (hashed) password; the login code the school issues.</li>
+        <li>Work they do on the site: lessons and activities completed, quiz scores, homework hand-ins and feedback, competition entries, club sign-ups, house points and badges.</li>
+        <li>Photos or files they choose to attach to work or entries.</li>
+        <li>Announcements sent to them, and when they read them.</li>
+        <li>Optionally, a link to their Compass Dash account (a sister revision site) if they choose to connect it, which can be removed at any time.</li>
+      </ul>
+      <p>The full list, who can see it and how long it is kept, is in the Privacy Policy at <b>compass-ed.github.io/privacy.html</b>. Data is stored in a database hosted by Supabase and is never used for advertising or sold.</p>
+
+      <h2>Please tick to agree</h2>
+      <div class="tick"><i></i><span>I give permission for my child to have a CompassED account and for the school to store the information listed above for school purposes.</span></div>
+      <div class="tick"><i></i><span>I understand my child's first name and house may appear on house-point leaderboards seen by other students at the school.</span></div>
+      <div class="tick"><i></i><span>I understand my child can choose to show a competition entry in the campus gallery with their first name, and that they can opt out of this each time.</span></div>
+      <div class="tick"><i></i><span>I understand I can ask the school to see, correct or delete my child's data at any time.</span></div>
+      <div class="tick"><i></i><span><b>Optional:</b> my child may link their Compass Dash account to CompassED.</span></div>
+
+      <p style="margin-top:22px">Child's name: <span class="fill"></span> &nbsp; Year / class: <span class="fill" style="min-width:120px"></span></p>
+      <p>Parent or carer's name: <span class="fill"></span> &nbsp; Relationship: <span class="fill" style="min-width:140px"></span></p>
+
+      <div class="sig">
+        <div>Signature of parent or carer</div>
+        <div>Date</div>
+      </div>
+
+      <p class="mut" style="margin-top:28px;font-size:12px">Return this form to the school office. The school keeps it with its records; CompassED records only the date consent was confirmed. To withdraw consent, write to the school office and the account will be deleted.</p>
+    </div>
+    <p class="sm mut noprint" style="text-align:center;margin-top:18px">Staff: print copies from the Admin page or with the Print button above. Students under 13 can also tick "a parent or carer has agreed" when they first sign in.</p>
+  </div>
+</main>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/icons.js"></script>
+<script src="assets/public.js"></script>
+</body>
+</html>

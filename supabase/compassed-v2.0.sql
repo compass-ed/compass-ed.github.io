@@ -1088,7 +1088,7 @@ end $$;
 
 -- ---------- 8. First admin and codes: CHANGE THESE THREE VALUES, then run ----------
 do $$
-declare admin_pw text := 'eljayquito';          -- the admin's password (8 to 72 characters)
+declare admin_pw text := 'change-me-now';        -- the admin's password (8 to 72 characters). Never commit a real one.
         join_code text := 'COMPASS-2026';           -- students type this to create an account
         invite_code text := 'TEACH-2026';           -- teachers type this to create an account
 begin

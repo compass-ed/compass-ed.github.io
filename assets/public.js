@@ -3,6 +3,7 @@
   const b = document.querySelector("[data-burger]"), n = document.getElementById("pubnav");
   if (b && n) b.addEventListener("click", () => n.classList.toggle("open"));
   const y = document.getElementById("yr"); if (y) y.textContent = new Date().getFullYear();
+  const pb = document.getElementById("printBtn"); if (pb) pb.onclick = () => print();
   const s = CE.auth && CE.auth.get();
   const cta = document.querySelector(".nav .cta");
   if (cta && s && s.me) { cta.innerHTML = ""; cta.append(CE.h("a", { class: "btn cyan", href: s.me.role === "student" ? "student/" : "teacher/" }, s.me.role === "student" ? "Open my campus" : "Open staff portal")); }
@@ -29,6 +30,7 @@
     const el = document.getElementById("eventList"); el.innerHTML = "";
     if (!r.events.length) el.append(h("div", { class: "empty" }, "No whole-school events in the next two months."));
     r.events.slice(0, 6).forEach(e => el.append(h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t" }, e.title), h("div", { class: "s" }, D.dt(e.starts) + (e.place ? " · " + e.place : ""))))));
+    CE.api("ed_links").then(l => { const sec = document.getElementById("links"), lg = document.getElementById("linkGrid"); if (!l.ok || !(l.links || []).length || !lg) return; lg.innerHTML = ""; lg.append(CE.linkTiles(l.links)); sec.classList.remove("hide"); }).catch(() => {});
     const nl = document.getElementById("newsList"); nl.innerHTML = "";
     if (!r.news.length) nl.append(h("div", { class: "empty" }, "No news yet."));
     r.news.slice(0, 3).forEach(x => nl.append(h("a", { class: "card", href: link("#/news"), style: { textDecoration: "none", color: "inherit" } }, x.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("h4", { style: { marginTop: "6px" } }, x.title), h("p", { class: "sm mut", style: { margin: 0 } }, x.body.replace(/\*\*/g, "").slice(0, 160) + (x.body.length > 160 ? "…" : "")), h("div", { class: "xs mut", style: { marginTop: "8px" } }, D.ago(x.created)))));

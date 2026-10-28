@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>Cookie Policy · CompassED</title>
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass<b>ED</b></a>
+    <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
+    <nav id="pubnav"><a href="index.html">Home</a><a href="index.html#explore">Explore</a><a href="about.html">About</a><a href="versions.html">Versions</a></nav>
+    <div class="cta"><a class="btn ghost" href="signin.html?signup=1">Create account</a><a class="btn cyan" href="signin.html">Sign in</a></div>
+  </div>
+</header>
+
+<main>
+  <section class="hero legal-hero">
+    <div class="wrap">
+      <span class="eyebrow">Cookie Policy</span>
+      <h1>Cookies and browser storage</h1>
+      <p class="lead">CompassED sets no advertising or analytics cookies. It uses your browser's own storage for a handful of essential things, listed here in full.</p>
+      <p class="sm mut">Last updated 28 October 2026 · version 1</p>
+    </div>
+  </section>
+
+  <section class="sec legal-body">
+    <div class="wrap">
+      <article class="prose" style="max-width:none">
+        <h2>What is stored, and why</h2>
+        <div class="tbw">
+          <table class="tb">
+            <thead><tr><th>Name</th><th>Kind</th><th>What it does</th><th>How long</th></tr></thead>
+            <tbody>
+              <tr><td><code>ce_auth</code></td><td>localStorage</td><td>Your session token and account details, so you stay signed in. Essential.</td><td>Until you sign out; staff sessions lock after 20 minutes without use</td></tr>
+              <tr><td><code>ce_prefs</code></td><td>localStorage</td><td>Display settings: light or dark theme, dyslexia-friendly reading, detail level, transparency.</td><td>Until you change them or clear site data</td></tr>
+              <tr><td><code>ce_cookie_ok</code></td><td>localStorage</td><td>Remembers that you have seen the cookie notice.</td><td>Until cleared</td></tr>
+              <tr><td><code>ce_demo</code>, <code>ce_demo_v23</code></td><td>localStorage</td><td>Only in preview mode: the sample campus kept in your browser.</td><td>Until cleared or "Reset sample"</td></tr>
+              <tr><td><code>ce_cache_*</code></td><td>sessionStorage</td><td>A copy of pages you have opened, so they still show without a connection.</td><td>Until the tab is closed</td></tr>
+              <tr><td>Service worker cache</td><td>Cache storage</td><td>The app shell (styles, scripts, icons) for offline use and faster loading.</td><td>Replaced when a new version is published</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>None of these are HTTP cookies, so they are never sent to a server automatically. The session token is sent only with requests to the school's database, over HTTPS.</p>
+
+        <h2>Third parties</h2>
+        <p>The pages load fonts from Google Fonts. Google receives the font request (your IP address and browser type) but sets no cookies through it. No other third-party scripts, pixels or embeds are used. If a lesson includes a video, the video player loads only when you open that lesson and is governed by the video site's own policy.</p>
+
+        <h2>Your choices</h2>
+        <p>Because everything listed is essential to the site working, there is nothing to opt out of beyond not signing in. You can clear all of it at any time from your browser's site settings ("Clear site data"), which signs you out and resets your display settings. Signing out removes <code>ce_auth</code> immediately.</p>
+      </article>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <span>© <span id="yr"></span> CompassED</span>
+    <a href="about.html">About</a><a href="versions.html">Versions</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="cookies.html">Cookies</a><a href="signin.html">Sign in</a>
+  </div>
+</footer>
+<script src="assets/config.js"></script>
+<script src="assets/core.js"></script>
+<script src="assets/icons.js"></script>
+<script src="assets/public.js"></script>
+</body>
+</html>

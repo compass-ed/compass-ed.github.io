@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .ver-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:start}
-  .ver-row img{width:100%;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh)}
+  .ver-row img,.ver-row video{width:100%;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh);display:block}
   .ver-row ul{padding-left:20px;margin:0}
   .ver-row li{margin:6px 0}
   .ver-tag{font-family:var(--mono);background:var(--ink);color:#fff;padding:4px 10px;border-radius:999px;font-size:13px}
@@ -21,7 +21,7 @@
 <body>
 <header class="nav">
   <div class="wrap">
-    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="">Compass<b>ED</b></a>
+    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass<b>ED</b></a>
     <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
     <nav id="pubnav">
       <a href="index.html">Home</a>
@@ -48,9 +48,25 @@
   <section class="sec" style="padding-top:8px">
     <div class="wrap stack" style="gap:28px">
 
+      <article class="card ver-row" id="v2-3">
+        <div>
+          <div class="row"><span class="ver-tag">v2.3</span><span class="mut sm">28 October 2026 · current</span></div>
+          <h2 style="margin-top:10px">Codes, consent and connections</h2>
+          <ul class="sm">
+            <li>Login codes in the form <b>1234-5678</b>: unique, printable, revocable; a code creates an account or resets credentials.</li>
+            <li>Admin dashboard for accounts, codes, calendar feeds and links; sign out any account everywhere.</li>
+            <li>Privacy Policy, Terms of Service, Cookie Policy, consent form and cookie notice.</li>
+            <li>Houses: North red, East green, South blue, West yellow.</li>
+            <li>Global Campus and other calendars mirrored from their iCalendar feeds; Compass Dash XP, assignments, announcements and house cup inside CompassED.</li>
+            <li>Artwork and this animated preview designed in Moda; logo contrast fixes.</li>
+          </ul>
+        </div>
+        <video src="assets/versions/v2.3.mp4" autoplay muted loop playsinline poster="assets/art/signin-bg.jpg" aria-label="Animated preview of CompassED version 2.3: codes, consent and connections"></video>
+      </article>
+
       <article class="card ver-row" id="v2-2">
         <div>
-          <div class="row"><span class="ver-tag">v2.2</span><span class="mut sm">28 October 2026 · current</span></div>
+          <div class="row"><span class="ver-tag">v2.2</span><span class="mut sm">28 October 2026</span></div>
           <h2 style="margin-top:10px">Polish, directories and a content pack</h2>
           <ul class="sm">
             <li>Student and staff portals now live at <b>/student/</b> and <b>/teacher/</b>.</li>
@@ -92,6 +108,9 @@
     <span>© <span id="yr"></span> CompassED</span>
     <a href="about.html">About</a>
     <a href="versions.html">Versions</a>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+    <a href="cookies.html">Cookies</a>
     <a href="signin.html">Sign in</a>
   </div>
 </footer>

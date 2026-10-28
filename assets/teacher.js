@@ -5,6 +5,7 @@
   CE.demoBanner();
   $("#meAv").textContent = CE.initials(me.name); $("#meName").textContent = me.name;
   $("#meRole").textContent = me.role === "admin" ? "Administrator" : (me.subj != null ? CE.subjName(me.subj) + " teacher" : "Teacher");
+  if (me.role === "admin") { const na = $("#navAdmin"); if (na) na.classList.remove("hide"); }
   $("#signout").onclick = CE.signOut;
   CE.shell();
   const S = { home: null, content: null };
@@ -403,10 +404,10 @@
       head.innerHTML = ""; head.append(h("div", { class: "row" }, h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() - 1); render(); } }, "‹"), h("h3", { style: { margin: 0 } }, d.toLocaleDateString("en-GB", { month: "long", year: "numeric" })), h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() + 1); render(); } }, "›")), h("div", { class: "row" }, h("button", { class: "btn sm ghost", id: "ics" }, CE.icon("phone"), "Export .ics"), h("button", { class: "btn sm", onclick: () => eventEditor(null, render) }, "+ Add event")));
       const from = new Date(d.getFullYear(), d.getMonth(), -7), to = new Date(d.getFullYear(), d.getMonth() + 1, 7);
       const r = await api("ed_t_events", { p_from: D.ymd(from), p_to: D.ymd(to) }); if (!r.ok) return CE.fail(page, r);
-      const open = e => e.assign_id ? CE.nav("/assignment/" + e.assign_id) : e.comp_id ? CE.nav("/competition/" + e.comp_id) : eventEditor(e, render);
+      const open = e => e.assign_id ? CE.nav("/assignment/" + e.assign_id) : e.comp_id ? CE.nav("/competition/" + e.comp_id) : e.src ? CE.modal(h("div", { class: "stack" }, srcTag(e.src, e.src_name), h("h3", {}, e.title), h("div", { class: "sm" }, D.long(e.starts) + (D.time(e.starts) !== "00:00" ? ", " + D.time(e.starts) + (e.ends ? " to " + D.time(e.ends) : "") : "") + (e.place ? " · " + e.place : "")), h("p", { class: "sm mut", style: { margin: 0 } }, "This event is mirrored from the " + (e.src_name || "calendar feed") + ". Change it there; it updates here on the next sync."), me.role === "admin" ? h("a", { class: "btn sm ghost", href: "#/admin/feeds", onclick: CE.closeModal }, "Calendar feeds") : null)) : eventEditor(e, render);
       CE.calendar(grid, d.getFullYear(), d.getMonth(), r.rows, open);
       const month = r.rows.filter(e => new Date(e.starts).getMonth() === d.getMonth()); list.innerHTML = ""; if (!month.length) list.append(h("div", { class: "empty" }, "Nothing this month."));
-      month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", due: "alarm", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + " · " + (e.class || "Whole school") + (e.place ? " · " + e.place : ""))))));
+      month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", due: "alarm", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + " · " + (e.class || "Whole school") + (e.place ? " · " + e.place : ""))), srcTag(e.src, e.src_name))));
       $("#ics").onclick = () => CE.ics(r.rows, "CompassED " + d.toLocaleDateString("en-GB", { month: "long" }));
     };
     render();
@@ -449,8 +450,17 @@
     const rl = sel([["student", "Student"], ["teacher", "Teacher"], ["admin", "Administrator"]], u.role, { disabled: !r.admin }), yr = sel([[0, "–"]].concat([7, 8, 9, 10, 11, 12, 13].map(y => [y, "Year " + y])), u.year || 0), cl = sel([[0, "No class"]].concat(r.classes.map(c => [c.id, c.name])), u.class_id || 0), sj = sel([[-1, "All subjects"]].concat(CE.subjects.map(s => [s.id, s.name])), u.subj == null ? -1 : u.subj), dis = h("input", { type: "checkbox", checked: u.disabled });
     const sf = h("div", { class: "grid g2" }, field("Year", yr), field("Class", cl)), tf = field("Main subject", sj, "Teachers with a subject see only classes of that subject (and classes with no subject).");
     const upd = () => { sf.classList.toggle("hide", rl.value !== "student"); tf.classList.toggle("hide", rl.value === "student"); }; rl.onchange = upd; upd();
-    const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, isNew ? "New " + (u.role === "student" ? "student" : "staff account") : "Edit " + u.name), field("Role", rl), field("Name", name), field("Username", user), field(isNew ? "Password" : "Reset password", pw), sf, tf, isNew ? null : h("label", { class: "chk" }, dis, "Disabled (cannot sign in)"), h("div", { class: "err", id: "uerr" }),
+    const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, isNew ? "New " + (u.role === "student" ? "student" : "staff account") : "Edit " + u.name), field("Role", rl), field("Name", name), field("Username", user), field(isNew ? "Password" : "Reset password", pw), sf, tf, isNew ? null : h("label", { class: "chk" }, dis, "Disabled (cannot sign in)"), isNew ? null : credBox(u, r), h("div", { class: "err", id: "uerr" }),
       h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { const x = await api("ed_a_user_save", { p_id: u.id || 0, p_role: rl.value, p_username: user.value.trim(), p_name: name.value, p_pw: pw.value ? pw.value : null, p_year: +yr.value, p_class: +cl.value, p_subj: +sj.value, p_disabled: dis.checked }); if (!x.ok) return $("#uerr", box).textContent = CE.errText(x); CE.closeModal(); CE.toast(isNew ? "Account created. Give them the username and password." : "Saved", "ok"); await refreshMe(); people({ tab: rl.value === "student" ? "students" : "staff" }); } }, isNew ? "Create account" : "Save"), !isNew && r.admin ? h("button", { class: "btn bad right", onclick: async () => { if (await CE.confirm("Delete " + u.name + " and everything they have done?", "Delete account")) { const x = await api("ed_a_user_del", { p_id: u.id }); if (!x.ok) return CE.toast(CE.errText(x), "bad"); CE.closeModal(); people({ tab: u.role === "student" ? "students" : "staff" }); } } }, "Delete") : null)));
+  }
+  /* credentials box inside the account editor: login codes, reset, sign out everywhere */
+  function credBox(u, r) {
+    const box = h("div", { class: "card flat stack", style: { gap: "8px" } }, h("div", { class: "row between" }, h("b", { class: "sm" }, "Login codes & sessions"), h("div", { class: "row" }, h("button", { class: "btn sm", onclick: () => genModal({ admin: r.admin }, u) }, "New login code"), h("button", { class: "btn sm ghost", onclick: async () => { if (await CE.confirm("Sign " + u.name + " out of every device? They can sign in again with their password or code.", "Sign out everywhere")) { const x = await api("ed_a_user_kick", { p_id: u.id }); CE.toast(x.ok ? "Signed out of " + x.n + " session" + (x.n === 1 ? "" : "s") : CE.errText(x), x.ok ? "ok" : "bad"); } } }, "Sign out everywhere"))), h("div", { class: "xs mut" }, "Loading…"));
+    api("ed_a_user_codes", { p_id: u.id }).then(x => { const info = box.lastChild; info.innerHTML = ""; if (!x.ok) return info.textContent = CE.errText(x);
+      const live = x.rows.filter(c => !c.revoked_at);
+      info.append(h("span", {}, (x.sessions || 0) + " active session" + (x.sessions === 1 ? "" : "s") + " · " + (live.length ? "code " + live.map(c => c.code).join(", ") + (live[0].purpose === "reset" && !live[0].used_at ? " (waiting to be used; sets a new password)" : "") : "no login code") + (x.rows.length > live.length ? " · " + (x.rows.length - live.length) + " revoked" : "")));
+      if (live.length) info.append(" ", h("a", { href: "#/admin/codes", onclick: CE.closeModal }, "manage")); });
+    return box;
   }
   function classEditor(c, r) {
     c = c || { name: "", year: null, subj: null };
@@ -483,12 +493,13 @@
   async function points() {
     CE.title("House points"); CE.loading(page);
     try {
-      const r = await api("ed_board"); if (!r.ok) return CE.fail(page, r);
+      const [r, cd] = await Promise.all([api("ed_board"), api("ed_t_cd").catch(() => null)]); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = ""; const top = Math.max(1, ...r.house.map(x => x.pts));
       page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "House points"), h("div", { class: "sm mut" }, "Awarded by staff, and automatically for activities, entries, places, mastery and peer reviews.")), h("button", { class: "btn", onclick: () => awardModal() }, "+ Award points")));
       page.append(card("Houses", h("div", { class: "stack" }, ...r.house.map((x, i) => h("div", { class: "house-" + x.house }, h("div", { class: "row between sm" }, h("b", {}, (i + 1) + ". " + (r.houses[x.house] || x.house)), h("span", {}, x.pts.toLocaleString() + " pts · " + x.week + " this week")), h("div", { class: "hbar" }, h("i", { style: { width: CE.pct(x.pts, top) + "%" } })))))));
       const g = h("div", { class: "grid g2" }); page.append(g);
       g.append(card("Top students", h("div", { class: "list" }, ...r.students.slice(0, 20).map((x, i) => h("div", { class: "item" }, h("span", { class: "badge" + (i < 3 ? " cyan" : "") }, i + 1), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.name), h("div", { class: "s xs" }, [x.class, x.house ? r.houses[x.house] : null].filter(Boolean).join(" · ") + " · " + x.week + " this week")), h("span", { class: "b" }, x.pts))))));
+      const cdc = cdHousesCard(cd && cd.ok ? cd : null); if (cdc) g.append(cdc);
       g.append(card("Classes", h("div", { class: "list" }, ...r.classes.map((x, i) => h("div", { class: "item" }, h("span", { class: "badge" }, i + 1), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.name), h("div", { class: "s xs" }, x.n + " students · " + Math.round(x.pts / Math.max(1, x.n)) + " each")), h("span", { class: "b" }, x.pts))))));
     } catch (e) { CE.fail(page, e); }
   }
@@ -615,11 +626,139 @@
     data = { c: c.ok ? c : { units: [], quizzes: [], activities: [], competitions: [], news: [] }, a: a.ok ? a : { rows: [] }, p: p2.ok ? p2 : { users: [], classes: [] }, b: b.ok ? b : { rows: [] } }; run(box.querySelector("input").value.trim().toLowerCase());
   }
 
+  /* ---------- v2.3: admin dashboard, login codes, feeds, links, Compass Dash ---------- */
+  const codeFmt = c => String(c || "").replace(/\D/g, "").replace(/^(\d{4})(\d{4})$/, "$1-$2");
+  const statusBadge = s => h("span", { class: "badge st-" + s }, { unused: "Unused", active: "Active", revoked: "Revoked", expired: "Expired" }[s] || s);
+  const srcTag = CE.srcTag;
+  const siteUrl = () => new URL(CE.root + "signin.html?code=", location.href).href;
+
+  async function admin(p) {
+    const tab = (p && p.tab) || "overview"; if (me.role !== "admin") return CE.nav("/people");
+    CE.title("Admin"); CE.loading(page);
+    try {
+      if (tab === "codes") return codesTab();
+      if (tab === "feeds") return feedsTab();
+      if (tab === "links") return linksTab();
+      const r = await api("ed_a_dash"); if (!r.ok) return CE.fail(page, r);
+      page.innerHTML = "";
+      page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Admin overview"), h("div", { class: "sm mut" }, r.school.name + " · accounts, codes, feeds and links in one place.")), h("div", { class: "row" }, h("a", { class: "btn", href: "#/admin/codes" }, "Login codes"), h("a", { class: "btn ghost", href: "#/people" }, "Accounts"))));
+      page.append(h("div", { class: "adm-grid" },
+        tile(r.students, "Students", "#/people/students"), tile(r.staff, "Staff", "#/people/staff"), tile(r.active_today, "Active today"), tile(r.active_week, "Active this week"),
+        tile(r.codes.unused, "Unused codes", "#/admin/codes"), tile(r.codes.active, "Active codes", "#/admin/codes"), tile(r.disabled, "Disabled accounts", "#/people/students"), tile(r.no_consent, "Not yet agreed to terms", null, r.no_consent ? "warn" : "")));
+      const g = h("div", { class: "grid g2" }); page.append(g);
+      g.append(card("Recent accounts", r.recent.length ? h("div", { class: "list" }, ...r.recent.map(x => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(x.role === "student" ? "user" : "people")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.name, " ", h("span", { class: "kbd" }, x.username)), h("div", { class: "s xs" }, x.role + " · joined " + D.ago(x.created) + (x.consent ? "" : " · terms not yet accepted"))), h("a", { class: "btn sm ghost", href: "#/people/" + (x.role === "student" ? "students" : "staff") }, "Open")))) : h("div", { class: "empty" }, "No accounts yet.")));
+      g.append(card("Security", h("div", { class: "stack sm" },
+        h("div", { class: "row between" }, h("span", {}, "Sessions in use (30 days)"), h("b", {}, r.sessions)),
+        h("div", { class: "row between" }, h("span", {}, "Connections locked out right now"), h("b", {}, r.locked_ips)),
+        h("div", { class: "row between" }, h("span", {}, "Student join code"), h("span", { class: "kbd" }, r.school.join_code)),
+        h("div", { class: "row between" }, h("span", {}, "Teacher invite code"), h("span", { class: "kbd" }, r.school.invite_code)),
+        h("div", { class: "xs mut" }, "Passwords are stored as bcrypt hashes and are never shown. Five wrong sign-ins lock a connection for a minute. The administrator password is changed under Settings and is not kept anywhere in the website's code."),
+        h("div", { class: "row" }, h("a", { class: "btn sm ghost", href: "#/people/codes" }, "Change join codes"), h("a", { class: "btn sm ghost", href: "#/settings" }, "Change my password")))));
+      g.append(card("Integrations", h("div", { class: "stack sm" },
+        h("div", { class: "row between" }, h("span", {}, "Compass Dash (same database)"), h("span", { class: "badge " + (r.compassdash ? "ok" : "") }, r.compassdash ? "Connected" : "Not installed")),
+        h("div", { class: "row between" }, h("span", {}, "Calendar feeds (http extension)"), h("span", { class: "badge " + (r.http ? "ok" : "warn") }, r.http ? "Ready" : "Enable in Supabase")),
+        ...r.feeds.map(f => h("div", { class: "row between" }, h("span", {}, srcTag(f.source, f.name), " ", f.name), h("span", { class: "xs mut" }, f.last_error ? "Error: " + f.last_error : f.last_sync ? f.n + " events · synced " + D.ago(f.last_sync) : "Never synced"))),
+        h("div", { class: "row" }, h("a", { class: "btn sm ghost", href: "#/admin/feeds" }, "Calendar feeds"), h("a", { class: "btn sm ghost", href: "#/admin/links" }, "Links on home pages")))));
+      g.append(card("Houses", h("div", { class: "stack sm" }, ...Object.entries(r.school.houses || CE.HOUSE_NAMES).map(([k, v]) => h("div", { class: "row between house-" + k }, h("span", { class: "hpill" }, v), h("span", { class: "xs mut" }, { N: "red", E: "green", S: "blue", W: "yellow" }[k]))), h("div", { class: "xs mut" }, "Students choose a house once; staff change it from a class page. Points and the leaderboard are under House points."))));
+      g.append(card("Printable forms", h("div", { class: "stack sm" }, h("a", { class: "btn sm ghost", href: CE.root + "consent.html", target: "_blank" }, "Parent or carer consent form"), h("a", { class: "btn sm ghost", href: "#/admin/codes" }, "Login code sheets"), h("div", { class: "xs mut" }, "Also: ", h("a", { href: CE.root + "privacy.html", target: "_blank" }, "Privacy Policy"), " · ", h("a", { href: CE.root + "terms.html", target: "_blank" }, "Terms of Service"), " · ", h("a", { href: CE.root + "cookies.html", target: "_blank" }, "Cookie Policy")))));
+    } catch (e) { CE.fail(page, e); }
+  }
+  const tile = (n, l, href, cls) => h(href ? "a" : "div", { class: "card stat sm" + (cls ? " " + cls : ""), href: href || null, style: { textDecoration: "none", color: "inherit" } }, h("span", { class: "n" }, n), h("span", { class: "l" }, l));
+
+  /* ----- login codes ----- */
+  async function codesTab() {
+    const r = await api("ed_a_codes"); if (!r.ok) return CE.fail(page, r);
+    page.innerHTML = "";
+    const picked = new Set();
+    page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Login codes"), h("div", { class: "sm mut" }, "Each code is unique and belongs to one person. Blank codes create an account the first time they are used; a code made for an existing account signs that person in and asks for a new password.")), h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: () => genModal(r) }, "+ Make codes"), h("button", { class: "btn ghost", onclick: () => printCodes(r.rows.filter(c => picked.size ? picked.has(c.code) : c.status === "unused")) }, CE.icon("phone"), picked.size ? "Print selected" : "Print unused"))));
+    let filter = "all"; const q = h("input", { class: "in", placeholder: "Search codes, names, classes", style: { maxWidth: "300px" } });
+    const seg = h("div", { class: "seg" }, ...[["all", "All"], ["unused", "Unused"], ["active", "Active"], ["revoked", "Revoked"], ["expired", "Expired"]].map(([k, l]) => h("button", { class: k === "all" ? "on" : "", onclick: e => { filter = k; CE.$$("button", seg).forEach(b => b.classList.toggle("on", b === e.target)); draw(); } }, l)));
+    const tb = h("table", { class: "tb" }, h("thead", {}, h("tr", {}, h("th", {}, ""), h("th", {}, "Code"), h("th", {}, "Status"), h("th", {}, "For"), h("th", {}, "Class / year"), h("th", {}, "Made"), h("th", {}, "Used"), h("th", {}, ""))), h("tbody", {}));
+    const printBtn = page.querySelector(".row.between .row .btn.ghost");
+    const draw = () => {
+      const f = q.value.trim().toLowerCase(); tb.lastChild.innerHTML = "";
+      r.rows.filter(c => (filter === "all" || c.status === filter) && (!f || c.code.includes(f) || (c.user && (c.user.name.toLowerCase().includes(f) || c.user.username.toLowerCase().includes(f))) || (c.label || "").toLowerCase().includes(f) || (c.class || "").toLowerCase().includes(f))).forEach(c => {
+        const cb = h("input", { type: "checkbox", checked: picked.has(c.code), onchange: () => { if (cb.checked) picked.add(c.code); else picked.delete(c.code); printBtn.lastChild.textContent = picked.size ? "Print selected (" + picked.size + ")" : "Print unused"; } });
+        tb.lastChild.append(h("tr", { style: c.status === "revoked" || c.status === "expired" ? { opacity: .55 } : null },
+          h("td", {}, cb), h("td", {}, h("span", { class: "code sm" }, c.code)), h("td", {}, statusBadge(c.status), c.purpose === "reset" && !c.used_at && c.status === "active" ? h("div", { class: "xs mut" }, "reset · not used yet") : null),
+          h("td", {}, c.user ? h("span", {}, h("b", {}, c.user.name), " ", h("span", { class: "kbd" }, c.user.username), c.user.disabled ? h("span", { class: "badge" }, "disabled") : null) : h("span", { class: "mut" }, "New " + c.role + (c.label ? " · " + c.label : ""))),
+          h("td", { class: "sm" }, [c.class, c.year ? "Year " + c.year : null].filter(Boolean).join(" · ") || "–"), h("td", { class: "sm" }, D.ago(c.created) + (c.by ? " by " + c.by : "")), h("td", { class: "sm" }, c.used_at ? "first " + D.short(c.used_at) + (c.last_used ? ", last " + D.ago(c.last_used) : "") : c.status === "unused" ? "expires " + D.short(c.expires) : "–"),
+          h("td", {}, h("div", { class: "row", style: { flexWrap: "nowrap" } }, h("button", { class: "btn sm ghost", onclick: () => printCodes([c]) }, "Print"), c.status === "revoked" ? h("button", { class: "btn sm ghost", onclick: async () => { const x = await api("ed_a_code_revoke", { p_code: c.code, p_undo: true }); if (!x.ok) return CE.toast(CE.errText(x), "bad"); CE.toast("Code restored", "ok"); codesTab(); } }, "Restore") : c.status === "expired" ? null : h("button", { class: "btn sm bad", onclick: async () => { if (await CE.confirm("Revoke " + c.code + "? " + (c.user ? c.user.name + " can still sign in with their password." : "It will no longer create an account."), "Revoke")) { const x = await api("ed_a_code_revoke", { p_code: c.code, p_undo: false }); if (!x.ok) return CE.toast(CE.errText(x), "bad"); CE.toast("Code revoked", "ok"); codesTab(); } } }, "Revoke")))));
+      });
+      if (!tb.lastChild.children.length) tb.lastChild.append(h("tr", {}, h("td", { colspan: 8, class: "mut" }, "No codes here yet. Click \"Make codes\".")));
+    };
+    q.oninput = draw; draw();
+    page.append(h("div", { class: "card stack" }, h("div", { class: "row between" }, q, seg), h("div", { class: "tbw" }, tb), h("div", { class: "row between" }, h("div", { class: "xs mut" }, r.rows.length + " codes · " + r.rows.filter(c => c.status === "unused").length + " unused · " + r.rows.filter(c => c.status === "active").length + " active"), r.admin ? h("button", { class: "btn sm ghost", onclick: async () => { if (await CE.confirm("Delete every revoked code and every unused code that has expired? Active and unused codes are kept.", "Tidy up")) { const x = await api("ed_a_code_purge"); CE.toast(x.ok ? "Removed " + x.n + " old codes" : CE.errText(x), x.ok ? "ok" : "bad"); codesTab(); } } }, "Tidy up old codes") : null)));
+  }
+  function genModal(r, user) {
+    const n = h("input", { class: "in", type: "number", min: 1, max: 200, value: 10 }), role = sel([["student", "Students"], ["teacher", "Staff"]], "student", { disabled: !r.admin }), cl = sel([[0, "No class yet"]].concat((me.classes || []).map(c => [c.id, c.name])), 0), yr = sel([[0, "–"]].concat([7, 8, 9, 10, 11, 12, 13].map(y => [y, "Year " + y])), 0), label = h("input", { class: "in", maxlength: 60, placeholder: user ? "e.g. Forgot password" : "e.g. 7A · September intake" }), er = h("div", { class: "err" });
+    const sf = h("div", { class: "grid g2" }, field("Class", cl), field("Year", yr)); role.onchange = () => sf.classList.toggle("hide", role.value !== "student");
+    const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, user ? "Login code for " + user.name : "Make login codes"),
+      user ? h("p", { class: "sm mut", style: { margin: 0 } }, "A new code for this account. Any older codes they had are revoked. When they use it they are signed in and asked to set a new password, so this is also how to reset someone's credentials.") : h("p", { class: "sm mut", style: { margin: 0 } }, "Blank codes to hand out. Each one creates one account the first time it is used, with the class and year you set here. Unused codes expire after 180 days."),
+      user ? null : h("div", { class: "grid g2" }, field("How many", n), field("For", role)), user ? null : sf, field("Label (printed on the sheet)", label), er,
+      h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { er.textContent = ""; const x = await api("ed_a_code_gen", { p_n: +n.value || 1, p_role: role.value, p_class: +cl.value, p_year: +yr.value, p_label: label.value, p_uid: user ? user.id : 0 }); if (!x.ok) return er.textContent = CE.errText(x); CE.closeModal(); CE.toast(x.codes.length + " code" + (x.codes.length > 1 ? "s" : "") + " made", "ok");
+        const made = await api("ed_a_codes"); const rows = made.ok ? made.rows.filter(c => x.codes.includes(c.code)) : x.codes.map(c => ({ code: c, role: role.value, label: label.value }));
+        if (user) showCode(rows[0], user); else { if (location.hash.startsWith("#/admin/codes")) codesTab(); else CE.nav("/admin/codes"); if (await CE.confirm("Print the " + rows.length + " new code" + (rows.length > 1 ? "s" : "") + " now?", "Print")) printCodes(rows); } } }, user ? "Make code" : "Make codes"))));
+  }
+  function showCode(c, user) {
+    const url = siteUrl() + c.code.replace("-", "");
+    CE.modal(h("div", { class: "stack", style: { textAlign: "center" } }, h("h3", {}, "Code for " + user.name), h("div", { class: "code", style: { fontSize: "34px" } }, c.code), h("p", { class: "sm mut" }, "Give this to them in person. It signs them in at ", h("b", {}, location.host + "/signin.html"), " under \"Use a code\", then asks for a new password."),
+      h("div", { class: "row", style: { justifyContent: "center" } }, h("button", { class: "btn", onclick: () => printCodes([Object.assign({}, c, { user: { name: user.name, username: user.username } })]) }, "Print card"), h("button", { class: "btn ghost", onclick: () => { navigator.clipboard && navigator.clipboard.writeText(c.code); CE.toast("Copied", "ok"); } }, "Copy"), h("a", { class: "btn ghost", href: url, target: "_blank", rel: "noopener" }, "Open link"))));
+  }
+  /* print: cut-out cards, two per row, with the sign-in address on each */
+  function printCodes(rows) {
+    if (!rows.length) return CE.toast("Nothing to print. Select some codes first.", "bad");
+    CE.$$(".print-only", page).forEach(x => x.remove());
+    const addr = location.host + "/signin.html";
+    const sheet = h("div", { class: "print-only hide" }, h("div", { class: "print-head" }, h("b", {}, (CE.me && CE.me.school) || "CompassED"), " · login codes · printed " + D.long(new Date().toISOString()) + " · " + rows.length + " code" + (rows.length > 1 ? "s" : "") + ". Cut along the dashed lines. Keep this sheet somewhere safe."),
+      h("div", { class: "codesheet" }, ...rows.map(c => h("div", { class: "cc" }, h("div", { class: "t" }, c.user ? c.user.name : "Your CompassED login"), h("img", { src: CE.root + "assets/logo.svg", alt: "" }), h("div", { class: "s" }, c.user ? "Username " + c.user.username + " · this code also resets your password" : [c.role === "teacher" ? "Staff account" : "Student account", c.class, c.year ? "Year " + c.year : null, c.label].filter(Boolean).join(" · ")), h("div", { class: "code" }, c.code), h("div", { class: "how" }, "1. Go to ", h("b", {}, addr), " and choose \"Use a code\". 2. Type the code. 3. " + (c.user ? "Set your new password." : "Pick a username and password.") + " Do not share this code.")))));
+    page.append(sheet); sheet.classList.remove("hide");
+    const after = () => { sheet.remove(); removeEventListener("afterprint", after); }; addEventListener("afterprint", after);
+    setTimeout(() => print(), 50);
+  }
+
+  /* ----- calendar feeds ----- */
+  async function feedsTab() {
+    const r = await api("ed_a_feeds"); if (!r.ok) return CE.fail(page, r);
+    page.innerHTML = "";
+    page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Calendar feeds"), h("div", { class: "sm mut" }, "Subscribe to any iCalendar (.ics) address. Its events are mirrored into the campus calendar, tagged with where they came from, and refreshed each time you sync.")), h("button", { class: "btn cyan", onclick: () => feedEditor(null) }, "+ Add feed")));
+    if (!r.http) page.append(h("div", { class: "card tint" }, h("b", {}, "One thing to switch on first. "), "Feeds are fetched by the database, which needs the ", h("span", { class: "kbd" }, "http"), " extension. In Supabase open Database > Extensions, search for http and enable it. Then come back and click Sync."));
+    page.append(h("div", { class: "card stack" }, h("h3", {}, "Global Campus and other calendars"), h("p", { class: "sm mut", style: { margin: 0 } }, "Global Campus (Nord Anglia) has no public API, so CompassED uses the one method every calendar service supports: an iCalendar feed. In Global Campus (or the school's Google/Outlook calendar), find the calendar's \"export\", \"subscribe\" or \"iCal\" link, paste it here and pick the source. Events stay in sync whenever a sync runs; to run it automatically, schedule ", h("span", { class: "kbd" }, "select public.ed_feeds_sync_all();"), " hourly with pg_cron in Supabase.")));
+    const list = h("div", { class: "stack" }); page.append(list);
+    if (!r.rows.length) list.append(CE.emptyArt("inbox", "No feeds yet", "Add the Global Campus calendar or any .ics link."));
+    r.rows.forEach(f => list.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("div", { class: "row" }, srcTag(f.source, f.name), h("h3", { style: { margin: 0 } }, f.name), f.class ? h("span", { class: "badge" }, f.class) : h("span", { class: "badge" }, "Whole school")), h("div", { class: "row" }, h("button", { class: "btn sm cyan", onclick: async e => { e.target.disabled = true; const x = await api("ed_a_feed_sync", { p_id: f.id }); CE.toast(x.ok ? x.n + " events in sync" : CE.errText(x) + (x.detail ? " (" + x.detail + ")" : ""), x.ok ? "ok" : "bad"); feedsTab(); } }, "Sync now"), h("button", { class: "btn sm ghost", onclick: () => feedEditor(f) }, "Edit"))),
+      h("div", { class: "sm mut", style: { wordBreak: "break-all" } }, f.url), h("div", { class: "xs mut", style: { marginTop: "6px" } }, (f.last_sync ? f.n + " events · last synced " + D.ago(f.last_sync) : "Never synced yet") + (f.last_error ? " · last error: " + f.last_error : "") + " · times without a zone read as " + f.tz))));
+  }
+  function feedEditor(f) {
+    f = f || { name: "", url: "", source: "globalcampus", class_id: 0, tz: "Europe/London" };
+    const name = h("input", { class: "in", value: f.name, placeholder: "e.g. Global Campus events" }), url = h("input", { class: "in", value: f.url, placeholder: "https://…/calendar.ics (or webcal://…)" }), src = sel([["globalcampus", "Global Campus"], ["compassdash", "Compass Dash"], ["other", "Other calendar"]], f.source), cl = sel(classOpts("Whole school"), f.class_id || 0), tz = h("input", { class: "in", value: f.tz, placeholder: "Europe/London" }), er = h("div", { class: "err" });
+    const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, f.id ? "Edit feed" : "Add a calendar feed"), field("Name", name), field("Feed address", url, "Must be an iCalendar link: it usually ends in .ics. Secret addresses from Google or Outlook work too."), h("div", { class: "grid g2" }, field("Source", src), field("Show to", cl)), field("Time zone for times without one", tz), er,
+      h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { er.textContent = ""; const x = await api("ed_a_feed_save", { p_id: f.id || 0, p_name: name.value, p_url: url.value.trim(), p_source: src.value, p_class: +cl.value, p_tz: tz.value.trim() }); if (!x.ok) return er.textContent = CE.errText(x); CE.closeModal(); CE.toast("Saved. Click Sync now to fetch it.", "ok"); feedsTab(); } }, "Save"), f.id ? h("button", { class: "btn bad right", onclick: async () => { if (await CE.confirm("Remove this feed and every event it added?", "Remove feed")) { await api("ed_a_feed_del", { p_id: f.id }); CE.closeModal(); feedsTab(); } } }, "Remove") : null)));
+  }
+
+  /* ----- links shown on home pages ----- */
+  async function linksTab() {
+    const r = await api("ed_a_dash"); if (!r.ok) return CE.fail(page, r);
+    page.innerHTML = ""; let links = (r.school.links || []).map(l => Object.assign({}, l));
+    page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Links & integrations"), h("div", { class: "sm mut" }, "Shortcuts shown on the public home page and in both portals: Global Campus, Compass Dash, the library, anything with a web address.")), h("button", { class: "btn", onclick: () => { links.push({ name: "", url: "https://", blurb: "" }); draw(); } }, "+ Add link")));
+    page.append(h("div", { class: "card stack" }, h("h3", {}, "Compass Dash"), h("div", { class: "row between" }, h("span", { class: "sm" }, "Compass Dash shares this database, so the connection is automatic: students link their Compass Dash code and username from their Settings, and their XP, mastery, assignments and announcements appear in CompassED. Everyone sees the Compass Dash house cup under House points."), h("span", { class: "badge " + (r.compassdash ? "ok" : "") }, r.compassdash ? "Connected" : "Not installed"))));
+    const list = h("div", { class: "stack" }), er = h("div", { class: "err" }); page.append(h("div", { class: "card stack" }, list, er, h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { er.textContent = ""; const x = await api("ed_a_links_save", { p_links: links.filter(l => l.name.trim() || l.url !== "https://") }); if (!x.ok) return er.textContent = CE.errText(x); CE.toast("Saved", "ok"); linksTab(); } }, "Save links"))));
+    const draw = () => { list.innerHTML = ""; if (!links.length) list.append(h("div", { class: "empty" }, "No links yet. Add Global Campus or Compass Dash."));
+      links.forEach((l, i) => list.append(h("div", { class: "grid", style: { gridTemplateColumns: "1fr 1.4fr 1.6fr auto", gap: "8px", alignItems: "center" } }, h("input", { class: "in", value: l.name, placeholder: "Name", maxlength: 40, oninput: e => l.name = e.target.value }), h("input", { class: "in", value: l.url, placeholder: "https://…", oninput: e => l.url = e.target.value }), h("input", { class: "in", value: l.blurb, placeholder: "One line about it", maxlength: 120, oninput: e => l.blurb = e.target.value }), h("button", { class: "ib", title: "Remove", onclick: () => { links.splice(i, 1); draw(); } }, CE.icon("cross"))))); };
+    draw();
+    page.append(h("div", { class: "card stack" }, h("h3", {}, "Suggested"), h("div", { class: "row" }, ...[["Global Campus", "https://globalcampus.nae.school/", "Nord Anglia's online campus: global challenges and programmes."], ["Compass Dash", "https://compassdash.github.io/Compassdash/", "KS3 revision games with XP and the house cup."], ["Compass GCSE", "https://compassdash.github.io/Compass-GCSE/", "GCSE revision, the sister site of Compass Dash."]].filter(([n]) => !links.some(l => l.name === n)).map(([n, u, b]) => h("button", { class: "btn sm ghost", onclick: () => { links.push({ name: n, url: u, blurb: b }); draw(); } }, "+ " + n)))));
+  }
+
+  /* ----- Compass Dash for staff (houses, challenges, cup, leaderboard) ----- */
+  const cdHousesCard = cd => CE.cdHousesCard(cd);
+
+
   const GROUPS = [
     [["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["News", "#/news"]],
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
     [["Announcements", "#/announcements"], ["Calendar", "#/calendar"]],
     [["People & classes", "#/people", /^#\/people/], ["House points", "#/points"]],
+    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"]],
     [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
   ];
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g && g.length > 1 ? g : []); };
@@ -631,7 +770,7 @@
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignmentPage },
-    { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }
+    { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }, { path: "/admin", handler: admin }, { path: "/admin/:tab", handler: admin }
   ]);
   loadBell();
 })();
