@@ -201,6 +201,88 @@
   const vis = () => document.body && document.body.classList.toggle("motion", document.visibilityState === "visible" && !matchMedia("(prefers-reduced-motion: reduce)").matches);
   document.addEventListener("visibilitychange", vis); if (document.body) vis(); else document.addEventListener("DOMContentLoaded", vis);
 
+
+  /* ---------- user settings: theme, dyslexia-friendly, detail level, transparency ---------- */
+  CE.prefs = {
+    get() { return Object.assign({ theme: "auto", dys: false, detail: "standard", glass: 0 }, LS.get("ce_prefs") || {}); },
+    set(p) { LS.set("ce_prefs", Object.assign(CE.prefs.get(), p)); CE.prefs.apply(); },
+    apply() {
+      const p = CE.prefs.get(), root = document.documentElement, b = document.body;
+      const dark = p.theme === "dark" || (p.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      root.setAttribute("data-theme", dark ? "dark" : "light");
+      if (!b) return;
+      b.classList.toggle("dys", !!p.dys); b.classList.toggle("compact", p.detail === "compact"); b.classList.toggle("detailed", p.detail === "detailed");
+      b.classList.toggle("glass", p.glass > 0); b.style.setProperty("--glass", String(Math.min(60, Math.max(0, +p.glass || 0))));
+      if (p.dys && !document.getElementById("lexend")) { const l = CE.h("link", { id: "lexend", rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700&display=swap" }); document.head.append(l); }
+    }
+  };
+  CE.prefs.apply(); if (!document.body) document.addEventListener("DOMContentLoaded", () => CE.prefs.apply());
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => CE.prefs.apply());
+  /* the settings card every portal shows */
+  CE.prefsCard = () => {
+    const p = CE.prefs.get(), h = CE.h;
+    const seg = (opts, val, on) => h("div", { class: "seg" }, ...opts.map(([v, l]) => h("button", { class: String(v) === String(val) ? "on" : "", onclick: () => { on(v); CE.prefsCard.refresh && CE.prefsCard.refresh(); } }, l)));
+    const box = h("div", { class: "stack" },
+      h("div", { class: "row between" }, h("div", {}, h("b", {}, "Appearance"), h("div", { class: "sm mut" }, "Light, dark or follow the device.")), seg([["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]], p.theme, v => CE.prefs.set({ theme: v }))),
+      h("div", { class: "row between" }, h("div", {}, h("b", {}, "Dyslexia-friendly reading"), h("div", { class: "sm mut" }, "Lexend typeface, wider spacing, shorter lines and a warmer page.")), h("label", { class: "chk" }, h("input", { type: "checkbox", checked: p.dys, onchange: e => CE.prefs.set({ dys: e.target.checked }) }), p.dys ? "On" : "Off")),
+      h("div", { class: "row between" }, h("div", {}, h("b", {}, "Detail level"), h("div", { class: "sm mut" }, "Compact shows less text per card; detailed shows more.")), seg([["compact", "Compact"], ["standard", "Standard"], ["detailed", "Detailed"]], p.detail, v => CE.prefs.set({ detail: v }))),
+      h("div", { class: "row between" }, h("div", {}, h("b", {}, "Interface transparency"), h("div", { class: "sm mut" }, "Glass effect on cards and bars. 0 is solid.")), h("input", { type: "range", min: 0, max: 60, step: 5, value: p.glass, style: { width: "160px" }, oninput: e => CE.prefs.set({ glass: +e.target.value }) })));
+    return box;
+  };
+
+  /* ---------- offline: keep the last copy of what you read, serve it when the network is down ---------- */
+  const READ = /^ed_(s_(home|explore|activity|comp|subjects|lesson|quiz|assigns|review|progress|calendar|anns|news|clubs|badges)|me|board|t_(home|content|assigns|subs|class|heatmap|anns|events|clubs|bank))$/;
+  const rawApi = CE.api;
+  CE.api = async function (fn, args) {
+    const key = "ce_off_" + fn + ":" + JSON.stringify(Object.assign({}, args, { p_key: undefined }));
+    try {
+      const r = await rawApi(fn, args);
+      if (READ.test(fn) && r && r.ok) { try { sessionStorage.setItem(key, JSON.stringify(r)); } catch (e) {} }
+      CE.offline(false); return r;
+    } catch (e) {
+      if (e.message === "Failed to fetch" && READ.test(fn)) { const c = sessionStorage.getItem(key); if (c) { CE.offline(true); return JSON.parse(c); } }
+      throw e;
+    }
+  };
+  CE.offline = on => { let b = CE.$("#offline"); if (on && !b) { b = CE.h("div", { id: "offline", class: "offline" }, "You're offline. Showing the last copy of this page; changes won't save until you're back online."); document.body.prepend(b); } if (!on && b) b.remove(); };
+  addEventListener("online", () => CE.offline(false));
+  if ("serviceWorker" in navigator && !local) navigator.serviceWorker.register("sw.js").catch(() => {});
+
+  /* ---------- file uploads (Supabase Storage bucket "uploads"; preview mode keeps small files in the browser) ---------- */
+  CE.upload = async function (file) {
+    if (file.size > 10 * 1024 * 1024) throw new Error("That file is over 10 MB.");
+    const ext = (file.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 5);
+    const path = (CE.me ? CE.me.id : "x") + "/" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10) + "." + ext;
+    if (demo) { if (file.size > 400000) throw new Error("Preview mode can only keep files under 400 KB."); const url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(file); }); return { url, name: file.name }; }
+    const r = await fetch(C.supabaseUrl.replace(/\/+$/, "") + "/storage/v1/object/uploads/" + path, { method: "POST", headers: { apikey: C.supabaseKey, Authorization: "Bearer " + C.supabaseKey, "Content-Type": file.type || "application/octet-stream", "x-upsert": "false" }, body: file });
+    if (!r.ok) throw new Error(r.status === 404 ? "Uploads are not set up yet (run compassed-v2.1.sql)." : "Upload failed (" + r.status + ")");
+    CE.capi("ed_s_file", { p_path: path, p_name: file.name, p_size: file.size }).catch(() => {});
+    return { url: C.supabaseUrl.replace(/\/+$/, "") + "/storage/v1/object/public/uploads/" + path, name: file.name };
+  };
+  /* a small "attach file" control that appends the uploaded link to a text input of space-separated links */
+  CE.attach = (linksInput) => {
+    const h = CE.h, inp = h("input", { type: "file", accept: "image/*,application/pdf,video/mp4,audio/*,.txt", class: "hide", multiple: true });
+    const btn = h("button", { class: "btn sm ghost", type: "button", onclick: () => inp.click() }, CE.icon("link"), "Attach a photo or file");
+    inp.onchange = async () => { for (const f of inp.files) { btn.disabled = true; btn.textContent = "Uploading " + f.name + "…"; try { const u = await CE.upload(f); linksInput.value = (linksInput.value + " " + u.url).trim(); CE.toast("Attached " + f.name, "ok"); } catch (e) { CE.toast(e.message, "bad"); } } btn.disabled = false; btn.innerHTML = ""; btn.append(CE.icon("link"), "Attach a photo or file"); inp.value = ""; };
+    return h("span", {}, inp, btn);
+  };
+  /* render a list of links: images inline, everything else as a link */
+  CE.links = (links) => { const h = CE.h, w = h("div", { class: "stack" }); (links || []).forEach(l => { if (/^data:image|\.(png|jpe?g|gif|webp)(\?|$)/i.test(l) || /\/storage\/v1\/object\/public\/uploads\/.*\.(png|jpe?g|gif|webp)$/i.test(l)) w.append(h("a", { href: l, target: "_blank", rel: "noopener" }, h("img", { src: l, alt: "", style: { maxWidth: "100%", maxHeight: "360px", borderRadius: "12px" }, loading: "lazy" }))); else w.append(h("a", { href: l, target: "_blank", rel: "noopener", class: "row", style: { gap: "6px" } }, CE.icon("link"), l.length > 70 ? l.slice(0, 67) + "…" : l)); }); return w; };
+
+  /* ---------- badges (computed from the numbers ed_s_badges returns) ---------- */
+  CE.BADGES = [
+    ["first-step", "First step", "Complete your first activity", "explore", b => b.activities >= 1], ["explorer", "Explorer", "10 activities done", "compass", b => b.activities >= 10], ["all-rounder", "All-rounder", "Activities in 5 categories", "grid", b => b.cats >= 5],
+    ["bookworm", "Bookworm", "10 lessons completed", "lesson", b => b.lessons >= 10], ["master", "Master", "Pass a mastery checkpoint", "flag", b => b.checkpoints >= 1], ["grand-master", "Grand master", "5 checkpoints passed", "trophy", b => b.checkpoints >= 5],
+    ["perfect", "Perfect score", "100% on a quiz", "spark", b => b.perfect >= 1], ["contender", "Contender", "Enter a competition", "medal", b => b.entries >= 1], ["placed", "On the podium", "Place in a competition", "medal", b => b.places >= 1], ["champion", "Champion", "Win a competition", "trophy", b => b.wins >= 1],
+    ["on-time", "Handed in", "Hand in 5 pieces of work", "pencil", b => b.handins >= 5], ["memory", "Memory", "50 flashcard reviews", "repeat", b => b.reviews >= 50], ["joiner", "Joiner", "Join a club", "users", b => b.clubs >= 1], ["critic", "Kind critic", "Write a peer review", "eye", b => b.peer >= 1],
+    ["100-points", "Century", "100 house points", "cup", b => b.pts >= 100], ["500-points", "High flyer", "500 house points", "cup", b => b.pts >= 500]
+  ];
+  CE.badges = b => CE.BADGES.map(([id, name, desc, icon, test]) => ({ id, name, desc, icon, on: !!(b && test(b)) }));
+  CE.HOUSE_NAMES = { N: "North", E: "East", S: "South", W: "West" };
+
+  /* ---------- search (client-side over what the portal already loads) ---------- */
+  CE.searchBox = (placeholder, onInput) => { const h = CE.h, i = h("input", { class: "in", placeholder, oninput: () => onInput(i.value.trim().toLowerCase()) }); return h("div", { class: "srch" }, CE.icon("explore"), i); };
+
   /* ---------- shell (sidebar + topbar) ---------- */
   CE.shell = function () {
     const side = CE.$("#side"), scrim = CE.$("#scrim");

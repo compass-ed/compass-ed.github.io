@@ -18,6 +18,9 @@ assets/core.js        API, sessions, router, block renderer, calendar + .ics exp
 assets/config.js      Supabase URL / key, preview-mode switch
 assets/demo.js        Preview mode: a sample campus in the browser that mirrors every database function
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
+supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues, gallery, parent links, uploads
+parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
+sw.js                           Offline support: keeps the app shell and pages you have opened
 supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: removes its tables
 ```
 
@@ -27,6 +30,7 @@ supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: r
 1. Open your Supabase project > **SQL Editor** > **New query**.
 2. Open `supabase/compassed-v2.0.sql`. **Change the three values in section 8** near the end: the admin password, the student join code and the teacher invite code.
 3. Paste the whole file and **Run**. It is safe to run again; it never deletes anything.
+3b. Then paste `supabase/compassed-v2.1.sql` and **Run** it too. It adds houses and points, clubs, the question bank, timed quizzes, peer review, newsletter issues, the winners' gallery, parent links and the `uploads` storage bucket (10 MB per file, images, PDFs, audio and MP4).
 4. `assets/config.js` must point at that project (`supabaseUrl` and the publishable/anon key from Project Settings > API). The key is safe to publish: every table is locked down and only the `ed_*` functions can be called.
 
 Then sign in at the site as `admin` with the password you chose. Under **People & classes** create classes, add staff (or give them the invite code), and hand students the join code (or create their accounts for them).
@@ -59,6 +63,24 @@ then open http://127.0.0.1:8766/.
 - Five wrong sign-ins from one connection lock it for one minute.
 - All `ed_*` tables have row-level security on with no policies, so the only way in is through the `security definer` functions, each of which checks the caller's token and role.
 - Students can only read and write their own submissions, entries, review cards and completions, and only see assignments for their class.
+
+## Settings every user has
+Under Settings in either portal: **light / dark / auto** theme, a **dyslexia-friendly** reading mode (Lexend typeface, wider spacing, shorter lines, warmer page), a **detail level** (compact, standard, detailed) and an **interface transparency** slider. They are kept in the browser.
+
+## Also in v2.1
+- **House points and leaderboards**: students pick a house once; points come automatically from activities, entries, places, mastery checkpoints and peer reviews, and staff award them from any class page. Leaderboards by house, student and class.
+- **Badges** on the Progress page, computed from what a student has done.
+- **File uploads** on assignments and competition entries (Supabase Storage).
+- **Parent summary**: a private read-only link from Settings showing the week, work due, marks and events.
+- **Clubs** with capacity and sign-ups, run by staff.
+- **Newsletter builder**: one click drafts an issue from recent winners, open competitions, news and new activities.
+- **Winners' gallery** on the home page (only entries the student allowed), and an **age band** switch (under 11 / 11+).
+- **Question bank** with CSV import, pulled into quizzes with one click; a **Topics** view per class showing accuracy per topic tag.
+- **Timed assessments** with an open/close window and a countdown that auto-marks, plus a per-question results breakdown for staff.
+- **Peer review**: each student reviews two classmates' work after handing in; reviews show in the grading dialog.
+- **Register and seating plan** per class, colour-coded by overdue work and activity.
+- **Offline**: the app shell and any page already opened keep working without a connection.
+- **Search** across both portals.
 
 ## Feature map
 

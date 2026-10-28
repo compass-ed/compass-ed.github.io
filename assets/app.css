@@ -240,3 +240,37 @@ table.tb{width:100%;border-collapse:collapse;font-size:14px}
 .fig{margin:0} .fig img{border-radius:14px;width:100%}
 .lesson{max-width:780px}
 @media (max-width:980px){.bh{grid-template-columns:1fr;min-height:0}.bh-art{order:-1;padding:28px 24px 0}.bh-art img{width:120px}}
+
+/* ---- settings: dark mode, dyslexia-friendly, detail level, transparency ---- */
+:root[data-theme="dark"]{--bg:#0f1213;--bg2:#141819;--bg3:#1c2224;--ink:#f3f6f7;--ink2:#d5dcde;--mute:#9aa6a9;--line:#263033;--line2:#334043;--cyan-soft:#12363a;--cyan-tint:#0f2a2e;--ok-soft:#113524;--warn-soft:#3a2a0c;--bad-soft:#3d1717;--sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);--sh2:0 20px 50px -20px rgba(0,0,0,.8)}
+:root[data-theme="dark"] body{background:var(--bg)} :root[data-theme="dark"] .card,:root[data-theme="dark"] .item,:root[data-theme="dark"] .subj,:root[data-theme="dark"] .modal .box,:root[data-theme="dark"] .pop,:root[data-theme="dark"] .nav,:root[data-theme="dark"] .topbar,:root[data-theme="dark"] .in,:root[data-theme="dark"] .pill,:root[data-theme="dark"] .q .opt,:root[data-theme="dark"] .flash .cardf,:root[data-theme="dark"] .cal .d,:root[data-theme="dark"] .ver button,:root[data-theme="dark"] .seg button.on,:root[data-theme="dark"] .heat th,:root[data-theme="dark"] .side.teach,:root[data-theme="dark"] .mock{background:var(--bg2);color:var(--ink)}
+:root[data-theme="dark"] .nav{background:rgba(15,18,19,.88)} :root[data-theme="dark"] .ring::after{background:var(--bg2)}
+:root[data-theme="dark"] .btn{background:#fff;border-color:#fff;color:#000} :root[data-theme="dark"] .btn:hover{background:#e6e6e6;border-color:#e6e6e6} :root[data-theme="dark"] .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)} :root[data-theme="dark"] .btn.ghost:hover{background:var(--bg3)}
+:root[data-theme="dark"] .btn.cyan{background:var(--cyan);border-color:var(--cyan);color:#000} :root[data-theme="dark"] .badge.ink{background:#fff;color:#000} :root[data-theme="dark"] .ico.ink{background:#fff;color:#000} :root[data-theme="dark"] .ico.ink .i{color:#000}
+:root[data-theme="dark"] .side.teach a.nl.on,:root[data-theme="dark"] .pill.on,:root[data-theme="dark"] .bar.ink i,:root[data-theme="dark"] .cal .ev.due,:root[data-theme="dark"] .side .me .av{background:#fff;color:#000} :root[data-theme="dark"] .side.teach .me .av{background:#fff;color:#000}
+:root[data-theme="dark"] .card.ink,:root[data-theme="dark"] .sec.ink{background:#000;color:#fff} :root[data-theme="dark"] .bh{background:#000}
+:root[data-theme="dark"] .heat td.h0{background:#1c2224;color:#6c777a} :root[data-theme="dark"] .heat td.h1{background:#153538} :root[data-theme="dark"] .heat td.h2{background:#1b5056} :root[data-theme="dark"] .heat td.h3{background:#237a84} :root[data-theme="dark"] .skel{background:linear-gradient(90deg,var(--bg3) 25%,#232b2d 50%,var(--bg3) 75%)}
+:root[data-theme="dark"] .topbar.teach{background:#000} :root[data-theme="dark"] .side{background:#000} :root[data-theme="dark"] .key{background:var(--cyan-tint)} :root[data-theme="dark"] .empty{background:var(--bg2)} :root[data-theme="dark"] .kbd,:root[data-theme="dark"] .q .opt .k{background:var(--bg3)}
+:root[data-theme="dark"] .side.teach .sw{background:var(--bg3)} :root[data-theme="dark"] .cal .d.o{background:var(--bg3)}
+/* dyslexia-friendly reading: Lexend, wider spacing, no justification, warmer paper */
+body.dys{--font:"Lexend","Plus Jakarta Sans",system-ui,sans-serif;--head:"Lexend","Manrope",system-ui,sans-serif;letter-spacing:.02em;word-spacing:.08em;line-height:1.75}
+body.dys h1,body.dys h2,body.dys h3,body.dys h4{letter-spacing:0;font-weight:700} body.dys p,body.dys li{max-width:70ch} body.dys .lesson{font-size:17px}
+:root[data-theme="light"] body.dys{--bg:#fbf8f1;--bg2:#f6f1e6;--bg3:#efe8d9}
+/* detail level: compact hides secondary lines and tightens; detailed shows more */
+body.compact{--r:10px;--r2:8px} body.compact .card{padding:14px} body.compact .item{padding:8px 10px} body.compact .page{gap:12px} body.compact .item .s,body.compact .stat .l{display:none} body.compact .stat .n{font-size:24px} body.compact .lesson{font-size:14px}
+body.detailed .item .s{display:block} body.detailed .card{padding:24px} body.detailed .xs{font-size:13px} body.detailed .sm{font-size:14px}
+/* transparency: cards, topbar and sidebar take a glass look at the chosen strength */
+body.glass .card,body.glass .item,body.glass .subj,body.glass .topbar,body.glass .pop,body.glass .modal .box{background:color-mix(in srgb,var(--bg2) calc(100% - var(--glass)),transparent);backdrop-filter:blur(calc(var(--glass) * .3px)) saturate(1.2);-webkit-backdrop-filter:blur(calc(var(--glass) * .3px)) saturate(1.2)}
+body.glass{background:linear-gradient(135deg,var(--bg) 0%,var(--cyan-tint) 60%,var(--bg2) 100%) fixed}
+body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2),transparent);backdrop-filter:blur(12px)} body.glass .side.teach{background:color-mix(in srgb,var(--bg2) calc(100% - var(--glass)),transparent)}
+/* house colours */
+.house-N{--hc:#4cc4cf} .house-E{--hc:#f2b134} .house-S{--hc:#e4572e} .house-W{--hc:#7bc96f}
+.hbar{height:14px;border-radius:999px;background:var(--bg3);overflow:hidden} .hbar i{display:block;height:100%;background:var(--hc,var(--cyan));border-radius:999px}
+.badge-tile{display:grid;gap:6px;justify-items:center;text-align:center;padding:14px 8px;border:1px solid var(--line);border-radius:14px;background:var(--bg2)} .badge-tile.on{background:var(--cyan-tint);border-color:var(--cyan)} .badge-tile .i{width:30px;height:30px;color:var(--mute)} .badge-tile.on .i{color:var(--cyan3)} .badge-tile .t{font-weight:700;font-size:12px} .badge-tile .s{font-size:11px;color:var(--mute)}
+.timer{font-family:var(--mono);font-weight:600;padding:4px 10px;border-radius:999px;background:var(--bg3)} .timer.low{background:var(--bad-soft);color:var(--bad)}
+.seat{display:grid;grid-template-columns:repeat(6,1fr);gap:8px} .seat .s{border:1px solid var(--line);border-radius:12px;padding:10px;background:var(--bg2);cursor:pointer;display:grid;gap:4px;min-height:74px} .seat .s.sel{outline:3px solid var(--cyan)} .seat .s .nm{font-weight:700;font-size:13px} .seat .s .st{font-size:11px;color:var(--mute)} .seat .s.r{border-color:var(--bad);background:var(--bad-soft)} .seat .s.a{border-color:var(--warn);background:var(--warn-soft)} .seat .s.g{border-color:var(--ok)}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px} .gallery .g{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--bg2)} .gallery .g img{width:100%;aspect-ratio:4/3;object-fit:cover} .gallery .g .b{padding:12px}
+.nav.dark{background:rgba(0,0,0,.92);border-color:#000;color:#fff} .nav.dark .brand{color:#fff} .nav.dark .brand b{color:var(--cyan)} .nav.dark nav a{color:#c9d2d4} .nav.dark nav a:hover,.nav.dark nav a.on{background:#1d1d1d;color:#fff} .nav.dark .ib{color:#fff} .nav.dark .btn.ghost{color:#fff;border-color:#fff} .nav.dark .btn.ghost:hover{background:#fff;color:#000}
+@media (max-width:980px){.nav.dark nav{background:#000;border-color:#222} .seat{grid-template-columns:repeat(3,1fr)}}
+.offline{background:var(--warn-soft);color:#6a4200;font-weight:600;font-size:13px;padding:8px 16px;text-align:center}
+.srch{position:relative} .srch input{padding-left:36px} .srch .i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mute)}

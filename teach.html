@@ -9,7 +9,7 @@
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500&family=Lexend:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .side.teach{background:#fff;color:var(--ink);border-right:1px solid var(--line)}
@@ -29,6 +29,7 @@
     <div class="sec-l">Campus</div>
     <a class="nl" href="#/activities"><span data-icon="explore"></span>Activities</a>
     <a class="nl" href="#/competitions"><span data-icon="trophy"></span>Competitions</a>
+    <a class="nl" href="#/clubs"><span data-icon="users"></span>Clubs</a>
     <a class="nl" href="#/news"><span data-icon="news"></span>News</a>
     <a class="nl" href="#/announcements"><span data-icon="megaphone"></span>Announcements</a>
     <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
@@ -38,8 +39,10 @@
     <a class="nl" href="#/content"><span data-icon="puzzle"></span>Lessons &amp; quizzes</a>
     <a class="nl" href="#/playlists"><span data-icon="play"></span>Playlists</a>
     <a class="nl" href="#/rubrics"><span data-icon="ruler"></span>Rubrics</a>
+    <a class="nl" href="#/bank"><span data-icon="grid"></span>Question bank</a>
     <div class="sec-l">School</div>
     <a class="nl" href="#/people"><span data-icon="people"></span>People &amp; classes</a>
+    <a class="nl" href="#/points"><span data-icon="cup"></span>House points</a>
     <a class="nl" href="#/settings"><span data-icon="settings"></span>Settings</a>
     <div class="sp"></div>
     <div class="me"><div class="av" id="meAv">?</div><div><div class="nm" id="meName">…</div><div class="rl" id="meRole"></div></div><button class="ib right" id="signout" title="Sign out" aria-label="Sign out"><span data-icon="exit"></span></button></div>
@@ -50,7 +53,8 @@
       <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
       <h2 id="ptitle">Dashboard</h2>
       <span class="badge" style="background:#222;color:#fff">Staff portal</span>
-      <div class="right bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop" style="color:var(--ink)"></div></div>
+      <a class="ib" href="#/search" aria-label="Search" style="margin-left:auto"><span data-icon="explore"></span></a>
+      <div class="bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop" style="color:var(--ink)"></div></div>
     </div>
     <main class="page" id="page"></main>
   </div>

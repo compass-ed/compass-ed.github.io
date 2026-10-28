@@ -14,9 +14,9 @@
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
-<header class="nav">
+<header class="nav dark">
   <div class="wrap">
-    <a class="brand" href="index.html"><img src="assets/logo.svg" alt="">Compass<b>ED</b></a>
+    <a class="brand" href="index.html"><img src="assets/logo-white.svg" alt="">Compass<b>ED</b></a>
     <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
     <nav id="pubnav">
       <a href="index.html" class="on">Home</a>
@@ -24,6 +24,7 @@
       <a href="#competitions">Competitions</a>
       <a href="#calendar">Calendar</a>
       <a href="#news">News</a>
+      <a href="#clubs">Clubs</a>
       <a href="about.html">About</a>
     </nav>
     <div class="cta">
@@ -55,7 +56,7 @@
     <div class="wrap">
       <div class="row between" style="align-items:flex-end;margin-bottom:22px">
         <div><div class="kicker">Explore</div><h2 style="margin:0">Pick a category</h2></div>
-        <a class="btn sm ghost" href="signin.html">Sign in to open activities</a>
+        <div class="seg" id="ageSeg"><button class="on" data-age="all">All ages</button><button data-age="under11">Under 11</button><button data-age="11plus">11 and over</button></div>
       </div>
       <div class="grid g4" id="catGrid"></div>
     </div>
@@ -82,6 +83,23 @@
         <h2 id="news">Latest from campus</h2>
         <div class="stack" id="newsList"></div>
       </div>
+    </div>
+  </section>
+
+  <section class="sec" id="gallery">
+    <div class="wrap">
+      <div class="kicker">Gallery</div>
+      <h2>Recent winners</h2>
+      <p class="mut">Entries from closed competitions, shown with the student's permission.</p>
+      <div class="gallery" id="galleryGrid"></div>
+    </div>
+  </section>
+
+  <section class="sec alt" id="clubs">
+    <div class="wrap">
+      <div class="kicker">Clubs</div>
+      <h2>Lunchtime and after school</h2>
+      <div class="grid g4" id="clubGrid" style="margin-top:22px"></div>
     </div>
   </section>
 

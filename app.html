@@ -10,7 +10,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#000000">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Manrope:wght@700;800&family=JetBrains+Mono:wght@500&family=Lexend:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/app.css">
 </head>
 <body>
@@ -20,6 +20,8 @@
     <a class="nl" href="#/"><span data-icon="compass"></span>Home</a>
     <a class="nl" href="#/explore"><span data-icon="explore"></span>Explore</a>
     <a class="nl" href="#/competitions"><span data-icon="trophy"></span>Competitions</a>
+    <a class="nl" href="#/clubs"><span data-icon="users"></span>Clubs</a>
+    <a class="nl" href="#/house"><span data-icon="cup"></span>House points</a>
     <a class="nl" href="#/news"><span data-icon="news"></span>News</a>
     <a class="nl" href="#/calendar"><span data-icon="calendar"></span>Calendar</a>
     <div class="sec-l">My schoolwork</div>
@@ -37,7 +39,8 @@
     <div class="topbar">
       <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
       <h2 id="ptitle">Home</h2>
-      <div class="right bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop"></div></div>
+      <a class="ib" href="#/search" aria-label="Search" style="margin-left:auto"><span data-icon="explore"></span></a>
+      <div class="bell" id="bellWrap"><button class="ib" id="bell" aria-label="Notifications"><span data-icon="bell"></span><span class="n hide" id="bellN"></span></button><div class="pop" id="bellPop"></div></div>
     </div>
     <main class="page" id="page"></main>
   </div>
