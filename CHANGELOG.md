@@ -2,6 +2,9 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.4.3 — 28 October 2026
+- Home page sections modelled on the Compass International School Doha site: a welcome from the Principal with the quote "Every child is different. Every path should be too." (Jamie Hughes, Principal), the learning journey by stage (Early Years, Primary, Secondary, Sixth Form), "Beyond the classroom" (arts, STEAM, sport and wellbeing, social purpose, with the Global Campus collaborations), and "Four steps to get started". The About page lists the Themaid and Madinat Khalifa campuses. Reveal-on-scroll now covers the whole home page.
+
 ## v2.4.2 — 28 October 2026
 - **Feedback button** in both portals (bottom right), modelled on Compass Dash: a star rating, a category, a message, a honeypot and a 30-second cooldown. Only the administrator can read it, under Admin > Feedback (New/All/category filters, mark as seen, delete, average rating). Database: run `supabase/compassed-v2.4.2-feedback.sql`.
 - **v2.4.1**: the Moda export badge is cropped out of every video.
