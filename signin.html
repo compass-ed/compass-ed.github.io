@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co https://va.vercel-scripts.com; form-action 'self'; object-src 'none'; base-uri 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; form-action 'self'; object-src 'none'; base-uri 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <title>Sign in · Compass Ed</title>
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
@@ -32,10 +32,6 @@
   .steps i.on{background:var(--ink);color:#fff}
   @media (max-width:900px){.si{grid-template-columns:1fr}.si .art{min-height:220px;padding:24px 20px;justify-content:flex-end}.si .art .brand-lg{margin-bottom:28px;font-size:22px}.si .art .brand-lg img{width:34px;height:34px}.si .art p{display:none}.si .art h2{font-size:24px}}
 </style>
-<script>
-  window.si = window.si || function () { (window.siq = window.siq || []).push(arguments); };
-</script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
 </head>
 <body>
 <header class="nav">
