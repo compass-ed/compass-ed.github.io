@@ -6,6 +6,9 @@
 (function () {
   const h = CE.h, D = CE.date;
 
+  /* one gallery tile (a winning entry); used by the campus page, the Showcase and the news Highlights */
+  CE.galleryTile = g => { const img = (g.links || []).find(l => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(l) || /\/uploads\//.test(l)); return h("div", { class: "g lift" }, img ? h("img", { src: img, alt: "", loading: "lazy" }) : h("div", { class: "ph" }, CE.icon("medal")), h("div", { class: "b" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, ["", "1st", "2nd", "3rd"][g.place] || g.place + "th"), h("span", { class: "xs mut" }, g.comp)), h("div", { class: "b sm", style: { marginTop: "6px" } }, g.name), h("div", { class: "xs mut" }, g.body))); };
+
   CE.campus = async function (root, opts) {
     opts = opts || {}; const portal = opts.portal || null, inPortal = !!opts.inPortal, pre = inPortal ? CE.root : "", slots = opts.slots || {};
     const link = (studentHash, teacherHash) => portal === "student" ? (inPortal ? studentHash : "student/" + studentHash) : portal === "teacher" ? (inPortal ? (teacherHash || "#/activities") : "teacher/" + (teacherHash || "#/activities")) : "signin.html";
@@ -56,7 +59,7 @@
     const show = h("div", { class: "showcase solo" }, galCol, linkCol);
     place("showcase", h("section", { class: "csec reveal", id: "showcase" }, show));
     if (!gal.length) gg.append(CE.emptyArt("trophy", "Winners appear here once competitions close"));
-    gal.slice(0, 8).forEach(g => { const img = (g.links || []).find(l => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(l) || /\/uploads\//.test(l)); gg.append(h("div", { class: "g lift" }, img ? h("img", { src: img, alt: "", loading: "lazy" }) : h("div", { class: "ph" }, CE.icon("medal")), h("div", { class: "b" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, ["", "1st", "2nd", "3rd"][g.place] || g.place + "th"), h("span", { class: "xs mut" }, g.comp)), h("div", { class: "b sm", style: { marginTop: "6px" } }, g.name), h("div", { class: "xs mut" }, g.body)))); });
+    gal.slice(0, 8).forEach(g => gg.append(CE.galleryTile(g)));
     CE.api("ed_links").then(l => { if (!l.ok || !(l.links || []).length) return; linkCol.append(CE.linkTiles(l.links)); linkCol.classList.remove("hide"); show.classList.remove("solo"); }).catch(() => {});
 
     /* clubs */

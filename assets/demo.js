@@ -169,6 +169,11 @@
     db.feedback = db.feedback || [{ id: 1, uid: 101, role: "student", name: "Alice Johnson", rating: 5, category: "Suggestion", body: "Could the review queue show how many cards are due tomorrow as well as today? I like planning ahead.", page: "Student portal #/review", created: day(-1), seen_at: null },
       { id: 2, uid: 3, role: "teacher", name: "Mr Ode", rating: 3, category: "Bug report", body: "The heatmap takes a while to load for 8B when the quiz list is long. Not broken, just slow.", page: "Staff portal #/class/2/heatmap", created: day(-2), seen_at: null },
       { id: 3, uid: 103, role: "student", name: "Cara Mensah", rating: 4, category: "Feature request", body: "A dark mode for the public home page too, please. The portals have it already.", page: "Student portal #/campus", created: day(-5), seen_at: day(-4) }];
+    if (!db.voice) { const nm = id => (db.users.find(u => u.id === id) || {}).name || "Student";
+      db.voice = [{ id: 1, uid: 101, name: nm(101), title: "Keep the library open through lunch", body: "Lots of us want somewhere quiet to finish homework before clubs start.", status: "planned", reply: "Trialling it after half term, Tuesday to Thursday.", created: day(-9) },
+        { id: 2, uid: 103, name: nm(103), title: "A chess ladder for Years 7 and 8", body: "The tournament is great but a ladder would let us play every week.", status: "open", reply: "", created: day(-4) },
+        { id: 3, uid: 102, name: nm(102), title: "Water fountain near the sports hall", body: "", status: "done", reply: "Installed over the summer; thanks for asking.", created: day(-30) }];
+      db.voice_votes = [{ voice_id: 1, uid: 101 }, { voice_id: 1, uid: 102 }, { voice_id: 1, uid: 103 }, { voice_id: 2, uid: 103 }, { voice_id: 2, uid: 101 }, { voice_id: 3, uid: 102 }]; }
     db.users.forEach(u => { if (u.consent == null) u.consent = u.username === "dev.p" ? {} : { terms: u.created, privacy: u.created, v: 1 }; if (u.must_pw == null) u.must_pw = false; if (u.cd_code === undefined) { u.cd_code = u.username === "alice.j" ? "7K3Q" : null; u.cd_user = u.username === "alice.j" ? "alice_j" : null; } });
   };
   const load = () => { try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {} if (!db || !db.users) { db = seed(); } migrate(); save(); };
@@ -439,6 +444,27 @@
     ed_a_feedback(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); const rows = db.feedback.slice().sort((p, q) => q.created < p.created ? -1 : 1); return { ok: true, unseen: rows.filter(f => !f.seen_at).length, total: rows.length, avg: rows.length ? Math.round(rows.reduce((n, f) => n + f.rating, 0) / rows.length * 10) / 10 : null, rows: rows.map(f => ({ id: f.id, uid: f.uid, role: f.role, name: f.name, username: (db.users.find(x => x.id === f.uid) || {}).username || null, rating: f.rating, category: f.category, body: f.body, page: f.page, created: f.created, seen: !!f.seen_at })) }; },
     ed_a_feedback_seen(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); db.feedback.forEach(f => { if (!a.p_id || f.id === +a.p_id) f.seen_at = a.p_seen === false ? null : (f.seen_at || now()); }); return { ok: true }; },
     ed_a_feedback_del(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); const i = db.feedback.findIndex(f => f.id === +a.p_id); if (i < 0) return { ok: false }; db.feedback.splice(i, 1); return { ok: true }; }
+  });
+
+  /* v2.6: Student Voice and Campus Insights */
+  Object.assign(F, {
+    ed_s_voice(a) { const u = who(a); if (!u) return err("bad_key"); const n = id => db.voice_votes.filter(v => v.voice_id === id).length;
+      return { ok: true, rows: db.voice.slice().sort((p, q) => (p.status === "closed") - (q.status === "closed") || n(q.id) - n(p.id) || (q.created < p.created ? -1 : 1)).map(v => ({ id: v.id, title: v.title, body: v.body, name: v.name, status: v.status, reply: v.reply, created: v.created, votes: n(v.id), voted: db.voice_votes.some(x => x.voice_id === v.id && x.uid === u.id), mine: v.uid === u.id })) }; },
+    ed_s_voice_post(a) { const u = who(a); if (!u) return err("bad_key"); const t = (a.p_title || "").trim(); if (t.length < 4) return err("empty"); if (t.length > 80 || (a.p_body || "").length > 600) return err("too_big");
+      const v = { id: nid(), uid: u.id, name: u.name, title: t, body: (a.p_body || "").trim(), status: "open", reply: "", created: now() }; db.voice.push(v); db.voice_votes.push({ voice_id: v.id, uid: u.id }); return { ok: true, id: v.id }; },
+    ed_s_voice_vote(a) { const u = who(a); if (!u) return err("bad_key"); const v = db.voice.find(x => x.id === +a.p_id && x.status !== "closed"); if (!v) return err("not_found"); const i = db.voice_votes.findIndex(x => x.voice_id === v.id && x.uid === u.id); if (i >= 0) db.voice_votes.splice(i, 1); else db.voice_votes.push({ voice_id: v.id, uid: u.id }); return { ok: true, voted: i < 0, votes: db.voice_votes.filter(x => x.voice_id === v.id).length }; },
+    ed_t_voice_set(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const v = db.voice.find(x => x.id === +a.p_id); if (!v || !["open", "planned", "done", "closed"].includes(a.p_status)) return err("bad_status"); v.status = a.p_status; v.reply = (a.p_reply || "").trim().slice(0, 400); return { ok: true }; },
+    ed_t_voice_del(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const i = db.voice.findIndex(x => x.id === +a.p_id); if (i < 0) return { ok: false }; db.voice.splice(i, 1); db.voice_votes = db.voice_votes.filter(x => x.voice_id !== +a.p_id); return { ok: true }; },
+    ed_t_insights(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const since = d => new Date(Date.now() - d * 864e5).toISOString(); const st = students(); const ws = weekStart();
+      const wk = {}; db.activity_done.filter(d => d.at > since(56)).forEach(d => { const x = new Date(d.at); x.setHours(0, 0, 0, 0); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); const k = x.toISOString(); wk[k] = (wk[k] || 0) + 1; });
+      return { ok: true, students: st.length, active_week: st.filter(s => (s.last_seen || "") > since(7)).length, active_month: st.filter(s => (s.last_seen || "") > since(30)).length,
+        done_week: db.activity_done.filter(d => d.at > since(7)).length, done_total: db.activity_done.length, lessons_week: db.lesson_done.filter(d => d.at > since(7)).length, quizzes_week: db.quiz_res.filter(d => d.at > since(7)).length,
+        subs_week: db.subs.filter(s => s.status === "submitted" && (s.sub_at || "") > since(7)).length, voice_open: db.voice.filter(v => v.status === "open").length,
+        cats: db.categories.map(c => ({ name: c.name, n: db.activity_done.filter(d => db.activities.some(x => x.id === d.activity_id && x.cat === c.id)).length })),
+        comps: db.competitions.slice().sort((p, q) => q.closes < p.closes ? -1 : 1).slice(0, 8).map(c => ({ title: c.title, kind: c.kind, closes: c.closes, entries: db.entries.filter(x => x.comp_id === c.id).length })),
+        houses: ["N", "E", "S", "W"].map(hh => ({ house: hh, pts: db.points.filter(p => st.some(s => s.id === p.uid && s.house === hh)).reduce((n, p) => n + p.pts, 0), week: db.points.filter(p => p.at >= ws && st.some(s => s.id === p.uid && s.house === hh)).reduce((n, p) => n + p.pts, 0) })).sort((p, q) => q.pts - p.pts),
+        clubs: db.clubs.map(c => ({ title: c.title, members: db.club_members.filter(m => m.club_id === c.id).length, capacity: c.capacity })),
+        weeks: Object.keys(wk).sort().map(k => ({ week: k, n: wk[k] })) }; }
   });
 
   window.CE_DEMO = {

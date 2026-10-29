@@ -2,6 +2,12 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.6 — 29 October 2026
+- **Campus Hub** in both portals, modelled on Nord Anglia's Global Campus: one sub-navigation that gathers the campus pages. Students get **Student Voice** (post an idea, back others', see staff replies and what is planned or done), a **Student Showcase** (winning entries shown with permission, plus your own entries), **Culture & community** (houses, clubs, school services) and a **Digital Student ID** card (name, class, year, house, campus number; printable; backdrop designed in Moda). The News page opens with a **Highlights** strip of recent winners.
+- **Staff**: **Campus Insights** (who is taking part and in what: active students, completions by category and by week, competition entries, house points, club capacity; nothing new is tracked), a Student Voice inbox to answer, plan, close or delete ideas, and **Display mode**: a full-screen classroom screen that rotates coming-up events, open competitions, news, house points and clubs with a clock, from the staff portal's Campus Hub.
+- Database: `supabase/compassed-v2.6-campus.sql` (run once after v2.4.2) adds the ideas and votes tables and the insights function. Preview mode mirrors all of it.
+- Housekeeping: duplicate logo files and an unused headers file removed; the Vercel copy now sends real security headers (`vercel.json`); the changelog is no longer excluded from Vercel; README file map and setup order corrected.
+
 ## v2.5 — 29 October 2026
 - **The compass transition.** Moving between pages now has one cinematic beat: a black veil blurs the page away while the compass needle spins up and settles precisely on north, then the next page opens from the compass as the rose flies past the camera. It runs on every page-to-page link, after sign-in and on sign-out, on desktop, tablet and phone (about a second in all, with the page load hidden inside it). The compass rose and needle were designed in Moda (`assets/art/compass-rose.png`, `compass-needle.png`); the motion, easing and blur are CSS, because a video overlay cannot be transparent, flicker-free or reduced-motion aware.
 - **Route swaps inside the portals** use the browser's View Transitions API where available (Chrome, Edge, Safari 18, Firefox 144): the old content blurs and settles into the new one in a quarter of a second while the sidebar and top bar stay put. Older browsers keep the previous instant render.
@@ -21,7 +27,7 @@ Each new version from v2.2 onwards ships with an animated preview in `assets/ver
 - **v2.4.1**: the Moda export badge is cropped out of every video.
 
 ## v2.4 — 28 October 2026
-- **Compass Ed** is the name everywhere (pages, portals, policies, manifest, sample data); run `supabase/patches/rename-compass-ed.sql` once to rename the live school record.
+- **Compass Ed** is the name everywhere (pages, portals, policies, manifest, sample data); the live school record was renamed with a one-off patch at the time.
 - **ECA**: the Clubs section says "ECA and after school" and "ECA (extra-curricular activities)" instead of "Lunchtime".
 - **The campus home page inside both portals** (`#/campus`): the same page as the public site, rendered by one shared module (`assets/campus.js`), so students and staff browse it without signing out. Links go to the right place in each portal.
 - **Motion**: "Welcome to campus" rises in word by word with an underline sweep on the sign-in page; sections reveal as you scroll; cards, tiles and list rows lift on hover; buttons press; nav links underline; inputs glow on focus. All of it respects "reduce motion".

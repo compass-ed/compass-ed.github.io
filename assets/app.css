@@ -470,3 +470,30 @@ html.tx-in::after{left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320
 @keyframes vtIn{from{opacity:0;transform:scale(1.01);filter:blur(4px)}}
 ::view-transition-old(side),::view-transition-new(side),::view-transition-old(topbar),::view-transition-new(topbar),::view-transition-old(subnav),::view-transition-new(subnav),::view-transition-old(fab),::view-transition-new(fab){animation:none;mix-blend-mode:normal}
 @media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+
+/* ===== v2.6 campus hub: student voice, digital ID, insights bars, display mode ===== */
+.voice .reply{margin-top:8px;padding:8px 10px;border-left:3px solid var(--cyan);background:var(--bg2);border-radius:0 8px 8px 0} .voice.dim{opacity:.72}
+.bar[class*="house-"] i{background:var(--hc)}
+.idcard{position:relative;aspect-ratio:1.6;max-width:560px;border-radius:22px;overflow:hidden;background:#000 url("art/id-card.jpg") center/cover;color:#fff;padding:clamp(16px,4vw,28px);display:flex;flex-direction:column;justify-content:space-between;box-shadow:var(--sh2);isolation:isolate;transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.idcard:hover{transform:perspective(900px) rotateX(3deg) rotateY(-4deg)}
+.idcard::after{content:"";position:absolute;inset:-60% -30%;background:linear-gradient(115deg,transparent 45%,rgba(255,255,255,.16) 50%,transparent 55%);transform:translateX(-60%);animation:idShine 2.2s .5s cubic-bezier(.2,.7,.2,1) forwards;pointer-events:none}
+@keyframes idShine{to{transform:translateX(60%)}}
+.idtop{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.02em} .idtop img{width:34px}
+.idname{font-family:var(--head);font-weight:800;font-size:clamp(22px,4.5vw,34px);line-height:1.1}
+.idmeta{display:flex;gap:8px;flex-wrap:wrap;color:#c9d2d4;font-size:14px;align-items:center} .idhouse{background:var(--hc);color:#000;padding:2px 10px;border-radius:999px;font-weight:700}
+.idfoot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:#c9d2d4} .idfoot .mono{font-family:var(--mono);font-size:16px;color:#fff;letter-spacing:.06em}
+@media print{.noprint{display:none!important} .idcard{box-shadow:none;transform:none;-webkit-print-color-adjust:exact;print-color-adjust:exact} .idcard::after{display:none}}
+.display .side,.display .topbar,.display .subnav,.display .fab-fb,.display .cookie,.display .banner,.display .scrim{display:none!important}
+.display .page{padding:0;gap:0;background:#000}
+.stage{position:relative;min-height:100dvh;color:#fff;isolation:isolate;padding:clamp(20px,4vw,56px);display:flex;flex-direction:column;gap:24px;overflow:hidden}
+.stage .loop-bg{opacity:.45} .stage::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.35),rgba(0,0,0,.82));z-index:0}
+.stage>*:not(.loop-bg){position:relative;z-index:1}
+.stage-head{display:flex;justify-content:space-between;align-items:center;font-size:clamp(18px,2.2vw,28px)} .stage-head img{width:44px} .stage-head .clock{font-family:var(--mono);font-size:clamp(28px,4vw,56px);font-weight:500}
+.stage-body{flex:1;opacity:0;transform:translateY(16px);transition:opacity .6s cubic-bezier(.2,.7,.2,1),transform .6s cubic-bezier(.2,.7,.2,1)} .stage-body.in{opacity:1;transform:none}
+.stage-body h2{font-size:clamp(32px,5vw,72px);margin:0 0 20px;font-family:var(--head);color:#fff}
+.stage-list{display:grid;gap:14px;font-size:clamp(18px,2.4vw,32px)} .stage-list .it{display:grid;grid-template-columns:minmax(120px,.35fr) 1fr;gap:16px;padding:14px 18px;background:rgba(255,255,255,.08);border-radius:14px} .stage-list .it b{color:var(--cyan)}
+.stage-empty{font-size:clamp(18px,2.4vw,32px);color:#c9d2d4}
+.stage-houses{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px} .stage-houses .hs{padding:22px;border-radius:18px;background:rgba(255,255,255,.08);border-top:8px solid var(--hc);display:flex;flex-direction:column;gap:6px;font-size:clamp(16px,2vw,24px)} .stage-houses .n{font-family:var(--head);font-weight:800;font-size:clamp(32px,5vw,64px);line-height:1}
+.dots{display:flex;gap:8px} .dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3)} .dots i.on{background:var(--cyan)}
+.stage-tools{display:flex;gap:8px} .stage-tools .btn{color:#fff;border-color:#fff;background:transparent}
+@media (prefers-reduced-motion:reduce){.idcard::after{animation:none} .stage-body{transition:none;opacity:1;transform:none}}

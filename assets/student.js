@@ -141,8 +141,10 @@
   async function news() {
     CE.title("News"); CE.loading(page);
     try {
-      const r = await CE.capi("ed_s_news"); if (!r.ok) return CE.fail(page, r);
+      const [r, pub] = await Promise.all([CE.capi("ed_s_news"), CE.api("ed_public").catch(() => ({}))]); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
+      const gal = (pub.gallery || []).slice(0, 4);
+      if (gal.length) page.append(h("div", {}, h("div", { class: "kicker" }, "Highlights"), h("div", { class: "gallery" }, ...gal.map(CE.galleryTile))));
       if (!r.rows.length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("news")), h("div", { class: "b" }, "No news yet")));
       r.rows.forEach(n => page.append(h("article", { class: "card" + (n.featured ? " tint" : ""), style: { maxWidth: "820px" } }, n.cover && /^https:\/\//.test(n.cover) ? h("img", { src: n.cover, alt: "", style: { borderRadius: "12px", marginBottom: "12px", width: "100%" }, loading: "lazy" }) : null, n.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("h3", { style: { marginTop: "6px" } }, n.title), h("div", { html: CE.rich(n.body) }), h("div", { class: "xs mut" }, (n.from ? n.from + " · " : "") + D.long(n.created)))));
     } catch (e) { CE.fail(page, e); }
@@ -444,7 +446,67 @@
     const root = h("div", { id: "campus" }); page.append(root);
     await CE.campus(root, { portal: "student", inPortal: true });
   }
+  /* ---------- campus hub (v2.6): student voice, showcase, culture & community, digital ID ---------- */
+  const STATUS = { open: ["Open", ""], planned: ["Planned", " cyan"], done: ["Done", " ok"], closed: ["Closed", " ink"] };
+  async function voice() {
+    CE.title("Student Voice"); CE.loading(page);
+    try {
+      const r = await CE.capi("ed_s_voice"); if (!r.ok) return CE.fail(page, r);
+      page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Student Voice"), h("div", { class: "sm mut" }, "Share an idea for the campus and back the ones you like. Staff reply here and mark what is planned or done."))));
+      const t = h("input", { class: "in", maxlength: "80", placeholder: "Your idea in one line" }), b = h("textarea", { class: "in", rows: "3", maxlength: "600", placeholder: "Why it would help (optional)" });
+      page.append(card("Share an idea", h("div", { class: "stack" }, t, b, h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { const x = await CE.capi("ed_s_voice_post", { p_title: t.value, p_body: b.value }); if (!x.ok) return CE.toast(x.error === "too_many" ? "One idea a minute, ten a day." : x.error === "empty" ? "Give your idea a title." : CE.errText(x)); CE.toast("Thanks, your idea is up."); voice(); } }, "Share")))));
+      if (!r.rows.length) return page.append(h("div", { class: "empty" }, "No ideas yet. Yours could be the first."));
+      page.append(h("div", { class: "stack" }, ...r.rows.map(v => { const [lbl, cls] = STATUS[v.status] || STATUS.open;
+        const vb = h("button", { class: "btn sm" + (v.voted ? " cyan" : " ghost"), disabled: v.status === "closed", onclick: async () => { const x = await CE.capi("ed_s_voice_vote", { p_id: v.id }); if (!x.ok) return CE.toast(CE.errText(x)); vb.className = "btn sm" + (x.voted ? " cyan" : " ghost"); vb.textContent = "▲ " + x.votes; } }, "▲ " + v.votes);
+        return h("div", { class: "card voice" + (v.status === "closed" ? " dim" : "") }, h("div", { class: "row between" }, h("span", { class: "badge" + cls }, lbl), h("span", { class: "xs mut" }, v.name + (v.mine ? " (you)" : "") + " · " + D.ago(v.created))),
+          h("h4", { style: { margin: "8px 0 4px" } }, v.title), v.body ? h("p", { class: "sm mut", style: { margin: 0 } }, v.body) : null,
+          v.reply ? h("div", { class: "reply sm" }, h("b", {}, "Staff reply: "), v.reply) : null, h("div", { class: "row", style: { marginTop: "10px" } }, vb)); })));
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function showcase() {
+    CE.title("Showcase"); CE.loading(page);
+    try {
+      const [pub, ex] = await Promise.all([CE.api("ed_public"), CE.capi("ed_s_explore", { p_cat: 0 })]); if (!pub.ok) return CE.fail(page, pub);
+      page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Student Showcase"), h("div", { class: "sm mut" }, "Winning entries from closed competitions, shown with each student's permission. Tick \"show in the gallery\" when you enter to be included."))));
+      const gal = pub.gallery || [];
+      page.append(gal.length ? h("div", { class: "gallery" }, ...gal.map(CE.galleryTile)) : CE.emptyArt("trophy", "Nothing on show yet", "Winners appear here once competitions close."));
+      const mine = ex.ok ? ex.competitions.filter(c => c.entered) : [];
+      page.append(card("My entries", mine.length ? h("div", { class: "list" }, ...mine.map(c => h("a", { class: "item", href: "#/competition/" + c.id }, h("div", { class: "ico sm" }, CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, c.kind + (c.open ? " · open until " + D.short(c.closes) : " · closed")))))) : h("div", { class: "empty" }, "You have not entered anything yet. ", h("a", { href: "#/competitions" }, "See what is open."))));
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function community() {
+    CE.title("Culture & community"); CE.loading(page);
+    try {
+      const [b, c] = await Promise.all([CE.capi("ed_board"), CE.capi("ed_s_clubs")]); if (!b.ok) return CE.fail(page, b);
+      page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Culture & community"), h("div", { class: "sm mut" }, "Houses, clubs and the other places the school meets."))));
+      page.append(h("div", { class: "grid g4" }, ...b.house.map((x, i) => h("a", { class: "card stat house-" + x.house, href: "#/house", style: { textDecoration: "none", color: "inherit", borderTop: "4px solid var(--hc)" } }, h("span", { class: "n" }, x.pts.toLocaleString()), h("span", { class: "l" }, (i + 1) + ". " + (b.houses[x.house] || x.house) + (x.house === b.my_house ? " · mine" : "") + " · +" + x.week + " this week")))));
+      const rows = c.ok ? c.rows : [], mine = rows.filter(x => x.joined);
+      page.append(card("Clubs", h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, mine.length ? "You're in " + mine.map(x => x.title).join(", ") + "." : "You have not joined a club yet."),
+        rows.length ? h("div", { class: "list" }, ...rows.slice(0, 6).map(x => h("a", { class: "item", href: "#/clubs" }, h("div", { class: "ico sm" }, CE.icon("users")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, x.day + " · " + x.time + (x.place ? " · " + x.place : ""))), h("span", { class: "badge" + (x.joined ? " cyan" : "") }, x.joined ? "Joined" : x.n + "/" + x.capacity)))) : h("div", { class: "empty" }, "No clubs yet."),
+        h("div", {}, h("a", { class: "btn sm ghost", href: "#/clubs" }, "All clubs")))));
+      CE.api("ed_links").then(l => { if (l.ok && (l.links || []).length) page.append(card("Other school services", CE.linkTiles(l.links))); }).catch(() => {});
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function idCard() {
+    CE.title("My ID"); CE.loading(page);
+    try {
+      const b = await CE.capi("ed_board"); page.innerHTML = "";
+      const num = "CE-" + String(me.id).padStart(5, "0");
+      page.append(h("div", { class: "page-lead noprint" }, h("div", {}, h("h2", {}, "Digital Student ID"), h("div", { class: "sm mut" }, "Show it at the library, at clubs and on trips. It only shows while you are signed in."))),
+        h("div", { class: "idcard house-" + (me.house || "N") },
+          h("div", { class: "idtop" }, h("img", { src: CE.root + "assets/logo-white.svg", alt: "" }), h("span", {}, me.school || "Compass Ed")),
+          h("div", { class: "idname" }, me.name),
+          h("div", { class: "idmeta" }, me.class ? h("span", {}, me.class.name) : null, me.year ? h("span", {}, "Year " + me.year) : null, me.house ? h("span", { class: "idhouse" }, (b.ok && b.houses[me.house]) || me.house) : null),
+          h("div", { class: "idfoot" }, h("span", { class: "mono" }, num), h("span", {}, "@" + me.username), me.cd ? h("span", { class: "badge cyan" }, "Compass Dash linked") : null)),
+        h("div", { class: "row noprint" }, h("button", { class: "btn ghost sm", onclick: () => print() }, "Print"), h("span", { class: "xs mut" }, num + " is your campus number.")));
+    } catch (e) { CE.fail(page, e); }
+  }
+
   const GROUPS = [
+    [["Campus Hub", "#/campus"], ["Student Voice", "#/voice"], ["Showcase", "#/showcase"], ["Culture & community", "#/community"], ["My ID", "#/id"]],
     [["Activities", "#/explore", /^#\/(explore|activity)/], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"]],
     [["Subjects", "#/subjects", /^#\/(subjects|subject|lesson|quiz)/], ["Assignments", "#/assignments", /^#\/assignment/], ["Review queue", "#/review"]],
     [["Progress & badges", "#/progress"], ["House points", "#/house"]],
@@ -455,6 +517,7 @@
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/house", handler: house }, { path: "/clubs", handler: clubs }, { path: "/search", handler: search },
+    { path: "/voice", handler: voice }, { path: "/showcase", handler: showcase }, { path: "/community", handler: community }, { path: "/id", handler: idCard },
     { path: "/", handler: home }, { path: "/campus", handler: campusPage }, { path: "/explore", handler: explore }, { path: "/explore/:cat", handler: explore }, { path: "/activity/:id", handler: activity },
     { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: competition }, { path: "/news", handler: news },
     { path: "/subjects", handler: subjects }, { path: "/subject/:id", handler: subject }, { path: "/lesson/:id", handler: lesson }, { path: "/quiz/:id", handler: quiz },

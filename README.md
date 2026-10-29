@@ -14,20 +14,27 @@ about.html            About page                 signin.html   Sign in / create 
 student/index.html    Student portal (hash-routed)              -> assets/student.js
 teacher/index.html    Staff portal (teachers + administrator)   -> assets/teacher.js
 versions.html         Version history with animated previews   CHANGELOG.md
+404.html              Not-found page (GitHub Pages and Vercel serve it by name)   manifest.webmanifest + assets/icon-*.png   Installable app icons
+assets/tx.js          Page-transition handshake, loaded first in every <head>
+assets/public.js      Shared bits of the public pages (nav, print)   assets/signin.js   The sign-in page
 assets/app.css        Design system              assets/icons.js  Hand-drawn SVG icon set
 assets/core.js        API, sessions, router, block renderer, calendar + .ics export
 assets/campus.js      The campus home page as one renderer: used by index.html and by #/campus in both portals
 assets/config.js      Supabase URL / key, preview-mode switch
 assets/demo.js        Preview mode: a sample campus in the browser that mirrors every database function
+assets/art/           Artwork: compass rose and needle (page transitions), hero and sign-in loops, ID-card backdrop, category patterns, empty-state art
+assets/versions/ assets/trailer/   Version previews and the 30-second trailer
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
 supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues, gallery, parent links, uploads
 supabase/compassed-v2.3.sql     Run after v2.1: login codes, consent, admin overview, calendar feeds (.ics), Compass Dash link
 supabase/compassed-v2.4.2-feedback.sql   Run after v2.3: the feedback button (admin-only inbox)
+supabase/compassed-v2.6-campus.sql       Run after v2.4.2: Student Voice (ideas and votes) and Campus Insights
 privacy.html terms.html cookies.html consent.html   Legal pages and the printable parent/carer consent form
 parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
 sw.js                           Offline support: keeps the app shell and pages you have opened
 supabase/content-pack.sql       Starter content: 16 activities, 4 competitions, 5 clubs, news, a launch event (run once on a fresh campus)
 supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: removes its tables
+vercel.json                     Security headers for the Vercel copy (GitHub Pages cannot set headers; each page carries a meta policy)
 ```
 
 ## Setting it up
@@ -36,9 +43,9 @@ supabase/patches/drop-v1-tables.sql   Only if the earlier v1.0 script was run: r
 1. Open your Supabase project > **SQL Editor** > **New query**.
 2. Open `supabase/compassed-v2.0.sql`. **Change the three values in section 8** near the end: the admin password, the student join code and the teacher invite code.
 3. Paste the whole file and **Run**. It is safe to run again; it never deletes anything.
-3b. Then paste `supabase/compassed-v2.1.sql` and **Run** it too, then `supabase/compassed-v2.3.sql`.
+3b. Then paste and **Run**, in order: `supabase/compassed-v2.1.sql`, `supabase/compassed-v2.3.sql`, `supabase/compassed-v2.4.2-feedback.sql`, `supabase/compassed-v2.6-campus.sql`.
+3c. Optional but recommended: run `supabase/content-pack.sql` once so the campus starts with real activities, competitions, clubs and news instead of empty pages.
 3d. For calendar feeds (Global Campus etc.) enable the **http** extension: Database > Extensions > search "http" > enable. Optional: schedule `select public.ed_feeds_sync_all();` hourly with pg_cron.
-3c. Optional but recommended: run `supabase/content-pack.sql` once so the campus starts with real activities, competitions, clubs and news instead of empty pages. It adds houses and points, clubs, the question bank, timed quizzes, peer review, newsletter issues, the winners' gallery, parent links and the `uploads` storage bucket (10 MB per file, images, PDFs, audio and MP4).
 4. `assets/config.js` must point at that project (`supabaseUrl` and the publishable/anon key from Project Settings > API). The key is safe to publish: every table is locked down and only the `ed_*` functions can be called.
 
 Then sign in at the site as `admin` with the password you chose. Keep that password out of git: the committed file only ever holds the placeholder `change-me-now`; if a real one was ever committed, change it under Settings straight away. Under **People & classes** create classes, add staff (or give them the invite code), and hand students the join code (or create their accounts for them).
@@ -46,7 +53,7 @@ Then sign in at the site as `admin` with the password you chose. Keep that passw
 If you ran the earlier `compassed-v1.0.sql`, also run `supabase/patches/drop-v1-tables.sql` once to tidy up.
 
 ### 2. Hosting
-Push to the `compass-ed/compass-ed.github.io` repository. For a repository named `<account>.github.io` GitHub Pages is on automatically and the site is served from `main`.
+Push to the `compass-ed/compass-ed.github.io` repository. For a repository named `<account>.github.io` GitHub Pages is on automatically and the site is served from `main`. The same repository is connected to Vercel, which deploys every push to https://compass-ed.vercel.app with the headers in `vercel.json`; the Vercel copy also loads Vercel's analytics scripts (see `assets/core.js`).
 
 ### 3. Preview mode (no database needed)
 On `localhost` / `127.0.0.1`, or with `?demo=1` on any address, the site runs against a sample campus kept in the browser. The sign-in page lists the preview accounts (students `alice.j`, `cara.m`, `finn.s` with password `student123`; staff `ms_khan`, `mr_ode` with `teach1234`; `admin` with `admin1234`; join code `COMPASS-2026`, invite code `TEACH-2026`). Add `?demo=0` to switch back. Set `allowDemo: false` in `config.js` to remove preview mode.

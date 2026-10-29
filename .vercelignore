@@ -3,6 +3,5 @@
 .claude
 .git
 supabase/local
-CHANGELOG.md
 .env.local
 .vercel

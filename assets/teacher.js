@@ -784,7 +784,66 @@
     const root = h("div", { id: "campus" }); page.append(root);
     await CE.campus(root, { portal: "teacher", inPortal: true });
   }
+  /* ---------- campus hub (v2.6): student voice, campus insights, display mode ---------- */
+  async function voiceAdmin() {
+    CE.title("Student Voice"); CE.loading(page);
+    try {
+      const r = await CE.capi("ed_s_voice"); if (!r.ok) return CE.fail(page, r);
+      page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Student Voice"), h("div", { class: "sm mut" }, "Ideas from students, most backed first. Reply, mark what is planned or done, or close one."))));
+      if (!r.rows.length) return page.append(h("div", { class: "empty" }, "No ideas yet."));
+      page.append(h("div", { class: "stack" }, ...r.rows.map(v => {
+        const sel = h("select", { class: "in", style: { width: "auto" } }, ...["open", "planned", "done", "closed"].map(s => h("option", { value: s, selected: s === v.status }, s[0].toUpperCase() + s.slice(1))));
+        const rep = h("textarea", { class: "in", rows: "2", maxlength: "400", placeholder: "Reply to the students (optional)" }, v.reply);
+        return h("div", { class: "card voice" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, "▲ " + v.votes), h("span", { class: "xs mut" }, v.name + " · " + D.ago(v.created))), h("h4", { style: { margin: "8px 0 4px" } }, v.title), v.body ? h("p", { class: "sm mut", style: { margin: 0 } }, v.body) : null,
+          h("div", { class: "row", style: { marginTop: "10px", alignItems: "flex-start", flexWrap: "wrap" } }, sel, h("div", { class: "grow" }, rep)),
+          h("div", { class: "row" }, h("button", { class: "btn sm cyan", onclick: async () => { const x = await CE.capi("ed_t_voice_set", { p_id: v.id, p_status: sel.value, p_reply: rep.value }); CE.toast(x.ok ? "Saved." : CE.errText(x)); } }, "Save"), h("button", { class: "btn sm ghost", onclick: async () => { if (!(await CE.confirm("Delete this idea?", "Delete"))) return; const x = await CE.capi("ed_t_voice_del", { p_id: v.id }); if (x.ok) voiceAdmin(); } }, "Delete"))); })));
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function insights() {
+    CE.title("Campus Insights"); CE.loading(page);
+    try {
+      const [r, b] = await Promise.all([CE.capi("ed_t_insights"), CE.capi("ed_board").catch(() => ({ ok: false }))]); if (!r.ok) return CE.fail(page, r);
+      page.innerHTML = "";
+      const stat = (n, l) => h("div", { class: "card stat" }, h("span", { class: "n" }, n), h("span", { class: "l" }, l));
+      const bars = (rows, label, val, cls) => { const top = Math.max(1, ...rows.map(val)); return rows.length ? h("div", { class: "stack" }, ...rows.map(x => h("div", {}, h("div", { class: "row between sm" }, h("span", {}, label(x)), h("span", { class: "mut" }, val(x))), h("div", { class: "bar" + (cls ? " " + cls(x) : "") }, h("i", { style: { width: Math.round(100 * val(x) / top) + "%" } }))))) : h("div", { class: "empty" }, "Nothing yet."); };
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Campus Insights"), h("div", { class: "sm mut" }, "Who is taking part, and in what. The numbers come from the campus itself; nothing extra is tracked."))));
+      page.append(h("div", { class: "grid g4" }, stat(r.students, "students"), stat(r.active_week, "active this week"), stat(r.active_month, "active this month"), stat(r.done_week, "activities done this week"), stat(r.lessons_week, "lessons completed this week"), stat(r.quizzes_week, "quiz attempts this week"), stat(r.subs_week, "hand-ins this week"), stat(r.voice_open, "open student ideas")));
+      const g = h("div", { class: "grid g2" }); page.append(g);
+      g.append(card("Activities completed, last 8 weeks", bars(r.weeks, w => "w/c " + D.short(w.week), w => w.n)));
+      g.append(card("Completions by category", bars(r.cats, c => c.name, c => c.n)));
+      g.append(card("Competition entries", r.comps.length ? h("div", { class: "list" }, ...r.comps.map(c => h("div", { class: "item" }, h("span", { class: "badge" }, c.kind), h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, (new Date(c.closes) > Date.now() ? "closes " : "closed ") + D.short(c.closes))), h("b", {}, c.entries)))) : h("div", { class: "empty" }, "No competitions yet.")));
+      g.append(card("House points", bars(r.houses, x => (b.ok && b.houses[x.house]) || x.house, x => x.pts, x => "house-" + x.house)));
+      g.append(card("Clubs", bars(r.clubs, c => c.title + " · " + c.members + "/" + c.capacity, c => c.members)));
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function display() {
+    CE.title("Display mode"); page.innerHTML = ""; document.body.classList.add("display");
+    const stage = h("div", { class: "stage" }, h("video", { class: "loop-bg", src: CE.root + "assets/art/hero-loop.mp4", poster: CE.root + "assets/art/signin-bg.jpg", muted: "", autoplay: "", loop: "", playsinline: "" }));
+    const clock = h("div", { class: "clock" }), body = h("div", { class: "stage-body" }), dots = h("div", { class: "dots" });
+    stage.append(h("div", { class: "stage-head" }, h("div", { class: "row" }, h("img", { src: CE.root + "assets/logo-white.svg", alt: "" }), h("b", {}, me.school || "Compass Ed")), clock), body, dots,
+      h("div", { class: "stage-tools" }, h("button", { class: "btn sm ghost", onclick: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}) }, "Full screen"), h("a", { class: "btn sm ghost", href: "#/" }, "Exit")));
+    page.append(stage);
+    const time = () => { clock.textContent = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }; time();
+    let panels = [], i = 0;
+    const show = () => { if (!panels.length) return; i %= panels.length; body.classList.remove("in"); body.innerHTML = ""; body.append(h("h2", {}, panels[i][0]), panels[i][1]); requestAnimationFrame(() => body.classList.add("in")); CE.$$("i", dots).forEach((d, k) => d.classList.toggle("on", k === i)); };
+    const build = async () => {
+      const [p, b] = await Promise.all([CE.api("ed_public"), CE.capi("ed_board").catch(() => ({ ok: false }))]); if (!p.ok) return;
+      const list = (rows, f) => rows.length ? h("div", { class: "stage-list" }, ...rows.map(f)) : h("div", { class: "stage-empty" }, "Nothing here yet");
+      panels = [["Coming up", list((p.events || []).slice(0, 6), e => h("div", { class: "it" }, h("b", {}, D.dt(e.starts)), h("span", {}, e.title + (e.place ? " · " + e.place : ""))))],
+        ["Open competitions", list((p.competitions || []).slice(0, 6), c => h("div", { class: "it" }, h("b", {}, D.left(c.closes)), h("span", {}, c.title)))],
+        ["News", list((p.news || []).slice(0, 3), n => h("div", { class: "it" }, h("b", {}, n.title), h("span", {}, n.body.replace(/\*\*/g, ""))))],
+        b.ok ? ["House points", h("div", { class: "stage-houses" }, ...b.house.map(x => h("div", { class: "hs house-" + x.house }, h("span", { class: "n" }, x.pts.toLocaleString()), h("span", {}, b.houses[x.house] || x.house))))] : null,
+        ["Clubs this week", list((p.clubs || []).slice(0, 6), c => h("div", { class: "it" }, h("b", {}, c.day + " " + c.time), h("span", {}, c.title)))]].filter(Boolean);
+      dots.innerHTML = ""; panels.forEach(() => dots.append(h("i", {}))); show();
+    };
+    const t1 = setInterval(time, 1000), t2 = setInterval(() => { i++; show(); }, 12000), t3 = setInterval(build, 300000);
+    addEventListener("hashchange", () => { document.body.classList.remove("display"); [t1, t2, t3].forEach(clearInterval); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }, { once: true });
+    await build();
+  }
+
   const GROUPS = [
+    [["Campus Hub", "#/campus"], ["Student Voice", "#/voice"], ["Insights", "#/insights"], ["Display mode", "#/display"]],
     [["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["News", "#/news"]],
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
     [["Announcements", "#/announcements"], ["Calendar", "#/calendar"]],
@@ -797,6 +856,7 @@
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/points", handler: points }, { path: "/clubs", handler: clubs }, { path: "/bank", handler: bank }, { path: "/search", handler: search },
+    { path: "/voice", handler: voiceAdmin }, { path: "/insights", handler: insights }, { path: "/display", handler: display },
     { path: "/", handler: dashboard }, { path: "/campus", handler: campusPage }, { path: "/activities", handler: activities }, { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: compPage }, { path: "/news", handler: news },
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },
