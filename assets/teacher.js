@@ -797,7 +797,7 @@
         const rep = h("textarea", { class: "in", rows: "2", maxlength: "400", placeholder: "Reply to the students (optional)" }, v.reply);
         return h("div", { class: "card voice" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, "▲ " + v.votes), h("span", { class: "xs mut" }, v.name + " · " + D.ago(v.created))), h("h4", { style: { margin: "8px 0 4px" } }, v.title), v.body ? h("p", { class: "sm mut", style: { margin: 0 } }, v.body) : null,
           h("div", { class: "row", style: { marginTop: "10px", alignItems: "flex-start", flexWrap: "wrap" } }, sel, h("div", { class: "grow" }, rep)),
-          h("div", { class: "row" }, h("button", { class: "btn sm cyan", onclick: async () => { const x = await CE.capi("ed_t_voice_set", { p_id: v.id, p_status: sel.value, p_reply: rep.value }); CE.toast(x.ok ? "Saved." : CE.errText(x)); } }, "Save"), h("button", { class: "btn sm ghost", onclick: async () => { if (!(await CE.confirm("Delete this idea?", "Delete"))) return; const x = await CE.capi("ed_t_voice_del", { p_id: v.id }); if (x.ok) voiceAdmin(); } }, "Delete"))); })));
+          h("div", { class: "row" }, h("button", { class: "btn sm cyan", onclick: async () => { const x = await CE.capi("ed_t_voice_set", { p_id: v.id, p_status: sel.value, p_reply: rep.value }); CE.toast(x.ok ? "Saved." : CE.errText(x)); } }, "Save"), h("button", { class: "btn sm ghost", onclick: async () => { if (!(await CE.confirm("Delete this idea?", "Delete"))) return; const x = await CE.capi("ed_t_voice_del", { p_id: v.id }).catch(e => ({ ok: false, error: e.message })); if (!x.ok) return CE.toast(CE.errText(x)); voiceAdmin(); } }, "Delete"))); })));
     } catch (e) { CE.fail(page, e); }
   }
   async function insights() {
@@ -823,12 +823,13 @@
     const clock = h("div", { class: "clock" }), body = h("div", { class: "stage-body" }), dots = h("div", { class: "dots" });
     stage.append(h("div", { class: "stage-head" }, h("div", { class: "row" }, h("img", { src: CE.root + "assets/logo-white.svg", alt: "" }), h("b", {}, me.school || "Compass Ed")), clock), body, dots,
       h("div", { class: "stage-tools" }, h("button", { class: "btn sm ghost", onclick: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}) }, "Full screen"), h("a", { class: "btn sm ghost", href: "#/" }, "Exit")));
-    page.append(stage);
+    page.append(stage); const vid = stage.querySelector("video"); vid.muted = true; vid.play().catch(() => {});
     const time = () => { clock.textContent = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }; time();
     let panels = [], i = 0;
-    const show = () => { if (!panels.length) return; i %= panels.length; body.classList.remove("in"); body.innerHTML = ""; body.append(h("h2", {}, panels[i][0]), panels[i][1]); requestAnimationFrame(() => body.classList.add("in")); CE.$$("i", dots).forEach((d, k) => d.classList.toggle("on", k === i)); };
+    const show = () => { if (!panels.length) return; i %= panels.length; body.classList.remove("on"); body.innerHTML = ""; body.append(h("h2", {}, panels[i][0]), panels[i][1]); void body.offsetWidth; body.classList.add("on"); CE.$$("i", dots).forEach((d, k) => d.classList.toggle("on", k === i)); };
     const build = async () => {
-      const [p, b] = await Promise.all([CE.api("ed_public"), CE.capi("ed_board").catch(() => ({ ok: false }))]); if (!p.ok) return;
+      let p, b; try { [p, b] = await Promise.all([CE.api("ed_public"), CE.capi("ed_board").catch(() => ({ ok: false }))]); if (!p.ok) throw p; }
+      catch (e) { body.innerHTML = ""; body.append(h("div", { class: "stage-empty" }, CE.errText(e))); body.classList.add("on"); return; }
       const list = (rows, f) => rows.length ? h("div", { class: "stage-list" }, ...rows.map(f)) : h("div", { class: "stage-empty" }, "Nothing here yet");
       panels = [["Coming up", list((p.events || []).slice(0, 6), e => h("div", { class: "it" }, h("b", {}, D.dt(e.starts)), h("span", {}, e.title + (e.place ? " · " + e.place : ""))))],
         ["Open competitions", list((p.competitions || []).slice(0, 6), c => h("div", { class: "it" }, h("b", {}, D.left(c.closes)), h("span", {}, c.title)))],
@@ -838,7 +839,7 @@
       dots.innerHTML = ""; panels.forEach(() => dots.append(h("i", {}))); show();
     };
     const t1 = setInterval(time, 1000), t2 = setInterval(() => { i++; show(); }, 12000), t3 = setInterval(build, 300000);
-    addEventListener("hashchange", () => { document.body.classList.remove("display"); [t1, t2, t3].forEach(clearInterval); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }, { once: true });
+    addEventListener("hashchange", () => { [t1, t2, t3].forEach(clearInterval); if (/^#\/display(\?|$)/.test(location.hash)) return; document.body.classList.remove("display"); if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); }, { once: true });
     await build();
   }
 

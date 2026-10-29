@@ -467,7 +467,7 @@
   async function showcase() {
     CE.title("Showcase"); CE.loading(page);
     try {
-      const [pub, ex] = await Promise.all([CE.api("ed_public"), CE.capi("ed_s_explore", { p_cat: 0 })]); if (!pub.ok) return CE.fail(page, pub);
+      const [pub, ex] = await Promise.all([CE.api("ed_public"), CE.capi("ed_s_explore", { p_cat: 0 }).catch(() => ({ ok: false }))]); if (!pub.ok) return CE.fail(page, pub);
       page.innerHTML = "";
       page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Student Showcase"), h("div", { class: "sm mut" }, "Winning entries from closed competitions, shown with each student's permission. Tick \"show in the gallery\" when you enter to be included."))));
       const gal = pub.gallery || [];
@@ -479,7 +479,7 @@
   async function community() {
     CE.title("Culture & community"); CE.loading(page);
     try {
-      const [b, c] = await Promise.all([CE.capi("ed_board"), CE.capi("ed_s_clubs")]); if (!b.ok) return CE.fail(page, b);
+      const [b, c] = await Promise.all([CE.capi("ed_board"), CE.capi("ed_s_clubs").catch(() => ({ ok: false }))]); if (!b.ok) return CE.fail(page, b);
       page.innerHTML = "";
       page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Culture & community"), h("div", { class: "sm mut" }, "Houses, clubs and the other places the school meets."))));
       page.append(h("div", { class: "grid g4" }, ...b.house.map((x, i) => h("a", { class: "card stat house-" + x.house, href: "#/house", style: { textDecoration: "none", color: "inherit", borderTop: "4px solid var(--hc)" } }, h("span", { class: "n" }, x.pts.toLocaleString()), h("span", { class: "l" }, (i + 1) + ". " + (b.houses[x.house] || x.house) + (x.house === b.my_house ? " · mine" : "") + " · +" + x.week + " this week")))));
@@ -487,13 +487,14 @@
       page.append(card("Clubs", h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, mine.length ? "You're in " + mine.map(x => x.title).join(", ") + "." : "You have not joined a club yet."),
         rows.length ? h("div", { class: "list" }, ...rows.slice(0, 6).map(x => h("a", { class: "item", href: "#/clubs" }, h("div", { class: "ico sm" }, CE.icon("users")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, x.day + " · " + x.time + (x.place ? " · " + x.place : ""))), h("span", { class: "badge" + (x.joined ? " cyan" : "") }, x.joined ? "Joined" : x.n + "/" + x.capacity)))) : h("div", { class: "empty" }, "No clubs yet."),
         h("div", {}, h("a", { class: "btn sm ghost", href: "#/clubs" }, "All clubs")))));
-      CE.api("ed_links").then(l => { if (l.ok && (l.links || []).length) page.append(card("Other school services", CE.linkTiles(l.links))); }).catch(() => {});
+      const links = h("div"); page.append(links);   /* filled when the links arrive, even if the user has moved on */
+      CE.api("ed_links").then(l => { if (l.ok && (l.links || []).length) links.append(card("Other school services", CE.linkTiles(l.links))); }).catch(() => {});
     } catch (e) { CE.fail(page, e); }
   }
   async function idCard() {
     CE.title("My ID"); CE.loading(page);
     try {
-      const b = await CE.capi("ed_board"); page.innerHTML = "";
+      const b = await CE.capi("ed_board").catch(() => ({ ok: false })); page.innerHTML = "";   /* the card itself needs nothing from the network */
       const num = "CE-" + String(me.id).padStart(5, "0");
       page.append(h("div", { class: "page-lead noprint" }, h("div", {}, h("h2", {}, "Digital Student ID"), h("div", { class: "sm mut" }, "Show it at the library, at clubs and on trips. It only shows while you are signed in."))),
         h("div", { class: "idcard house-" + (me.house || "N") },
