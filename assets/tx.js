@@ -3,9 +3,9 @@
 (function () {
   try {
     var t = sessionStorage.getItem("ce_tx"); if (!t) return; sessionStorage.removeItem("ce_tx");
-    if (Date.now() - (+t) > 4000 || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (Date.now() - (+t) > 4000 || matchMedia("(prefers-reduced-motion: reduce)").matches || !(window.CSS && CSS.registerProperty)) return;
     var d = document.documentElement; d.classList.add("tx-in");
     var off = function () { d.classList.remove("tx-in"); };
-    setTimeout(off, 900); addEventListener("pageshow", function (e) { if (e.persisted) off(); });
+    setTimeout(off, 2000); addEventListener("pageshow", function (e) { if (e.persisted) off(); });
   } catch (e) {}
 })();

@@ -213,10 +213,8 @@
      Elsewhere, or with reduced motion, a hidden tab or an open dialog, the route simply renders as before. */
   CE.txRoute = fn => {
     if (!document.startViewTransition || !txOk() || CE.$(".modal.show, .gate")) return fn();
-    const d = document.documentElement; d.classList.add("vt");
     const t = document.startViewTransition(() => { fn(); });
-    t.updateCallbackDone.catch(() => {}); t.ready.catch(() => {});
-    t.finished.catch(() => {}).finally(() => d.classList.remove("vt"));
+    t.updateCallbackDone.catch(() => {}); t.ready.catch(() => {}); t.finished.catch(() => {});
   };
   CE.nav = h => { location.hash = h; };
   CE.q = k => new URLSearchParams(location.hash.split("?")[1] || "").get(k);
@@ -308,14 +306,17 @@
      Nothing runs for reduced-motion users, hidden tabs, modifier clicks, downloads, external links or in-page anchors. */
   const TX_ART = ["compass-rose.png", "compass-needle.png"].map(f => ROOT + "assets/art/" + f);
   const txOk = () => !matchMedia("(prefers-reduced-motion: reduce)").matches && document.visibilityState === "visible" && !CE.$(".tx");
+  let txTimer = 0;
+  const leave = url => { try { sessionStorage.setItem("ce_tx", String(Date.now())); } catch (e) {} location.href = url; };
   CE.go = function (url) {
+    if (txTimer) { clearTimeout(txTimer); txTimer = setTimeout(() => leave(url), 150); return; }   /* a second request while the compass is up retargets it */
     if (!txOk()) { location.href = url; return; }
     const c = CE.h("div", { class: "tx", "aria-hidden": "true" }, CE.h("div", { class: "tx-veil" }),
       CE.h("div", { class: "tx-c" }, CE.h("img", { class: "tx-rose", src: TX_ART[0], alt: "", draggable: "false" }), CE.h("img", { class: "tx-needle", src: TX_ART[1], alt: "", draggable: "false" })));
     document.body.append(c);
     let gone = false; addEventListener("pagehide", () => { gone = true; }, { once: true });
-    setTimeout(() => { try { sessionStorage.setItem("ce_tx", String(Date.now())); } catch (e) {} location.href = url; }, 520);
-    setTimeout(() => { if (!gone) c.remove(); }, 6000);   /* the browser never left (a download, a blocked page): put the page back */
+    txTimer = setTimeout(() => leave(url), 520);
+    setTimeout(() => { if (!gone) { c.remove(); txTimer = 0; try { sessionStorage.removeItem("ce_tx"); } catch (e) {} } }, 15000);   /* the browser never left (a blocked page): put the page back */
   };
   const samePage = u => u.pathname.replace(/\/index\.html$/, "/") === location.pathname.replace(/\/index\.html$/, "/") && u.search === location.search;
   document.addEventListener("click", e => {
@@ -324,12 +325,13 @@
     if (!a || a.hasAttribute("download") || (a.target && a.target !== "_self") || a.closest("[data-no-tx]")) return;
     const href = a.getAttribute("href"); if (!href || /^(#|javascript:|mailto:|tel:)/i.test(href)) return;
     let u; try { u = new URL(a.href, location.href); } catch (x) { return; }
-    if (u.origin !== location.origin || !/^https?:$/.test(u.protocol) || samePage(u)) return;
-    if (/\.(mp4|webm|m4a|mp3|pdf|png|jpe?g|gif|svg|webp|zip|ics|csv|txt|json|xml)$/i.test(u.pathname)) return;
-    e.preventDefault(); if (!CE.$(".tx")) CE.go(u.href);
+    if (u.origin !== location.origin || !/^https?:$/.test(u.protocol)) return;
+    if (samePage(u) && u.hash) { if (u.pathname !== location.pathname) { e.preventDefault(); location.hash = u.hash; } return; }   /* in-page anchor, even "index.html#…" from "/" */
+    if (!/(\/|\.html?)$/i.test(u.pathname) && /\.[a-z0-9]+$/i.test(u.pathname)) return;   /* only pages get the compass, never files */
+    e.preventDefault(); CE.go(u.href);
   });
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) (window.requestIdleCallback ? f => requestIdleCallback(f) : f => setTimeout(f, 1500))(() => TX_ART.forEach(s => { const i = new Image(); i.src = s; }));
-  addEventListener("pageshow", e => { if (e.persisted) { CE.$$(".tx").forEach(x => x.remove()); document.documentElement.classList.remove("tx-in", "vt"); } });
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) (window.requestIdleCallback ? f => requestIdleCallback(f, { timeout: 800 }) : f => setTimeout(f, 1500))(() => TX_ART.forEach(s => { const i = new Image(); i.src = s; }));
+  addEventListener("pageshow", e => { if (e.persisted) { CE.$$(".tx").forEach(x => x.remove()); document.documentElement.classList.remove("tx-in"); } });
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
     let had = !!navigator.serviceWorker.controller;

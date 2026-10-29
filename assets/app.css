@@ -442,8 +442,9 @@ section:has(>[data-campus]>.hide:only-child){display:none}
 /* ===== v2.5 page transitions: the compass =====
    Leaving a page (CE.go in core.js): a black veil blurs the page away while the compass needle spins up and settles on north.
    Arriving (assets/tx.js adds html.tx-in before first paint): the veil opens from the compass and the compass flies past the camera. */
-.tx{position:fixed;inset:0;z-index:1000;pointer-events:none}
-.tx-veil{position:absolute;inset:0;background:#000;opacity:0;animation:txVeil .4s cubic-bezier(.4,0,.2,1) forwards;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.tx{position:fixed;inset:0;z-index:1000}
+.tx-veil{position:absolute;inset:0;background:#000;opacity:0;animation:txVeil .4s cubic-bezier(.4,0,.2,1) forwards}
+@media (hover:hover){.tx-veil{backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}}
 @keyframes txVeil{to{opacity:1}}
 .tx-c{position:absolute;left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320px);translate:-50% -50%;animation:txRise .34s cubic-bezier(.2,.7,.2,1) both}
 @keyframes txRise{from{opacity:0;transform:scale(.78)}to{opacity:1;transform:none}}
@@ -468,5 +469,4 @@ html.tx-in::after{left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320
 @keyframes vtOut{to{opacity:0;transform:scale(.988);filter:blur(4px)}}
 @keyframes vtIn{from{opacity:0;transform:scale(1.01);filter:blur(4px)}}
 ::view-transition-old(side),::view-transition-new(side),::view-transition-old(topbar),::view-transition-new(topbar),::view-transition-old(subnav),::view-transition-new(subnav),::view-transition-old(fab),::view-transition-new(fab){animation:none;mix-blend-mode:normal}
-html.vt .page>*{animation:none}
 @media (prefers-reduced-motion:reduce){::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
