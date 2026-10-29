@@ -29,6 +29,7 @@ supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, questi
 supabase/compassed-v2.3.sql     Run after v2.1: login codes, consent, admin overview, calendar feeds (.ics), Compass Dash link
 supabase/compassed-v2.4.2-feedback.sql   Run after v2.3: the feedback button (admin-only inbox)
 supabase/compassed-v2.6-campus.sql       Run after v2.4.2: Student Voice (ideas and votes) and Campus Insights
+supabase/content-pack-global.sql         Optional: 24 activities and 4 competitions in the spirit of Global Campus (inserts only titles that do not exist)
 privacy.html terms.html cookies.html consent.html   Legal pages and the printable parent/carer consent form
 parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
 sw.js                           Offline support: keeps the app shell and pages you have opened
