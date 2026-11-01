@@ -16,6 +16,7 @@
 <style>
   .side.teach{background:#fff;color:var(--ink);border-right:1px solid var(--line)}
   .side.teach .brand{color:var(--ink)} .side.teach .brand b{color:var(--cyan3)}
+  :root:not([data-theme="dark"]) .side.teach .brand img{filter:invert(1)} /* the white logo turns ink on the white sidebar; dark theme keeps it white */
   .side.teach a.nl{color:var(--ink2)} .side.teach a.nl:hover{background:var(--bg3);color:var(--ink)} .side.teach a.nl.on{background:var(--ink);color:#fff}
   .side.teach a.nl .n{background:var(--cyan);color:#000} .side.teach .me{background:var(--bg2)} .side.teach .me .nm{color:var(--ink)} .side.teach .me .av{background:var(--ink);color:#fff}
   .side.teach .sec-l{color:var(--mute)}

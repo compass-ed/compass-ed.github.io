@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "teacher/index.html"
+        ],
+        "createdAt": "2026-11-01T07:11:24.409Z",
+        "reason": "Claude: teacher/index.html has no box-shadow, text-shadow or glow (grep finds none); the flagged edit only adds filter:invert(1) to the sidebar logo"
+      }
+    ]
+  }
+}
