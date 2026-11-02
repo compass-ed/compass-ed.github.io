@@ -6330,7 +6330,7 @@ function tpBig(){ST.tpBig=!ST.tpBig;saveST();document.documentElement.classList.
 function tpShell(main,locked){const k=TC.tab,top=tpGroup(k)?"man":k;
  return`<div class="tp"><div class="tpnav" role="navigation" aria-label="Teacher Panel"><button class="tpbrand" onclick="go('teach','dash')" aria-label="Teacher Panel dashboard"><i class="lg">${logoCube("")}</i><span><b>Compass Dash</b><small>Teacher Panel${tpT()?" · "+esc(SUBJ[tpT().subj].n):""}</small></span></button>
 <div class="tpis">${locked?"":TPN.map(([id,n,ic])=>`<button class="tpi${top===id?" on":""}"${top===id?' aria-current="page"':""} onclick="go('teach','${id}')">${icn(ic)}<span>${n}</span></button>`).join("")}</div>
-<div class="tpfoot">${tpT()?`<button class="tpi" onclick="tAcct()" aria-label="Your account" title="Your account">${icn("user")}<span class="nc">${esc(tpT().name)}</span></button>`:""}<button class="tpi" onclick="ctOpen()" aria-label="Class tools" title="Name picker and timer">${icn("timer")}<span>Class tools</span></button><button class="tpi" onclick="tpBig()" aria-label="Big screen" aria-pressed="${!!ST.tpBig}" title="Larger text and controls for a projector or classroom screen">${icn("laptop")}<span>Big screen${ST.tpBig?" on":""}</span></button><button class="tpi" onclick="go('home')" aria-label="Student site" title="Back to the student site">${icn("back")}<span>Student site</span></button>${locked?"":`<button class="tpi" onclick="tcLock()" aria-label="Lock the Teacher Panel" title="Lock">${icn("lock")}<span>Lock</span></button>`}<small class="tpver">${VER}</small></div></div>
+<div class="tpfoot">${tpT()?`<button class="tpi" onclick="tAcct()" aria-label="Your account" title="Your account">${icn("user")}<span class="nc">${esc(tpT().name)}</span></button>`:""}<button class="tpi" onclick="ctOpen()" aria-label="Class tools" title="Name picker and timer">${icn("timer")}<span>Class tools</span></button><button class="tpi" onclick="tpBig()" aria-label="Big screen" aria-pressed="${!!ST.tpBig}" title="Larger text and controls for a projector or classroom screen">${icn("laptop")}<span>Big screen${ST.tpBig?" on":""}</span></button><button class="tpi" onclick="CEB.back()" aria-label="Back to Compass Ed" title="Back to Compass Ed">${icn("back")}<span>Compass Ed</span></button><button class="tpi" onclick="go('home')" aria-label="Student site" title="Back to the student site">${icn("back")}<span>Student site</span></button>${locked?"":`<button class="tpi" onclick="tcLock()" aria-label="Lock the Teacher Panel" title="Lock">${icn("lock")}<span>Lock</span></button>`}<small class="tpver">${VER}</small></div></div>
 <div class="tpmain">${navigator.onLine||locked?"":`<p class="offn">${icn("wifioff")} You're offline. Pages you've already opened still show, but saving, AI questions and live activities need internet.</p>`}${main}</div></div>`}
 function teach(t){if(t&&TCN[t])TC.tab=t;if(tpHide(TC.tab))TC.tab="dash";
  if(!cdOn())return app.innerHTML=tpShell(`<div class="tplock"><div class="card"><h1>Teacher Panel</h1><p class="mut">Student codes are not connected yet, so there is no class to manage. See README-student-codes.md.</p></div></div>`,1);
@@ -7820,7 +7820,21 @@ const CEB=(()=>{
   "sign in with your compass ed account first.":["Connecte-toi d'abord avec ton compte Compass Ed.","سجّل الدخول بحساب Compass Ed أولًا."],
   ". compass ed signs you in on every device.":[". Compass Ed te connecte sur chaque appareil.",". يسجّل Compass Ed دخولك على كل جهاز."]});
  UIRX.push([/^· (\w+) house\. Compass Ed signs you in on every device\.$/i,m=>[`· maison ${uiH(m[1],0)}. Compass Ed te connecte sur chaque appareil.`,`· بيت ${uiH(m[1],1)}. يسجّل Compass Ed دخولك على كل جهاز.`]]);
- return{sync,signOut,signIn:()=>goTop("../signin.html?next=student%23%2Fdash"),code:()=>own()};
+ /* a way back to Compass Ed from any Compass Dash page: the portal it sits in (leaving full screen), else the signed-in
+    person's portal, else the campus home */
+ const home=()=>{let s=null;try{s=JSON.parse(localStorage.getItem("ce_auth")||"null")}catch(e){}return s&&s.me?(s.me.role==="student"?"../student/":"../teacher/"):"../"};
+ function back(e){if(e)e.preventDefault();
+  if(window.top!==window){try{const d=window.top.document;if(d.fullscreenElement&&d.exitFullscreen)d.exitFullscreen();if(d.webkitFullscreenElement&&d.webkitExitFullscreen)d.webkitExitFullscreen();window.top.location.hash="#/";return}catch(x){}}
+  goTop(home())}
+ {const nav=document.getElementById("nav");if(nav){const st=document.createElement("style");
+  st.textContent=".ceback{display:inline-flex;align-items:center;gap:4px;flex:none;margin-inline-end:8px;padding:6px 10px 6px 6px;border:1px solid var(--line);border-radius:var(--r);color:var(--tx);font-weight:600;font-size:.88rem;text-decoration:none;white-space:nowrap}.ceback:hover{background:var(--bg)}.ceback:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ceback svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .ceback svg{transform:scaleX(-1)}@media (max-width:380px){.ceback span{display:none}.ceback{padding:6px}}";
+  document.head.appendChild(st);
+  const a=document.createElement("a");a.className="ceback";a.href=home();a.onclick=back;a.setAttribute("data-no-i18n","");
+  a.setAttribute("aria-label",L("Back to Compass Ed","Retour à Compass Ed","العودة إلى Compass Ed"));a.title=a.getAttribute("aria-label");
+  a.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>Compass Ed</span>';
+  a.addEventListener("pointerenter",()=>{a.href=home()});nav.insertBefore(a,nav.firstChild)}}
+ Object.assign(UITR,{"compass ed":["Compass Ed","Compass Ed"]});
+ return{sync,signOut,back,signIn:()=>goTop("../signin.html?next=student%23%2Fdash"),code:()=>own()};
 })();
 </script>
 <script>/* Compass Ed v2.7: interface text Compass Dash still showed in English when opened in French or Arabic
