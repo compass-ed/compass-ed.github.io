@@ -532,5 +532,14 @@ html.tx-in::after{left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320
 @media (max-width:600px){[dir="rtl"] .cookie{text-align:right} [dir="rtl"] .fab-fb{right:auto;left:14px}}
 
 /* ===== v2.7 Compass Dash inside the portals ===== */
-.dash-frame{display:block;width:100%;height:calc(100dvh - 170px);min-height:560px;border:0;border-radius:var(--r);background:#fff;box-shadow:var(--sh)}
-@media (max-width:980px){.dash-frame{height:calc(100dvh - 120px);border-radius:12px}}
+.dash-frame{display:block;width:100%;height:calc(100dvh - 214px);min-height:520px;border:0;border-radius:var(--r);background:#fff;box-shadow:var(--sh)}
+@media (max-width:980px){.dash-frame{height:calc(100dvh - 164px);border-radius:12px}}
+/* full screen: the button sits above the frame; in full screen it floats in the corner so touch screens can always leave */
+.dash-wrap{display:flex;flex-direction:column;gap:8px} .dash-fs{align-self:flex-end}
+.dash-wrap:fullscreen{background:#000;gap:0}
+.dash-wrap.max{position:fixed;inset:0;z-index:1000;background:#000;gap:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+.dash-wrap:fullscreen .dash-frame{flex:1;height:auto;min-height:0;border-radius:0;box-shadow:none}
+.dash-wrap.max .dash-frame{flex:1;height:auto;min-height:0;border-radius:0;box-shadow:none}
+.dash-wrap:fullscreen .dash-fs{position:absolute;bottom:14px;inset-inline-end:14px;z-index:2;background:rgba(0,0,0,.62);color:#fff;border-color:rgba(255,255,255,.55);backdrop-filter:blur(6px)}
+.dash-wrap.max .dash-fs{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));inset-inline-end:14px;z-index:2;background:rgba(0,0,0,.62);color:#fff;border-color:rgba(255,255,255,.55);backdrop-filter:blur(6px)}
+html.dash-max-on,html.dash-max-on body{overflow:hidden}

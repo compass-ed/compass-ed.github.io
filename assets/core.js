@@ -389,7 +389,26 @@
   CE.dashPage = async (page, student) => {
     CE.title("Compass Dash"); page.innerHTML = "";
     const f = CE.h("iframe", { class: "dash-frame", src: ROOT + "dash/", title: "Compass Dash", allow: "fullscreen; autoplay" });
-    page.append(f);
+    // full screen: the real thing where the browser allows it, else (iPhone) Compass Dash fills the page until Exit
+    const wrap = CE.h("div", { class: "dash-wrap" }), root = document.documentElement;
+    const isFull = () => (document.fullscreenElement || document.webkitFullscreenElement) === wrap || wrap.classList.contains("max");
+    const label = () => { const on = isFull(); fsBtn.replaceChildren(CE.icon(on ? "shrink" : "expand"), CE.t(on ? "Exit full screen" : "Full screen")); fsBtn.setAttribute("aria-pressed", on ? "true" : "false"); };
+    const unmax = () => { wrap.classList.remove("max"); root.classList.remove("dash-max-on"); label(); };
+    const toggle = () => {
+      if (isFull()) { if (wrap.classList.contains("max")) unmax(); else (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+      const req = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+      const fallback = () => { wrap.classList.add("max"); root.classList.add("dash-max-on"); label(); };
+      if (!req) fallback();
+      else { try { const p = req.call(wrap); if (p && p.catch) p.catch(fallback); } catch (e) { fallback(); }
+        setTimeout(() => { if (!isFull()) fallback(); }, 700); }   // some embedded browsers neither show it nor say no
+      try { f.contentWindow.focus(); } catch (e) {}
+    };
+    const fsBtn = CE.h("button", { class: "btn sm ghost dash-fs", type: "button", onclick: toggle });
+    const onFs = () => { if (!wrap.isConnected) return document.removeEventListener("fullscreenchange", onFs), document.removeEventListener("webkitfullscreenchange", onFs); label(); };
+    document.addEventListener("fullscreenchange", onFs); document.addEventListener("webkitfullscreenchange", onFs);
+    addEventListener("hashchange", unmax, { once: true });   // leaving the page always gives the portal back
+    wrap.append(fsBtn, f); label();
+    page.append(wrap);
     if (!student) return;
     let r = null; try { r = await CE.capi("ed_s_cd_session"); } catch (e) {}
     if (r && r.ok && r.linked) { const send = () => { try { f.contentWindow.postMessage({ type: "ce-cd-signin", code: r.code, user: r.user }, location.origin); } catch (e) {} }; f.addEventListener("load", send); send(); }
