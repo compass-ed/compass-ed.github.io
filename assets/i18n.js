@@ -4,7 +4,7 @@
    Dictionaries live in assets/i18n/<lang>.js and register themselves with CE_I18N({ t, h, r }):
      t: exact text  ->  translation          (labels, buttons, sentences)
      h: inner HTML  ->  translated inner HTML (static sentences with bold or links inside)
-     r: [[regex, replacement], ...]          (text with numbers or names in it, e.g. "3 days left")
+     r: [[regex, replacement], ...]          (text with numbers or names in it, e.g. "3 days left"; $T1 also translates part 1)
    Users' own content (titles, names, messages) is left as written. */
 (function () {
   const LANGS = { en: { name: "English", locale: "en-GB" }, fr: { name: "Français", locale: "fr-FR" }, ar: { name: "العربية", locale: "ar-u-nu-latn", rtl: true } };
@@ -49,13 +49,19 @@
 
   const tr = text => {
     const core = text.trim(); if (!core || !/\p{L}/u.test(core)) return null;
-    let out = one(core);
-    if (out == null && core.includes(" · ")) { const parts = core.split(" · "), done = parts.map(p => one(p.trim())); if (done.some(x => x != null)) out = parts.map((p, i) => done[i] != null ? done[i] : p).join(" · "); }
+    const out = full(core);
     if (out == null || out === core) return null;
     const lead = text.match(/^\s*/)[0], trail = text.match(/\s*$/)[0];
     return lead + out + trail;
   };
-  const one = s => { if (Object.prototype.hasOwnProperty.call(D.t, s)) return D.t[s]; for (const [re, to] of D.r) if (re.test(s)) return s.replace(re, to); return null; };
+  // $1 keeps a captured part as written; $T1 translates it too ("updated 2 days ago" -> "mis à jour il y a 2 jours")
+  const fill = (to, m) => to.replace(/\$(T?)(\d)/g, (x, t, i) => { const g = typeof m[+i] === "string" ? m[+i] : ""; if (!t) return g; const c = g.trim(), y = c ? full(c) : null; return y == null ? g : g.replace(c, () => y); });
+  const full = core => {   // whole text, else each " · " part
+    let out = one(core);
+    if (out == null && core.includes(" · ")) { const parts = core.split(" · "), done = parts.map(p => one(p.trim())); if (done.some(x => x != null)) out = parts.map((p, i) => done[i] != null ? done[i] : p).join(" · "); }
+    return out;
+  };
+  const one = s => { if (Object.prototype.hasOwnProperty.call(D.t, s)) return D.t[s]; for (const [re, to] of D.r) if (re.test(s)) return s.replace(re, (...m) => fill(to, m)); return null; };
   CE.t = s => { if (typeof s !== "string") return s; const x = tr(s); return x == null ? s : x; };
   for (const k of ["confirm", "alert", "prompt"]) { const f = window[k]; if (f) window[k] = (m, ...a) => f.call(window, CE.t(String(m == null ? "" : m)), ...a); }
 
