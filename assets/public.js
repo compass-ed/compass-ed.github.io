@@ -2,6 +2,7 @@
 (function () {
   const b = document.querySelector("[data-burger]"), n = document.getElementById("pubnav");
   if (b && n) b.addEventListener("click", () => n.classList.toggle("open"));
+  if (n && !n.querySelector('a[href="dash/"]')) { const a = CE.h("a", { href: "dash/" }, "Compass Dash"), ab = n.querySelector('a[href="about.html"]'); ab ? n.insertBefore(a, ab) : n.append(a); }
   const y = document.getElementById("yr"); if (y) y.textContent = new Date().getFullYear();
   const pb = document.getElementById("printBtn"); if (pb) pb.onclick = () => print();
   const s = CE.auth && CE.auth.get();

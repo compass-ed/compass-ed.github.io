@@ -402,14 +402,14 @@
     const head = h("div", { class: "row between" }), grid = h("div", { class: "cal" }), list = h("div", { class: "list" });
     page.append(h("div", { class: "card" }, head, grid), card("This month", list));
     const render = async () => {
-      head.innerHTML = ""; head.append(h("div", { class: "row" }, h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() - 1); render(); } }, "‹"), h("h3", { style: { margin: 0 } }, d.toLocaleDateString("en-GB", { month: "long", year: "numeric" })), h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() + 1); render(); } }, "›")), h("div", { class: "row" }, h("button", { class: "btn sm ghost", id: "ics" }, CE.icon("phone"), "Export .ics"), h("button", { class: "btn sm", onclick: () => eventEditor(null, render) }, "+ Add event")));
+      head.innerHTML = ""; head.append(h("div", { class: "row" }, h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() - 1); render(); } }, "‹"), h("h3", { style: { margin: 0 } }, d.toLocaleDateString((CE.locale || "en-GB"), { month: "long", year: "numeric" })), h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() + 1); render(); } }, "›")), h("div", { class: "row" }, h("button", { class: "btn sm ghost", id: "ics" }, CE.icon("phone"), "Export .ics"), h("button", { class: "btn sm", onclick: () => eventEditor(null, render) }, "+ Add event")));
       const from = new Date(d.getFullYear(), d.getMonth(), -7), to = new Date(d.getFullYear(), d.getMonth() + 1, 7);
       const r = await api("ed_t_events", { p_from: D.ymd(from), p_to: D.ymd(to) }); if (!r.ok) return CE.fail(page, r);
       const open = e => e.assign_id ? CE.nav("/assignment/" + e.assign_id) : e.comp_id ? CE.nav("/competition/" + e.comp_id) : e.src ? CE.modal(h("div", { class: "stack" }, srcTag(e.src, e.src_name), h("h3", {}, e.title), h("div", { class: "sm" }, D.long(e.starts) + (D.time(e.starts) !== "00:00" ? ", " + D.time(e.starts) + (e.ends ? " to " + D.time(e.ends) : "") : "") + (e.place ? " · " + e.place : "")), h("p", { class: "sm mut", style: { margin: 0 } }, "This event is mirrored from the " + (e.src_name || "calendar feed") + ". Change it there; it updates here on the next sync."), me.role === "admin" ? h("a", { class: "btn sm ghost", href: "#/admin/feeds", onclick: CE.closeModal }, "Calendar feeds") : null)) : eventEditor(e, render);
       CE.calendar(grid, d.getFullYear(), d.getMonth(), r.rows, open);
       const month = r.rows.filter(e => new Date(e.starts).getMonth() === d.getMonth()); list.innerHTML = ""; if (!month.length) list.append(h("div", { class: "empty" }, "Nothing this month."));
       month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", due: "alarm", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + " · " + (e.class || "Whole school") + (e.place ? " · " + e.place : ""))), srcTag(e.src, e.src_name))));
-      const icsBtn = $("#ics"); if (icsBtn) icsBtn.onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString("en-GB", { month: "long" }));
+      const icsBtn = $("#ics"); if (icsBtn) icsBtn.onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString((CE.locale || "en-GB"), { month: "long" }));
     };
     render();
   }
@@ -769,7 +769,7 @@
     const draw = () => { list.innerHTML = ""; if (!links.length) list.append(h("div", { class: "empty" }, "No links yet. Add Global Campus or Compass Dash."));
       links.forEach((l, i) => list.append(h("div", { class: "grid", style: { gridTemplateColumns: "1fr 1.4fr 1.6fr auto", gap: "8px", alignItems: "center" } }, h("input", { class: "in", value: l.name, placeholder: "Name", maxlength: 40, oninput: e => l.name = e.target.value }), h("input", { class: "in", value: l.url, placeholder: "https://…", oninput: e => l.url = e.target.value }), h("input", { class: "in", value: l.blurb, placeholder: "One line about it", maxlength: 120, oninput: e => l.blurb = e.target.value }), h("button", { class: "ib", title: "Remove", onclick: () => { links.splice(i, 1); draw(); } }, CE.icon("cross"))))); };
     draw();
-    page.append(h("div", { class: "card stack" }, h("h3", {}, "Suggested"), h("div", { class: "row" }, ...[["Global Campus", "https://globalcampus.nae.school/", "Nord Anglia's online campus: global challenges and programmes."], ["Compass Dash", "https://compassdash.github.io/Compassdash/", "KS3 revision games with XP and the house cup."], ["Compass GCSE", "https://compassdash.github.io/Compass-GCSE/", "GCSE revision, the sister site of Compass Dash."]].filter(([n]) => !links.some(l => l.name === n)).map(([n, u, b]) => h("button", { class: "btn sm ghost", onclick: () => { links.push({ name: n, url: u, blurb: b }); draw(); } }, "+ " + n)))));
+    page.append(h("div", { class: "card stack" }, h("h3", {}, "Suggested"), h("div", { class: "row" }, ...[["Global Campus", "https://globalcampus.nae.school/", "Nord Anglia's online campus: global challenges and programmes."], ["Compass Dash", new URL(CE.root + "dash/", location.href).href, "KS3 revision games with XP and the house cup, inside Compass Ed."], ["Compass GCSE", "https://compassdash.github.io/Compass-GCSE/", "GCSE revision, the sister site of Compass Dash."]].filter(([n]) => !links.some(l => l.name === n)).map(([n, u, b]) => h("button", { class: "btn sm ghost", onclick: () => { links.push({ name: n, url: u, blurb: b }); draw(); } }, "+ " + n)))));
   }
 
   /* ----- Compass Dash for staff (houses, challenges, cup, leaderboard) ----- */
@@ -824,7 +824,7 @@
     stage.append(h("div", { class: "stage-head" }, h("div", { class: "row" }, h("img", { src: CE.root + "assets/logo-white.svg", alt: "" }), h("b", {}, me.school || "Compass Ed")), clock), body, dots,
       h("div", { class: "stage-tools" }, h("button", { class: "btn sm ghost", onclick: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}) }, "Full screen"), h("a", { class: "btn sm ghost", href: "#/" }, "Exit")));
     page.append(stage); const vid = stage.querySelector("video"); vid.muted = true; vid.play().catch(() => {});
-    const time = () => { clock.textContent = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }); }; time();
+    const time = () => { clock.textContent = new Date().toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit" }); }; time();
     let panels = [], i = 0;
     const show = () => { if (!panels.length) return; i %= panels.length; body.classList.remove("on"); body.innerHTML = ""; body.append(h("h2", {}, panels[i][0]), panels[i][1]); void body.offsetWidth; body.classList.add("on"); CE.$$("i", dots).forEach((d, k) => d.classList.toggle("on", k === i)); };
     const build = async () => {
@@ -857,7 +857,7 @@
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/points", handler: points }, { path: "/clubs", handler: clubs }, { path: "/bank", handler: bank }, { path: "/search", handler: search },
-    { path: "/voice", handler: voiceAdmin }, { path: "/insights", handler: insights }, { path: "/display", handler: display },
+    { path: "/dash", handler: () => CE.dashPage(page, false) }, { path: "/voice", handler: voiceAdmin }, { path: "/insights", handler: insights }, { path: "/display", handler: display },
     { path: "/", handler: dashboard }, { path: "/campus", handler: campusPage }, { path: "/activities", handler: activities }, { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: compPage }, { path: "/news", handler: news },
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },

@@ -2,6 +2,11 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.7 — 2 November 2026
+- **Languages: English, French and Arabic.** A language menu sits in every header (public pages, sign-in, both portals). Arabic switches the whole layout right to left and uses IBM Plex Sans Arabic. About 1,600 interface strings were translated and each batch checked by a second reviewer; dates follow the language. The page code stays in English: `assets/i18n.js` swaps the text on screen, so pages the portals build later are translated too. Content people write (activity titles, news, messages) stays as written.
+- **Compass Dash moves into Compass Ed.** The whole KS3 revision app now lives at `/dash/` and opens inside both portals (sidebar: Compass Dash). Students who linked their Compass Dash account are signed in to it automatically. It follows the language chosen in Compass Ed (it already had French and Arabic menus). The old address forwards here and carries each browser's saved progress across, so nobody loses theirs.
+- Database: `supabase/compassed-v2.7-dash.sql` (run once after v2.6).
+
 ## v2.6 — 29 October 2026
 - **Campus Hub** in both portals, modelled on Nord Anglia's Global Campus: one sub-navigation that gathers the campus pages. Students get **Student Voice** (post an idea, back others', see staff replies and what is planned or done), a **Student Showcase** (winning entries shown with permission, plus your own entries), **Culture & community** (houses, clubs, school services) and a **Digital Student ID** card (name, class, year, house, campus number; printable; backdrop designed in Moda). The News page opens with a **Highlights** strip of recent winners.
 - **Staff**: **Campus Insights** (who is taking part and in what: active students, completions by category and by week, competition entries, house points, club capacity; nothing new is tracked), a Student Voice inbox to answer, plan, close or delete ideas, and **Display mode**: a full-screen classroom screen that rotates coming-up events, open competitions, news, house points and clubs with a clock, from the staff portal's Campus Hub.

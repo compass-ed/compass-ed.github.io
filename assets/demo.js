@@ -164,7 +164,7 @@
       { code: "1193-8820", uid: 102, role: "student", purpose: "join", label: "7A · September intake", class_id: 1, year: 7, created: day(-20), created_by: 1, expires: day(160), used_at: day(-20), last_used: day(-8), revoked_at: day(-2) },
       { code: "5540-7312", uid: 201, role: "student", purpose: "reset", label: "Forgot password", class_id: 2, year: 8, created: day(-1), created_by: 2, expires: day(29), used_at: null, last_used: null, revoked_at: null }];
     db.feeds = db.feeds || [{ id: 1, name: "Global Campus events", url: "https://globalcampus.nae.school/calendar/export.ics", source: "globalcampus", class_id: null, tz: "Europe/London", last_sync: day(-1), last_error: null, n: 3, uid: 1, created: day(-10) }];
-    db.school.links = db.school.links || [{ name: "Global Campus", url: "https://globalcampus.nae.school/", blurb: "Nord Anglia's online campus: global challenges and programmes with Juilliard, MIT and UNICEF." }, { name: "Compass Dash", url: "https://compassdash.github.io/Compassdash/", blurb: "KS3 revision games with XP, duels and the house cup." }];
+    db.school.links = db.school.links || [{ name: "Global Campus", url: "https://globalcampus.nae.school/", blurb: "Nord Anglia's online campus: global challenges and programmes with Juilliard, MIT and UNICEF." }, { name: "Compass Dash", url: "https://compass-ed.github.io/dash/", blurb: "KS3 revision games with XP, duels and the house cup." }];
     if (!db.events.some(e => e.src)) [["Global Challenge launch", 2, 10, "feed:1", "gc-1"], ["STEAM Festival submissions close", 9, 17, "feed:1", "gc-2"], ["Global Campus live: Juilliard masterclass", 16, 15, "feed:1", "gc-3"]].forEach(([t, d, hr, src, su]) => db.events.push({ id: nid(), class_id: null, kind: "event", title: t, starts: dayAt(d, hr), ends: dayAt(d, hr + 1), place: "Online", uid: 1, src, src_uid: su }));
     db.feedback = db.feedback || [{ id: 1, uid: 101, role: "student", name: "Alice Johnson", rating: 5, category: "Suggestion", body: "Could the review queue show how many cards are due tomorrow as well as today? I like planning ahead.", page: "Student portal #/review", created: day(-1), seen_at: null },
       { id: 2, uid: 3, role: "teacher", name: "Mr Ode", rating: 3, category: "Bug report", body: "The heatmap takes a while to load for 8B when the quiz list is long. Not broken, just slow.", page: "Staff portal #/class/2/heatmap", created: day(-2), seen_at: null },
@@ -448,6 +448,8 @@
     ed_a_feedback_del(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); const i = db.feedback.findIndex(f => f.id === +a.p_id); if (i < 0) return { ok: false }; db.feedback.splice(i, 1); return { ok: true }; }
   });
 
+  /* v2.7: preview mode never signs the sample students into the real Compass Dash */
+  F.ed_s_cd_session = a => { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); return { ok: true, linked: false, code: null, user: null }; };
   /* v2.6: Student Voice and Campus Insights */
   Object.assign(F, {
     ed_s_voice(a) { const u = who(a); if (!u) return err("bad_key"); const n = id => db.voice_votes.filter(v => v.voice_id === id).length;

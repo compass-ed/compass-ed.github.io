@@ -497,3 +497,36 @@ html.tx-in::after{left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320
 .display .dots{display:flex;gap:8px} .display .dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3)} .display .dots i.on{background:var(--cyan)}
 .display .stage-tools{display:flex;gap:8px} .display .stage-tools .btn{color:#fff;border-color:#fff;background:transparent}
 @media (prefers-reduced-motion:reduce){.idcard::after{animation:none} .display .stage-body{transition:none;opacity:1;transform:none}}
+
+/* ===== v2.7 languages: switcher, Arabic type, right-to-left mirrors ===== */
+.lang-sw{font:inherit;font-size:13px;font-weight:600;color:inherit;background:transparent;border:1px solid var(--line2);border-radius:999px;padding:6px 10px;cursor:pointer;max-width:120px}
+.lang-sw option{color:#000;background:#fff}
+.topbar .lang-sw{margin-inline-start:auto} .topbar .lang-sw + a.ib{margin-left:0!important;margin-inline-start:0!important}
+.topbar.teach .lang-sw{border-color:#444} .nav .cta .lang-sw{margin-inline-end:4px}
+:root[lang="ar"]{--font:"IBM Plex Sans Arabic","Plus Jakarta Sans",system-ui,sans-serif;--head:"IBM Plex Sans Arabic","Manrope",system-ui,sans-serif}
+:root[lang="ar"] *{letter-spacing:0!important}   /* spacing letters breaks Arabic joining */
+[dir="rtl"] .btn .i{margin-right:0;margin-left:-2px}
+[dir="rtl"] .right{margin-left:0;margin-right:auto}
+[dir="rtl"] .tb th,[dir="rtl"] .tb td,[dir="rtl"] .heat th{text-align:right}
+[dir="rtl"] .heat th{left:auto;right:0}
+[dir="rtl"] .modal .x{right:auto;left:12px}
+[dir="rtl"] .nav nav{margin-left:0;margin-right:8px}
+[dir="rtl"] .nav .cta{margin-left:0;margin-right:auto}
+[dir="rtl"] .nav .burger{margin-left:0;margin-right:4px}
+[dir="rtl"] .side a.nl .n{margin-left:0;margin-right:auto}
+[dir="rtl"] .bell .n{right:auto;left:2px}
+[dir="rtl"] .pop{right:auto;left:0}
+[dir="rtl"] .lesson .key{border-left:0;border-right:4px solid var(--cyan);border-radius:12px 0 0 12px}
+[dir="rtl"] .lesson ul,[dir="rtl"] .prose ul{padding-left:0;padding-right:22px}
+[dir="rtl"] .fab,[dir="rtl"] .fab-fb{right:auto;left:18px}
+[dir="rtl"] .srch input{padding-left:12px;padding-right:36px} [dir="rtl"] .srch .i{left:auto;right:10px}
+[dir="rtl"] .step .num{left:auto;right:16px}
+[dir="rtl"] .fb-card{border-left:0;border-right:4px solid var(--line)}
+[dir="rtl"] .voice .reply{border-left:0;border-right:3px solid var(--cyan);border-radius:8px 0 0 8px}
+[dir="rtl"] .side.teach{border-right:0;border-left:1px solid var(--line)}
+@media (max-width:980px){[dir="rtl"] .side{inset:0 0 0 auto;transform:translateX(100%)} [dir="rtl"] .side.open{transform:none}}
+@media (max-width:600px){[dir="rtl"] .cookie{text-align:right} [dir="rtl"] .fab-fb{right:auto;left:14px}}
+
+/* ===== v2.7 Compass Dash inside the portals ===== */
+.dash-frame{display:block;width:100%;height:calc(100dvh - 170px);min-height:560px;border:0;border-radius:var(--r);background:#fff;box-shadow:var(--sh)}
+@media (max-width:980px){.dash-frame{height:calc(100dvh - 120px);border-radius:12px}}

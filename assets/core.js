@@ -135,9 +135,9 @@
   CE.catName = id => CE.cat(id).name; CE.catIcon = id => CE.icon(CE.cat(id).icon);
   const D = CE.date = {
     parse: v => v ? new Date(v) : null,
-    short: v => { const d = D.parse(v); return d ? d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }) : ""; },
-    long: v => { const d = D.parse(v); return d ? d.toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""; },
-    time: v => { const d = D.parse(v); return d ? d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" }) : ""; },
+    short: v => { const d = D.parse(v); return d ? d.toLocaleDateString((CE.locale || "en-GB"), { weekday: "short", day: "numeric", month: "short" }) : ""; },
+    long: v => { const d = D.parse(v); return d ? d.toLocaleDateString((CE.locale || "en-GB"), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""; },
+    time: v => { const d = D.parse(v); return d ? d.toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit" }) : ""; },
     dt: v => { const d = D.parse(v); if (!d) return ""; const t = D.time(v); return D.short(v) + (t === "00:00" || t === "23:59" ? "" : ", " + t); },
     ago: v => { const d = D.parse(v); if (!d) return "never"; const m = Math.round((Date.now() - d) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " h ago"; const dd = Math.round(h / 24); if (dd < 7) return dd + " day" + (dd > 1 ? "s" : "") + " ago"; return D.short(v); },
     until: v => { const d = D.parse(v); if (!d) return ""; const ms = d - Date.now(); const h = Math.round(ms / 3600000); if (ms < 0) return "overdue"; if (h < 1) return "due within the hour"; if (h < 24) return "due in " + h + " h"; const dd = Math.round(h / 24); return "due in " + dd + " day" + (dd > 1 ? "s" : ""); },
@@ -382,9 +382,19 @@
       ...hs.map((x, i) => h("div", { class: "house-" + x.h }, h("div", { class: "row between sm" }, h("b", {}, (i + 1) + ". " + (CE.HOUSE_NAMES[x.h] || x.h) + (x.h === myHouse ? " (mine)" : "") + " · " + (x.members || 0) + " member" + (x.members === 1 ? "" : "s")), h("span", {}, (x.xp || 0).toLocaleString() + " XP · " + (x.wk || 0).toLocaleString() + " this week")), h("div", { class: "hbar" }, h("i", { style: { width: CE.pct(x.xp || 0, top) + "%" } })))),
       ch.length ? h("div", {}, h("h4", {}, "House challenges"), h("div", { class: "list" }, ...ch.map(c => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, [c.kind === "class" ? (c.class || "class") + " challenge" : "Whole-school challenge", c.goal ? (c.done != null ? c.done + " of " : "goal ") + c.goal + " " + (c.metric || "") : null, c.ends ? D.left(c.ends) : null].filter(Boolean).join(" · "))))))) : null,
       cd.board && cd.board.length ? h("div", {}, h("h4", {}, "Top on Compass Dash"), h("div", { class: "list" }, ...cd.board.slice(0, 5).map((b, i) => h("div", { class: "item" }, h("span", { class: "badge" + (i < 3 ? " cyan" : "") }, i + 1), h("div", { class: "grow" }, h("div", { class: "t sm" }, b.name), h("div", { class: "s xs" }, (b.xp || 0).toLocaleString() + " XP · " + (b.mast || 0) + " topics mastered")))))) : null,
-      h("a", { class: "btn sm ghost", href: "https://compassdash.github.io/Compassdash/", target: "_blank", rel: "noopener" }, "Open Compass Dash")));
+      h("a", { class: "btn sm ghost", href: "#/dash" }, "Open Compass Dash")));
   };
   /* school links (Global Campus, Compass Dash, ...) as tiles */
+  /* Compass Dash, inside the portal. Students who linked their Compass Dash account are signed in to it automatically. */
+  CE.dashPage = async (page, student) => {
+    CE.title("Compass Dash"); page.innerHTML = "";
+    const f = CE.h("iframe", { class: "dash-frame", src: ROOT + "dash/", title: "Compass Dash", allow: "fullscreen; autoplay" });
+    page.append(f);
+    if (!student) return;
+    let r = null; try { r = await CE.capi("ed_s_cd_session"); } catch (e) {}
+    if (r && r.ok && r.linked) { const send = () => { try { f.contentWindow.postMessage({ type: "ce-cd-signin", code: r.code, user: r.user }, location.origin); } catch (e) {} }; f.addEventListener("load", send); send(); }
+    else if (r && r.ok) page.prepend(CE.h("div", { class: "sm mut" }, "Already use Compass Dash? Link your account in ", CE.h("a", { href: "#/settings" }, "Settings"), " and it signs you in here automatically."));
+  };
   CE.linkTiles = links => { const h = CE.h; return (links || []).length ? h("div", { class: "grid g2" }, ...links.map(l => { let host = ""; try { host = new URL(l.url).hostname.replace(/^www\./, ""); } catch (e) {} return h("a", { class: "ext", href: l.url, target: "_blank", rel: "noopener" }, h("div", { class: "lg" }, (l.name || "?").trim().slice(0, 2).toUpperCase()), h("div", { class: "grow" }, h("div", { class: "t" }, l.name), h("div", { class: "s" }, l.blurb || host)), CE.icon("ext")); })) : null; };
   CE.PAT = { 1: "hub", 2: "art", 3: "world", 4: "perform", 5: "words", 6: "impact", 7: "steam", 8: "sport" };
   CE.emptyArt = (art, title, sub) => CE.h("div", { class: "empty art" }, CE.h("img", { src: ROOT + "assets/art/empty-" + art + ".svg", alt: "" }), CE.h("div", { class: "b" }, title), sub ? CE.h("div", { class: "sm" }, sub) : null);
