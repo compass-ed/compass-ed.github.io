@@ -7829,11 +7829,10 @@ const CEB=(()=>{
  {const nav=document.getElementById("nav");if(nav){const st=document.createElement("style");
   st.textContent=".ceback{display:inline-flex;align-items:center;gap:4px;flex:none;margin-inline-end:8px;padding:6px 10px 6px 6px;border:1px solid var(--line);border-radius:var(--r);color:var(--tx);font-weight:600;font-size:.88rem;text-decoration:none;white-space:nowrap}.ceback:hover{background:var(--bg)}.ceback:focus-visible{outline:2px solid var(--acc);outline-offset:2px}.ceback svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}[dir=rtl] .ceback svg{transform:scaleX(-1)}@media (max-width:380px){.ceback span{display:none}.ceback{padding:6px}}";
   document.head.appendChild(st);
-  const a=document.createElement("a");a.className="ceback";a.href=home();a.onclick=back;a.setAttribute("data-no-i18n","");
+  const a=document.createElement("a");a.className="ceback";a.href=home();a.onclick=back;
   a.setAttribute("aria-label",L("Back to Compass Ed","Retour à Compass Ed","العودة إلى Compass Ed"));a.title=a.getAttribute("aria-label");
   a.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg><span>Compass Ed</span>';
   a.addEventListener("pointerenter",()=>{a.href=home()});nav.insertBefore(a,nav.firstChild)}}
- Object.assign(UITR,{"compass ed":["Compass Ed","Compass Ed"]});
  return{sync,signOut,back,signIn:()=>goTop("../signin.html?next=student%23%2Fdash"),code:()=>own()};
 })();
 </script>
