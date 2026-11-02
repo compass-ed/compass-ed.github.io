@@ -450,6 +450,9 @@
 
   /* v2.7: preview mode never signs the sample students into the real Compass Dash */
   F.ed_s_cd_session = a => { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); return { ok: true, linked: false, code: null, user: null }; };
+  /* v2.8 one sign-in: preview has no real Compass Dash seat to link, so staff see the "sign in once" hint */
+  F.ed_t_cd_me = a => { const u = who(a); const e = mustStaff(u); if (e) return e; return { ok: true, on: true, linked: false }; };
+  F.ed_t_cd_unlink = a => { const u = who(a); const e = mustStaff(u); if (e) return e; return { ok: true }; };
   /* v2.6: Student Voice and Campus Insights */
   Object.assign(F, {
     ed_s_voice(a) { const u = who(a); if (!u) return err("bad_key"); const n = id => db.voice_votes.filter(v => v.voice_id === id).length;

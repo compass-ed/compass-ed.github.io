@@ -541,5 +541,8 @@ html.tx-in::after{left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320
 .dash-wrap:fullscreen .dash-frame{flex:1;height:auto;min-height:0;border-radius:0;box-shadow:none}
 .dash-wrap.max .dash-frame{flex:1;height:auto;min-height:0;border-radius:0;box-shadow:none}
 .dash-wrap:fullscreen .dash-fs{position:absolute;bottom:14px;inset-inline-end:14px;z-index:2;background:rgba(0,0,0,.62);color:#fff;border-color:rgba(255,255,255,.55);backdrop-filter:blur(6px)}
+.dash-wrap:-webkit-full-screen{background:#000;gap:0}
+.dash-wrap:-webkit-full-screen .dash-frame{flex:1;height:auto;min-height:0;border-radius:0;box-shadow:none}
+.dash-wrap:-webkit-full-screen .dash-fs{position:absolute;bottom:14px;inset-inline-end:14px;z-index:2;background:rgba(0,0,0,.62);color:#fff;border-color:rgba(255,255,255,.55);backdrop-filter:blur(6px)}
 .dash-wrap.max .dash-fs{position:absolute;bottom:calc(14px + env(safe-area-inset-bottom));inset-inline-end:14px;z-index:2;background:rgba(0,0,0,.62);color:#fff;border-color:rgba(255,255,255,.55);backdrop-filter:blur(6px)}
 html.dash-max-on,html.dash-max-on body{overflow:hidden}

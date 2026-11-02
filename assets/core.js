@@ -62,14 +62,17 @@
   const LS = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
   CE.LS = LS;
   const IDLE = 20 * 60 * 1000;   // staff sessions lock in this browser after 20 minutes without use
+  // one sign-in with Compass Dash: leaving Compass Ed also ends a Teacher Panel session open in this tab
+  // (Compass Dash signs its student account out by itself the next time it opens without this session)
+  const dashOut = () => { try { const k = sessionStorage.getItem("cdAK") || ""; if (/^t:/.test(k) && !demo) CE.api("cd_t_logout", { p_key: k }).catch(() => {}); ["cdAK", "cdAKt", "cdT", "cdCE"].forEach(x => sessionStorage.removeItem(x)); } catch (e) {} };
   CE.auth = {
     get() {
       const s = LS.get("ce_auth"); if (!s || !s.tok) return null;
-      if (s.me && s.me.role !== "student" && Date.now() - (s.at || 0) > IDLE) { LS.del("ce_auth"); return null; }
+      if (s.me && s.me.role !== "student" && Date.now() - (s.at || 0) > IDLE) { LS.del("ce_auth"); dashOut(); return null; }
       s.at = Date.now(); LS.set("ce_auth", s); return s;
     },
     set(tok, me) { LS.set("ce_auth", { tok, me, at: Date.now() }); },
-    clear() { LS.del("ce_auth"); },
+    clear() { LS.del("ce_auth"); dashOut(); },
     args() { const s = CE.auth.get(); return s ? { p_key: s.tok } : {}; }
   };
   CE.capi = async (fn, a) => {
@@ -385,8 +388,9 @@
       h("a", { class: "btn sm ghost", href: "#/dash" }, "Open Compass Dash")));
   };
   /* school links (Global Campus, Compass Dash, ...) as tiles */
-  /* Compass Dash, inside the portal. Students who linked their Compass Dash account are signed in to it automatically. */
-  CE.dashPage = async (page, student) => {
+  /* Compass Dash, inside the portal. It reads this Compass Ed session itself and signs in as the same person
+     (the bridge at the end of dash/index.html), so this page only frames it. */
+  CE.dashPage = page => {
     CE.title("Compass Dash"); page.innerHTML = "";
     const f = CE.h("iframe", { class: "dash-frame", src: ROOT + "dash/", title: "Compass Dash", allow: "fullscreen; autoplay" });
     // full screen: the real thing where the browser allows it, else (iPhone) Compass Dash fills the page until Exit
@@ -409,10 +413,6 @@
     addEventListener("hashchange", unmax, { once: true });   // leaving the page always gives the portal back
     wrap.append(fsBtn, f); label();
     page.append(wrap);
-    if (!student) return;
-    let r = null; try { r = await CE.capi("ed_s_cd_session"); } catch (e) {}
-    if (r && r.ok && r.linked) { const send = () => { try { f.contentWindow.postMessage({ type: "ce-cd-signin", code: r.code, user: r.user }, location.origin); } catch (e) {} }; f.addEventListener("load", send); send(); }
-    else if (r && r.ok) page.prepend(CE.h("div", { class: "sm mut" }, "Already use Compass Dash? Link your account in ", CE.h("a", { href: "#/settings" }, "Settings"), " and it signs you in here automatically."));
   };
   CE.linkTiles = links => { const h = CE.h; return (links || []).length ? h("div", { class: "grid g2" }, ...links.map(l => { let host = ""; try { host = new URL(l.url).hostname.replace(/^www\./, ""); } catch (e) {} return h("a", { class: "ext", href: l.url, target: "_blank", rel: "noopener" }, h("div", { class: "lg" }, (l.name || "?").trim().slice(0, 2).toUpperCase()), h("div", { class: "grow" }, h("div", { class: "t" }, l.name), h("div", { class: "s" }, l.blurb || host)), CE.icon("ext")); })) : null; };
   CE.PAT = { 1: "hub", 2: "art", 3: "world", 4: "perform", 5: "words", 6: "impact", 7: "steam", 8: "sport" };

@@ -474,6 +474,13 @@
     CE.title("Settings"); page.innerHTML = "";
     page.append(card("My account", h("div", { class: "stack" }, h("div", {}, h("b", {}, me.name), " · ", h("span", { class: "kbd" }, me.username)), h("div", { class: "sm mut" }, (me.role === "admin" ? "Administrator" : "Teacher" + (me.subj != null ? " · " + CE.subjName(me.subj) : "")) + " · the portal locks after 20 minutes without use."), h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: CE.signOut }, "Sign out")))));
     page.append(card("Reading and display", CE.prefsCard()));
+    // one sign-in: after one Teacher Panel sign-in inside Compass Ed, Compass Dash opens it without a password
+    const tpBox = h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, "Loading…")); page.append(card("Compass Dash Teacher Panel", tpBox, CE.srcTag("compassdash", "Compass Dash")));
+    const drawTp = async () => { const r = await api("ed_t_cd_me").catch(() => null); tpBox.innerHTML = "";
+      if (!r || !r.ok || !r.on) return tpBox.append(h("p", { class: "sm mut", style: { margin: 0 } }, "Compass Dash is not connected to this campus."));
+      if (!r.linked) return tpBox.append(h("p", { class: "sm mut", style: { margin: 0 } }, "Open Compass Dash, choose Teacher Panel and sign in once with your Compass Dash teacher account. From then on it opens by itself while you are signed in here."), h("div", { class: "row" }, h("a", { class: "btn sm", href: "#/dash" }, "Open Compass Dash")));
+      tpBox.append(h("p", { class: "sm", style: { margin: 0 } }, "Opens without a password as ", h("span", { class: "kbd" }, r.t.username || r.t.name), "."), h("div", { class: "row" }, h("button", { class: "btn sm ghost", onclick: async () => { const x = await api("ed_t_cd_unlink"); CE.toast(x.ok ? "Unlinked" : CE.errText(x), x.ok ? "ok" : "bad"); drawTp(); } }, "Unlink"))); };
+    drawTp();
     const old = h("input", { class: "in", type: "password", autocomplete: "current-password" }), nw = h("input", { class: "in", type: "password", autocomplete: "new-password", minlength: 8 }), er = h("div", { class: "err" });
     page.append(card("Change password", h("div", { class: "stack", style: { maxWidth: "420px" } }, h("label", { class: "f" }, "Current password", old), h("label", { class: "f" }, "New password (8+ characters)", nw), er, h("button", { class: "btn", onclick: async () => { er.textContent = ""; const r = await api("ed_pw", { p_old: old.value, p_new: nw.value }); if (!r.ok) return er.textContent = CE.errText(r); CE.toast("Password changed ✓", "ok"); old.value = nw.value = ""; } }, "Change password"))));
   }
@@ -857,7 +864,7 @@
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/points", handler: points }, { path: "/clubs", handler: clubs }, { path: "/bank", handler: bank }, { path: "/search", handler: search },
-    { path: "/dash", handler: () => CE.dashPage(page, false) }, { path: "/voice", handler: voiceAdmin }, { path: "/insights", handler: insights }, { path: "/display", handler: display },
+    { path: "/dash", handler: () => CE.dashPage(page) }, { path: "/voice", handler: voiceAdmin }, { path: "/insights", handler: insights }, { path: "/display", handler: display },
     { path: "/", handler: dashboard }, { path: "/campus", handler: campusPage }, { path: "/activities", handler: activities }, { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: compPage }, { path: "/news", handler: news },
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },

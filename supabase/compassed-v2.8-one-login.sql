@@ -4,7 +4,11 @@
 -- open it (or the one they already linked is used). Staff: the Teacher Panel opens without a password once they
 -- have signed in to it one time from inside Compass Ed. Nothing here is callable without a Compass Ed session.
 
-alter table public.ed_user add column if not exists cd_tid int;   -- the Compass Dash teacher seat this staff member uses
+alter table public.ed_user add column if not exists cd_tid int;    -- the Compass Dash teacher seat this staff member uses
+alter table public.ed_user add column if not exists cd_tsh text;   -- sha256 of the link's own anchor session (see ed_t_cd_link):
+-- a Teacher Panel session the server keeps for the link and never hands out, so ordinary sign-outs and Lock leave it alone,
+-- while a seat reset, a password change made elsewhere or "sign out everywhere" in Compass Dash (which delete the seat's
+-- sessions) end the link; one more sign-in by hand inside Compass Ed links again
 
 -- Compass Dash side: make a signed-up student account for a trusted caller (never the browser; revoked below).
 -- Same rows Compass Dash's own codes and sign-up make, minus the per-connection limit, which is for guessing codes.
@@ -29,24 +33,33 @@ end $$;
 revoke all on function public.cd_sso_student(text, text, int) from public, anon, authenticated;
 
 -- Student: the Compass Dash account to sign in with, made on first use. Gives back Compass Dash's own sign-in answer
--- ("info"), so the app signs in without asking again. A link whose account was removed in Compass Dash is replaced.
+-- ("info"), so the app signs in without asking again. Only an account that was removed or released in Compass Dash is
+-- replaced; a link whose name no longer matches is left for the student to fix in Settings (cd_relink), never guessed.
 create or replace function public.ed_s_cd_session(p_key text) returns json language plpgsql security definer set search_path = public, extensions as $$
-declare u public.ed_user := public.ed_who(p_key); r json; made boolean := false;
+declare u public.ed_user := public.ed_who(p_key); r json; c record; made boolean := false;
 begin
   if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'student' then return public.ed_err('forbidden'); end if;
   if not public.ed_cd_on() then return json_build_object('ok', true, 'on', false); end if;
   select * into u from public.ed_user where id = u.id for update;   -- two tabs at once make one account, not two
   if u.cd_code is not null then
-    r := public.ed_cd_call('cd_login', jsonb_build_object('p_code', u.cd_code, 'p_user', u.cd_user));
-    if r is null or (r->>'error') in ('locked', 'busy') then return public.ed_err('cd_busy'); end if;
-    if (r->>'ok')::boolean is not true then update public.ed_user set cd_code = null, cd_user = null where id = u.id; u.cd_code := null; end if;
+    select * into c from public.cd_find(u.cd_code);
+    if c.code is null or c.username is null then   -- removed or released in Compass Dash: a new one is made below
+      update public.ed_user set cd_code = null, cd_user = null where id = u.id; u.cd_code := null;
+    elsif lower(u.cd_user) not in (lower(c.username), lower(coalesce(c.prev_user, ''))) then
+      return public.ed_err('cd_relink');
+    end if;
   end if;
-  if u.cd_code is null then
+  if u.cd_code is not null then
+    r := public.ed_cd_call('cd_login', jsonb_build_object('p_code', u.cd_code, 'p_user', u.cd_user));
+    if r is null or (r->>'ok')::boolean is not true then return public.ed_err('cd_busy'); end if;
+  else
+    if public.cd_ip_busy() then return public.ed_err('cd_busy'); end if;
     r := public.cd_sso_student(u.username, u.house, u.year);
     if (r->>'ok')::boolean is not true then return public.ed_err('cd_' || coalesce(r->>'error', 'failed')); end if;
+    update public.ed_user set cd_code = r->>'code', cd_user = r->>'username' where id = u.id;   -- linked at once: a retry never makes another
+    made := true;
     r := public.ed_cd_call('cd_login', jsonb_build_object('p_code', r->>'code', 'p_user', r->>'username'));
     if r is null or (r->>'ok')::boolean is not true then return public.ed_err('cd_busy'); end if;
-    made := true;
   end if;
   update public.ed_user set cd_code = r->>'code', cd_user = r->>'username',
     house = case when house is null and (r->>'house') in ('N','E','S','W') then r->>'house' else house end
@@ -54,30 +67,45 @@ begin
   return json_build_object('ok', true, 'on', true, 'made', made, 'code', r->>'code', 'user', r->>'username', 'info', r);
 end $$;
 
+-- Does this staff member's Teacher Panel link still hold? (seat in use, and the session it was last renewed from still exists)
+create or replace function public.ed_cd_tlink_ok(p_tid int, p_tsh text) returns boolean language plpgsql stable security definer set search_path = public as $$
+begin   -- plpgsql, so this installs even where Compass Dash's teacher tables do not exist yet
+  return p_tid is not null and p_tsh is not null
+     and exists (select 1 from public.cd_teacher x where x.id = p_tid and not x.disabled and x.username is not null)
+     and exists (select 1 from public.cd_tsess s where s.tid = p_tid and s.tok = p_tsh);
+end $$;
+
 -- Staff: a fresh Teacher Panel session for the linked seat, or linked:false.
 create or replace function public.ed_t_cd_session(p_key text) returns json language plpgsql security definer set search_path = public, extensions as $$
-declare u public.ed_user := public.ed_who(p_key); t record;
+declare u public.ed_user := public.ed_who(p_key); t record; tok text;
 begin
   if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_staff(u) then return public.ed_err('forbidden'); end if;
   if to_regclass('public.cd_teacher') is null or u.cd_tid is null then return json_build_object('ok', true, 'linked', false); end if;
-  select * into t from public.cd_teacher where id = u.cd_tid;
-  if t.id is null or t.disabled or t.username is null then
-    update public.ed_user set cd_tid = null where id = u.id; return json_build_object('ok', true, 'linked', false);
+  if not public.ed_cd_tlink_ok(u.cd_tid, u.cd_tsh) then
+    update public.ed_user set cd_tid = null, cd_tsh = null where id = u.id; return json_build_object('ok', true, 'linked', false);
   end if;
-  return json_build_object('ok', true, 'linked', true, 'tok', public.cd_tsess_new(t.id),
+  select * into t from public.cd_teacher where id = u.cd_tid;
+  update public.cd_tsess x set seen = now() where x.tok = u.cd_tsh;   -- keep the anchor out of Compass Dash's 12-hour clean-up
+  tok := public.cd_tsess_new(t.id);
+  return json_build_object('ok', true, 'linked', true, 'tok', tok,
     't', json_build_object('id', t.id, 'subj', t.subj, 'seat', t.seat, 'name', t.name, 'username', t.username));
 end $$;
 
 -- Staff: remember the Teacher Panel seat they just signed in to (p_tkey is that Compass Dash session, which proves it).
+-- A seat another staff member still holds is not taken over (they unlink it in Settings, or it lapses as above).
 create or replace function public.ed_t_cd_link(p_key text, p_tkey text) returns json language plpgsql security definer set search_path = public, extensions as $$
-declare u public.ed_user := public.ed_who(p_key); t record;
+declare u public.ed_user := public.ed_who(p_key); t record; anchor text;
 begin
   if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_staff(u) then return public.ed_err('forbidden'); end if;
   if to_regclass('public.cd_teacher') is null then return public.ed_err('no_compassdash'); end if;
   select * into t from public.cd_tok(p_tkey);   -- null fields when the session is not valid
   if t.id is null or t.username is null then return public.ed_err('cd_no_match'); end if;
-  update public.ed_user set cd_tid = null where cd_tid = t.id and id <> u.id;   -- a seat belongs to one person
-  update public.ed_user set cd_tid = t.id where id = u.id;
+  if exists (select 1 from public.ed_user o where o.cd_tid = t.id and o.id <> u.id and public.ed_cd_tlink_ok(o.cd_tid, o.cd_tsh)) then
+    return public.ed_err('cd_taken');
+  end if;
+  update public.ed_user set cd_tid = null, cd_tsh = null where cd_tid = t.id and id <> u.id;   -- lapsed links to this seat
+  anchor := public.cd_tsess_new(t.id);   -- kept on the server only: the raw token is never returned
+  update public.ed_user set cd_tid = t.id, cd_tsh = encode(digest(substr(anchor, 3), 'sha256'), 'hex') where id = u.id;
   return json_build_object('ok', true, 't', json_build_object('id', t.id, 'subj', t.subj, 'name', t.name, 'username', t.username));
 end $$;
 
@@ -87,7 +115,7 @@ declare u public.ed_user := public.ed_who(p_key); t record;
 begin
   if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_staff(u) then return public.ed_err('forbidden'); end if;
   if to_regclass('public.cd_teacher') is null then return json_build_object('ok', true, 'on', false); end if;
-  select * into t from public.cd_teacher where id = u.cd_tid;   -- no row: every field null
+  select * into t from public.cd_teacher where id = case when public.ed_cd_tlink_ok(u.cd_tid, u.cd_tsh) then u.cd_tid end;   -- no row: every field null
   return json_build_object('ok', true, 'on', true, 'linked', t.id is not null,
     't', case when t.id is not null then json_build_object('name', t.name, 'username', t.username) end);
 end $$;
@@ -95,7 +123,7 @@ create or replace function public.ed_t_cd_unlink(p_key text) returns json langua
 declare u public.ed_user := public.ed_who(p_key);
 begin
   if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_staff(u) then return public.ed_err('forbidden'); end if;
-  update public.ed_user set cd_tid = null where id = u.id; return json_build_object('ok', true);
+  update public.ed_user set cd_tid = null, cd_tsh = null where id = u.id; return json_build_object('ok', true);
 end $$;
 
 -- Permissions (same rule as before)

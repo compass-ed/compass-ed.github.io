@@ -9,7 +9,8 @@
 try{if(/^https:\/\/compassdash\.github\.io\//.test(document.referrer)&&!localStorage.getItem("cgMoved")){var b=h.slice(9).replace(/-/g,"+").replace(/_/g,"/");var j=JSON.parse(decodeURIComponent(escape(atob(b))));
 var num=function(o){["score","best","correct","played"].forEach(function(f){o[f]=Math.max(0,+o[f]||0)});return o},played=function(v){try{return +JSON.parse(v).played||0}catch(e){return -1}};
 if(typeof j.cg==="string"){try{var c=JSON.parse(j.cg);j.cg=c&&typeof c==="object"&&!Array.isArray(c)?JSON.stringify(num(c)):null}catch(e){j.cg=null}}
-for(var k in j){if(!/^cg[A-Za-z_]*$/.test(k)||k==="cgMoved"||typeof j[k]!=="string")continue;var cur=localStorage.getItem(k);if(cur==null)localStorage.setItem(k,j[k]);else if(k==="cg"&&played(j[k])>played(cur)){localStorage.setItem("cgBeforeMove",cur);localStorage.setItem(k,j[k])}}
+var took=false;for(var k in j){if(!/^cg[A-Za-z_]*$/.test(k)||k==="cgMoved"||k==="cgBase"||typeof j[k]!=="string")continue;var cur=localStorage.getItem(k);if(cur==null){localStorage.setItem(k,j[k]);took=took||k==="cg"}else if(k==="cg"&&played(j[k])>played(cur)){localStorage.setItem("cgBeforeMove",cur);localStorage.setItem(k,j[k]);took=true}}
+if(took){if(typeof j.cgBase==="string")localStorage.setItem("cgBase",j.cgBase);else localStorage.removeItem("cgBase")}   /* the sync base belongs to the save it came with */
 localStorage.setItem("cgMoved",String(Date.now()))}}catch(e){}history.replaceState(null,"",location.pathname+location.search)})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
@@ -4003,7 +4004,7 @@ const MOD_HARD=/fuck|fuk|fck|fvck|shit|cunt|bitch|bastard|wank|twat|slut|whore|d
 const cleanText=v=>!String(v||"").split(/\s+/).some(w=>modHit(w,[MOD_HARD,MOD_SLUR]));
 /* phone numbers and email addresses come out of free text before it is sent */
 const redactPII=v=>String(v||"").replace(/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g,"[email removed]").replace(/(?:\+?\d[\s-]?){7,}\d/g,"[number removed]");
-function cdRow(){const u=cdUser(),h=u&&S.cd.house&&HS[S.cd.house];return`<div class="set"><div><b>Student account</b><span class="mut">${u?"Signed in as <b>"+esc(u)+"</b>"+(h?" · "+h[0]+" house":"")+". Sign in on another device with your code and username.":"Have a 4-digit student code? Enter it to create your username. You can play without one."}</span></div><button class="btn alt" onclick="cdOpen()">${u?"Manage":"Enter code"}</button></div>`}
+function cdRow(){const u=cdUser(),h=u&&S.cd.house&&HS[S.cd.house];return`<div class="set"><div><b>Student account</b><span class="mut">${u?"Signed in as <b>"+esc(u)+"</b>"+(h?" · "+h[0]+" house":"")+(S.cd.ce?". Compass Ed signs you in on every device.":". Sign in on another device with your code and username."):"Sign in with your Compass Ed account to save your progress on every device. You can play without one."}</span></div><button class="btn alt" onclick="cdOpen()">${u?"Manage":"Sign in"}</button></div>`}
 function cdOpen(){const u=cdUser();
  if(u){const c=S.cd,h=c.house&&HS[c.house];return cdShell(`<h2>Student account</h2><div class="acct">${h?hsCrest(c.house,64):""}<div><p style="margin:0">Signed in as <b>${esc(u)}</b></p><p class="mut" style="margin:4px 0 0">Code <b class="mono">${esc(c.code)}</b>${h?" · "+h[0]+" house":""}${c.year?" · Year "+c.year:""}${c.cls?" · "+esc(c.cls.name):""}</p></div></div><p class="mut">To sign in on another device, enter this code and then your username. Keep your code to yourself. Signing out only affects this device.</p><div class="fbr"><button class="btn alt" onclick="fbClose()">Close</button><button class="btn" onclick="cdSignOut()">Sign out</button></div>`)}
  if(!cdOn())return cdShell(`<h2>Student codes</h2><p class="mut">Student codes are not switched on for this site yet. You can keep playing without one.</p><div class="fbr"><button class="btn" onclick="fbClose()">Close</button></div>`);
@@ -4051,8 +4052,9 @@ async function cdCreate(){const e=$("cde"),b=$("cdb"),i=$("cdn");if(!e||!i||CDM.
 function cdInfo(r){const c=S.cd;if(!c)return;if(r.username&&r.username!==c.user){c.user=r.username;S.nm=r.username}
  if(r.code)c.code=r.code;if("house" in r)c.house=r.house||null;if("year" in r){c.year=r.year||null;if(r.year)S.yr=r.year}if("class" in r)c.cls=r.class||null}
 async function cdSetMe(h,y){if(!cdUser())return;try{const r=await cdRpc("cd_set_me",Object.assign(cdA(),{p_house:h,p_year:y}));if(r.ok){cdInfo(r);saveQ();return r}}catch(e){}}
-function cdSignIn(code,user,lead,info){
+function cdSignIn(code,user,lead,info,fresh){
  if(!S.cd){try{localStorage.setItem("cgGuest",JSON.stringify(S))}catch(e){}}   /* keep this device's own progress for when the student signs out */
+ if(fresh)cdUse({});   /* Compass Ed v2.8: an account made for a student starts empty, never with this device's guest progress or house */
  S.cd={code,user};cdInfo(info||{});S.nm=user;S.cdRev=0;S.cdDirty=0;CDP.ready=0;cdBaseSet(null,0);saveQ();fbClose();notify(lead+user);
  const lh=S.house;cdLoad().then(()=>{cdPendingTake();return cdPushNow()}).then(()=>{cdSync(1);BRD.rows=null;HSE.d=null;MY.d=null;if(!S.cd.house&&HS[lh])cdSetMe(lh,null).then(()=>{applyCos();hcPop()});applyCos();hcPop();cdRefresh()});stuWait()}
 async function cdSignOut(){fbClose();if(S.cdDirty){notify("Saving your progress…","info");await cdPushNow()}cdSync(1);
@@ -4145,7 +4147,8 @@ async function cdPushNow(){clearTimeout(CDP.tm);if(!CDP.ready||!cdUser()||!S.cdD
    else if(r.error==="conflict"&&r.prog){const a=p.rz|0,b=r.prog.rz|0;
     if(a>b){S.cdRev=r.rev;saveQ();CDP.again=1}                                   /* this device was reset more recently: its fresh start wins */
     else if(b>a){cdAdopt(r.prog,r.rev);cdBaseSet(r.prog,r.rev)}                 /* the other device was reset: take its fresh start */
-    else{const merged=cdMerge(r.prog,p,cdBaseGet());cdUse(merged,{cd:S.cd,cdRev:r.rev,cdDirty:1});cdBaseSet(r.prog,r.rev);CDP.sent="";CDP.again=1}}}}
+    else{const merged=cdMerge(r.prog,p,cdBaseGet());cdUse(merged,{cd:S.cd,cdRev:r.rev,cdDirty:1});cdBaseSet(r.prog,r.rev);CDP.sent="";CDP.again=1}}}
+  else if(r&&r.ok){try{const o=JSON.parse(localStorage.getItem("cgPending")||"null");if(o&&o.code===code){if(cdJ(o.p)===j)localStorage.removeItem("cgPending");else{o.base=p;localStorage.setItem("cgPending",JSON.stringify(o))}}}catch(x){}}   /* Compass Ed v2.8: this save landed after the account was switched, so what it sent is no longer pending */}
  catch(e){}
  CDP.busy=0;if(CDP.again){CDP.again=0;cdPushNow()}}
 addEventListener("pagehide",()=>cdPushNow());
@@ -4203,7 +4206,7 @@ function boardLoad(force){if(BRD.busy)return;BRD.busy=1;if(force)BRD.rows=null;
   .then(()=>{BRD.busy=0;if(window.CURP==="board")board()})}
 const boardMode=m=>{BRD.mode=m;board()};
 function board(){const me=cdUser(),k=BRD.mode==="wk"?"wk":"xp",R=BRD.rows;
- if(cdOn()&&!me)return app.innerHTML=`<h2>Class leaderboard</h2><p class="lead">Sign in with your student code to see the leaderboard. To keep everyone safe, it is only shown to signed-in students.</p><p><button class="btn" onclick="cdOpen()">Enter student code</button></p>${bar()}`;   /* v2.7.0 */
+ if(cdOn()&&!me)return app.innerHTML=`<h2>Class leaderboard</h2><p class="lead">Sign in with your Compass Ed account to see the leaderboard. To keep everyone safe, it is only shown to signed-in students.</p><p><button class="btn" onclick="cdOpen()">Sign in</button></p>${bar()}`;   /* v2.7.0 */
  if(!cdOn())return app.innerHTML=`<h2>Class leaderboard</h2><p class="lead">The leaderboard is not switched on for this site yet.</p>${bar()}`;
  const list=R?R.slice().sort((a,b)=>(+b[k]||0)-(+a[k]||0)):[];
  app.innerHTML=`<h2>Class leaderboard</h2><p class="lead">${me?`You are on the board as <b>${esc(me)}</b>. Your score updates as you play.`:"Enter your student code in Settings to appear on the board. You can keep playing without one."}</p>
@@ -4518,14 +4521,14 @@ function resetProgress(){const nm=S.nm,cd=S.cd,rev=S.cdRev;                /* th
 function resetAll(){if(confirm((cdUser()?"Reset progress for "+cdUser()+" on every device?\n\nYou are signed in, so this also resets your account: your teacher will see your XP and stats start again. ":"Reset progress on this device?\n\n")+"This clears stats, mastery, achievements, mistakes, playtime and shop purchases. Your settings, theme and display name are kept. This cannot be undone."))resetProgress()}
 /* v2.6.6: announcements from a teacher, shown on the Learn page until they end or the student closes them */
 let ANN={d:null,t:0};
-function annLoad(){if(!cdOn()||!cdUser()||Date.now()-ANN.t<6e4)return;ANN.t=Date.now();cdRpc("cd_anns",cdA()).then(r=>{if(r&&r.ok){ANN.d=r.rows||[];OC.set("ann",ANN.d);const e=$("annw");if(e&&window.CURP==="home")e.outerHTML=annHtml()}}).catch(()=>{const c=OC.get("ann");if(c&&!ANN.d){ANN.d=c.v;const e=$("annw");if(e&&window.CURP==="home")e.outerHTML=annHtml()}})}
+function annLoad(){if(!cdOn()||!cdUser()||Date.now()-ANN.t<6e4)return;ANN.t=Date.now();const ac=S.cd.code;cdRpc("cd_anns",cdA()).then(r=>{if(!S.cd||S.cd.code!==ac)return;if(r&&r.ok){ANN.d=r.rows||[];OC.set("ann",ANN.d);const e=$("annw");if(e&&window.CURP==="home")e.outerHTML=annHtml()}}).catch(()=>{const c=OC.get("ann");if(c&&!ANN.d){ANN.d=c.v;const e=$("annw");if(e&&window.CURP==="home")e.outerHTML=annHtml()}})}
 function annHtml(){const L=(ANN.d||[]).filter(a=>!(ST.annx||[]).includes(a.id));if(!L.length)return`<div id="annw"></div>`;
  return`<div id="annw">${L.slice(0,3).map(a=>`<div class="card ann" role="status"><span class="anni">${icn("bell")}</span><div class="annb"><span class="mut">From your teacher${a.class?" · "+esc(a.class):""}</span><p class="nc">${esc(a.body)}</p></div><button class="mx" aria-label="Close" onclick="annX(${a.id})">\u00d7</button></div>`).join("")}</div>`}
 function annX(id){ST.annx=(ST.annx||[]).concat(id).slice(-50);saveST();const e=$("annw");if(e)e.outerHTML=annHtml()}
 function home(){chk();if(cdOn()){hsLoad();if(cdUser()){myLoad();cupCheck();annLoad();ljCheck()}}const T=allT(),m=T.filter(x=>stage(...x)===4).length,ac=S.played?Math.min(100,Math.round(S.correct/S.played*100))+"%":"–",A=defs(),nu=A.filter(d=>S.ach[d.id]).length,nx=T.filter(x=>stage(...x)<4).sort((a,b)=>stage(...b)-stage(...a))[0],isNew=!S.played&&!T.some(x=>R(...x).r),gs=nx?`go('topic',[${nx[0]},${nx[1]}])`:"toSubj()",nm=(S.mis||[]).length,fe=(S.feat||[]).filter(i=>S.ach[i]).length;
 const subjects=`<h2 id="subjects" class="sech">Subjects <span class="mut">${SUBJ.length} subjects · ${T.length} topics · ${m} mastered</span></h2>
 <div class="sgrid">${SUBJ.map((u,i)=>`<button class="card game subj" onclick="go('subject',${i})"><span class="sji">${u.i}</span><span class="sjn">${u.n}</span><span class="sjd">${u.d}</span><span class="pb"><i style="width:${subPct(i)}%"></i></span><span class="sjm">${subPct(i)}% mastery · ${u.t.length} topics</span></button>`).join("")}</div>`;
-app.innerHTML=`<section class="hero3"><div><span class="eyebrow">${cdUser()?"Welcome, "+cdUser():"Your school learning companion"}${myHouse()?" \u00b7 "+HS[myHouse()][0]+" house":""}</span><h1>Compass Dash</h1><p class="lede">${isNew?`Short lessons, practice that explains every answer, and topic tests across ${SUBJ.length} school subjects.`:`Pick up where you left off, or start a new topic. Everything you answer counts towards your mastery.`}</p></div><div class="cta"><button class="btn big" onclick="${gs}">${isNew?"Get Started":"Continue learning"} →</button><button class="btn alt big" onclick="toSubj()">Browse subjects</button>${isNew&&!cdUser()?`<button class="btn alt big" onclick="cdOpen()">I have a student code</button>`:""}${isNew?`<button class="btn alt big" onclick="trailerOpen()">Watch the trailer</button>`:""}</div></section>
+app.innerHTML=`<section class="hero3"><div><span class="eyebrow">${cdUser()?"Welcome, "+cdUser():"Your school learning companion"}${myHouse()?" \u00b7 "+HS[myHouse()][0]+" house":""}</span><h1>Compass Dash</h1><p class="lede">${isNew?`Short lessons, practice that explains every answer, and topic tests across ${SUBJ.length} school subjects.`:`Pick up where you left off, or start a new topic. Everything you answer counts towards your mastery.`}</p></div><div class="cta"><button class="btn big" onclick="${gs}">${isNew?"Get Started":"Continue learning"} →</button><button class="btn alt big" onclick="toSubj()">Browse subjects</button>${isNew&&!cdUser()?`<button class="btn alt big" onclick="cdOpen()">Sign in</button>`:""}${isNew?`<button class="btn alt big" onclick="trailerOpen()">Watch the trailer</button>`:""}</div></section>
 ${cdUser()?inbHtml():""}${isNew?"":wqHtml()}${subjects}
 ${isNew?"":`<h3 class="sec">Next up</h3><div class="pcrow">${pathCard()}${nx?`<div class="card cont"><div><span class="mut">Continue where you left off</span><h3 class="cth">${SUBJ[nx[0]].i} ${TP(...nx).n} ${sg(stage(...nx))}</h3></div><button class="btn" onclick="${gs}">Open topic</button></div>`:""}</div>`}
 <div class="lay${isNew?"":" l11"}"><div>${isNew?`<h3 class="sec">How it works</h3><div class="how"><div class="card"><span class="n">1</span><h3>Learn</h3><p>Read a short lesson with key terms and quick checks.</p></div><div class="card"><span class="n">2</span><h3>Practise</h3><p>Answer untimed questions and see why each answer is right.</p></div><div class="card"><span class="n">3</span><h3>Test &amp; master</h3><p>Pass the topic test, then keep going until it's Mastered.</p></div></div><p class="note">No sign-up needed. Your progress is saved on this device.</p>`
@@ -6367,7 +6370,7 @@ async function tcPrint(id){if(!TC.d.codes){const r=await cdRpc("cd_admin_list",{
  const L=TC.d.codes.filter(r=>!r.username&&(!id||r.class_id===id)),cn=id?clsName(id):"";
  if(!L.length)return notify("There are no free codes"+(cn?" in "+cn:"")+" to print","info");
  const w=window.open("","_blank");if(!w)return notify("Allow pop-ups to print code slips","info");
- w.document.write(`<!doctype html><meta charset="utf-8"><title>Compass Dash codes${cn?" · "+esc(cn):""}</title><style>body{font:14px/1.4 system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.s{border:1.5px dashed #888;border-radius:8px;padding:12px;break-inside:avoid}.c{font:800 30px ui-monospace,Menlo,monospace;letter-spacing:.2em;margin:6px 0}.m{color:#555;font-size:12px}@media print{button{display:none}}<\/style><button onclick="print()">Print</button><h2>Compass Dash student codes${cn?" · "+esc(cn):""}</h2><div class="g">${L.map(r=>`<div class="s"><b>Compass Dash</b>${r.class_id?` · ${esc(clsName(r.class_id))}`:""}<div class="c">${r.code}</div><div class="m">Go to <b>${esc(location.host+location.pathname)}</b>, open Settings and choose <b>Enter code</b>. Pick a username you will remember: you need it with this code to sign in on another device.</div></div>`).join("")}</div>`);w.document.close()}
+ w.document.write(`<!doctype html><meta charset="utf-8"><title>Compass Dash codes${cn?" · "+esc(cn):""}</title><style>body{font:14px/1.4 system-ui,sans-serif;margin:16px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.s{border:1.5px dashed #888;border-radius:8px;padding:12px;break-inside:avoid}.c{font:800 30px ui-monospace,Menlo,monospace;letter-spacing:.2em;margin:6px 0}.m{color:#555;font-size:12px}@media print{button{display:none}}<\/style><button onclick="print()">Print</button><h2>Compass Dash student codes${cn?" · "+esc(cn):""}</h2><div class="g">${L.map(r=>`<div class="s"><b>Compass Dash</b>${r.class_id?` · ${esc(clsName(r.class_id))}`:""}<div class="c">${r.code}</div><div class="m">Go to <b>${esc(location.host+location.pathname)}</b>, open Settings, choose <b>Sign in</b>, then <b>Have a student code?</b> (or sign in with Compass Ed). Pick a username you will remember: you need it with this code to sign in on another device.</div></div>`).join("")}</div>`);w.document.close()}
 /* ---- students ---- */
 const tcSel=()=>{const f=TC.f;return(TC.d.stu||[]).filter(r=>f==="all"||(f==="none"?!r.class_id:String(r.class_id)===String(f)))};
 function tcFilt(v){TC.f=v;teach()}
@@ -6584,7 +6587,7 @@ TCR.codes=()=>{const R=TC.d.codes,f=TC.f,L=R.filter(r=>f==="all"||(f==="none"?!r
    Finishing a task anywhere counts: reading the lesson, finishing practice or the test, an activity or the quiz. */
 function myLoad(force){if(!cdOn()||!cdUser())return Promise.resolve();if(MY.p&&!force)return MY.p;
  if(!force&&MY.d&&Date.now()-MY.t<120000)return Promise.resolve();
- MY.p=cdRpc("cd_my",cdA()).then(r=>{if(r&&r.ok){OC.set("my",r);MY.d=obMy(r);MY.off=0;lgRows(r.assigns);MY.t=Date.now();MY.err=0;cdInfo(r);saveQ()}else if(r&&r.error==="no_match")cdLost();else MY.err=1})
+ const mc=S.cd.code;MY.p=cdRpc("cd_my",cdA()).then(r=>{if(!S.cd||S.cd.code!==mc)return;if(r&&r.ok){OC.set("my",r);MY.d=obMy(r);MY.off=0;lgRows(r.assigns);MY.t=Date.now();MY.err=0;cdInfo(r);saveQ()}else if(r&&r.error==="no_match")cdLost();else MY.err=1})
   .catch(()=>{const c=OC.get("my");if(c){MY.d=obMy(c.v);lgRows(MY.d.assigns);MY.off=c.t;MY.err=0}else MY.err=1}).then(()=>{MY.p=null;if(window.CURP==="mine")mine();else if((window.CURP==="home"||window.CURP==="tools")&&$("myc"))$("myc").outerHTML=myHomeCard();if(window.CURP==="home"&&$("inbw"))$("inbw").outerHTML=inbAsg()});
  return MY.p}
 const tkDone=(a,i)=>(a.done||[]).find(x=>x.task===i);
@@ -6614,7 +6617,7 @@ function myTask(ai,i){const a=MY.d.assigns.find(x=>x.id===ai),t=a&&a.tasks[i];if
  else if(t.t==="ex"){if(window.exStart)exStart(t.ex,["mine"])}}
 function mine(){
  if(!cdOn())return app.innerHTML=`<h2>My class</h2><p class="lead">Classes are not switched on for this site yet.</p>`;
- if(!cdUser())return app.innerHTML=`<h2>My class</h2>${emptyS("\u{1F511}","Sign in to see your class","Enter the 4-digit code from your teacher. Your assignments and quizzes then show here.",`<button class="btn sm" onclick="cdOpen()">Enter student code</button>`)}`;
+ if(!cdUser())return app.innerHTML=`<h2>My class</h2>${emptyS("\u{1F511}","Sign in to see your class","Sign in with your Compass Ed account. Your assignments and quizzes then show here.",`<button class="btn sm" onclick="cdOpen()">Sign in</button>`)}`;
  const D=MY.d,c=S.cd,h=myHouse();
  if(!D){app.innerHTML=`<h2>My class</h2><p class="mut">${MY.err?navigator.onLine?"Could not load your class. Try again in a moment.":"You're offline, and your class hasn't been saved on this device yet.":"Loading your class…"}</p>`;if(!MY.err)myLoad(1);return}
  const A=D.assigns,open=A.filter(asgOpen),done=A.filter(a=>!asgOpen(a));
@@ -6989,10 +6992,10 @@ var LJ={id:0,st:null,t:0,ans:{},err:0,rows:[]};
 const ljBan=()=>LJ.rows.map(x=>`<div class="card tmwarn ljban"><div><b>${icn(TMKIND[x.kind][1])} ${esc(x.title)}</b><span class="mut">${TMKIND[x.kind][0]} happening now</span></div><button class="btn" onclick="ljJoin('${x.pin}')">Join</button></div>`).join("");
 function ljHome(){return`<div id="ljw">${ljBan()}</div>`}
 /* on the home page and My class: anything running for this student's class */
-function ljCheck(){if(!cdOn()||!cdUser()||Date.now()-LJ.t<15000)return;LJ.t=Date.now();
- cdRpc("cd_live_mine",cdA()).then(r=>{if(!r||!r.ok)return;LJ.rows=(r.rows||[]).filter(x=>/^\d{6}$/.test(x.pin)&&TMKIND[x.kind]);const e=$("ljw");if(e)e.innerHTML=ljBan()}).catch(()=>{})}
+function ljCheck(){if(!cdOn()||!cdUser()||Date.now()-LJ.t<15000)return;LJ.t=Date.now();const lc=S.cd.code;
+ cdRpc("cd_live_mine",cdA()).then(r=>{if(!r||!r.ok||!S.cd||S.cd.code!==lc)return;LJ.rows=(r.rows||[]).filter(x=>/^\d{6}$/.test(x.pin)&&TMKIND[x.kind]);const e=$("ljw");if(e)e.innerHTML=ljBan()}).catch(()=>{})}
 function ljPage(id){if(!navigator.onLine)return app.innerHTML=`<h2>Join live</h2>${emptyS(icn("wifioff"),"Live activities need internet","Join from here once you're back online. Everything else keeps working offline.")}`;
- if(!cdOn()||!cdUser())return app.innerHTML=`<h2>Join live</h2>${emptyS("\u{1F511}","Sign in to join","Live quizzes and polls need your student code, so your teacher sees your answers.",cdOn()?`<button class="btn sm" onclick="cdOpen()">Enter student code</button>`:"")}`;
+ if(!cdOn()||!cdUser())return app.innerHTML=`<h2>Join live</h2>${emptyS("\u{1F511}","Sign in to join","Live quizzes and polls need you to sign in, so your teacher sees your answers.",cdOn()?`<button class="btn sm" onclick="cdOpen()">Sign in</button>`:"")}`;
  if(!id){LJ.t=0;app.innerHTML=`<h2>Join live</h2><p class="lead">Enter the PIN your teacher shows on the board.</p><div class="card"><div class="tcf"><input id="ljpin" inputmode="numeric" maxlength="7" placeholder="6-digit PIN" class="mono ljpin" onkeydown="if(event.key==='Enter')ljJoin(this.value)"><button class="btn" onclick="ljJoin($('ljpin').value)">Join</button></div><p class="fbe" id="ljerr" role="alert"></p></div>${ljHome()}`;ljCheck();return}
  if(LJ.id!==id)Object.assign(LJ,{id,st:null,ans:{},err:0});
  app.innerHTML=`<div id="ljb" class="ljb">${ljHtml()}</div>`;ljPoll()}
@@ -7161,7 +7164,7 @@ function duLoad(){if(DU.p)return DU.p;
   .catch(e=>{const c=OC.get("du");if(c&&isNetErr(e)){Object.assign(DU,c.v);DU.off=c.t;DU.err=0}else DU.err=/\b404\b/.test(String(e&&e.message))?"sql":1}).then(()=>{DU.p=null;if(window.CURP==="duel")duel()});return DU.p}
 const duT=ms=>(ms/1e3).toFixed(1)+" s",duSub=d=>esc((SUBJ[d.subj]||{n:""}).n);
 function duel(){const h="<h2>Challenge a classmate</h2>";
- if(!cdOn()||!cdUser())return app.innerHTML=h+emptyS("\u{1F511}","Sign in to challenge a classmate","Enter the 4-digit code from your teacher first.",`<button class="btn sm" onclick="cdOpen()">Enter student code</button>`);
+ if(!cdOn()||!cdUser())return app.innerHTML=h+emptyS("\u{1F511}","Sign in to challenge a classmate","Sign in with your Compass Ed account first.",`<button class="btn sm" onclick="cdOpen()">Sign in</button>`);
  if(!DU.rows){app.innerHTML=h+`<p class="mut">${DU.err==="sql"?"Challenges aren't switched on yet. Ask your teacher.":DU.err?"Could not load your challenges. Try again in a moment.":"Loading…"}</p>`;if(!DU.err)duLoad();return}
  const M=DU.mates||[],R=DU.rows,todo=R.filter(d=>!d.mine&&d.b_ok==null),wait=R.filter(d=>d.mine&&d.b_ok==null),done=R.filter(d=>d.b_ok!=null);
  app.innerHTML=h+offNote(DU.off)+`<p class="lead">Answer 5 questions, then your classmate answers the same 5. Most right wins, and the faster time breaks a tie.</p>
@@ -7716,7 +7719,7 @@ function hashGo(){const m=/^#\/([a-z]+)$/.exec(location.hash||"");if(!m)return f
  if(p==="home"||XPAGES[p]||["settings","about","shop","ach","stats"].includes(p))go(p);else go("notfound");return true}
 addEventListener("hashchange",()=>{if(/^#\//.test(location.hash))hashGo()});
 
-setTheme(document.documentElement.dataset.theme||"light");a11yApply();netShow();setTimeout(()=>{try{SCN.preload()}catch(e){}},1500);try{if("serviceWorker"in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}muLabel();S.own=(S.own||[]).filter(x=>!/^bundle-/.test(x));S.mis=(S.mis||[]).filter(id=>{const[a,b,c]=String(id).split(".").map(Number);return!!(SUBJ[a]&&SUBJ[a].t[b]&&(c>=1000?GENS[SUBJ[a].t[b].n]:SUBJ[a].t[b].f[c]))});{const f=$("fver");if(f)f.textContent="Compass Dash "+VER}try{localStorage.removeItem("cgFbLog")}catch(e){}chMigrate();syncChar();applyCos();if(!hashGo())go("home");cdVerify();if(!PCK.get())setTimeout(ckBanner,700);fontsApply();stuWait();
+setTheme(document.documentElement.dataset.theme||"light");a11yApply();netShow();setTimeout(()=>{try{SCN.preload()}catch(e){}},1500);try{if("serviceWorker"in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}muLabel();S.own=(S.own||[]).filter(x=>!/^bundle-/.test(x));S.mis=(S.mis||[]).filter(id=>{const[a,b,c]=String(id).split(".").map(Number);return!!(SUBJ[a]&&SUBJ[a].t[b]&&(c>=1000?GENS[SUBJ[a].t[b].n]:SUBJ[a].t[b].f[c]))});{const f=$("fver");if(f)f.textContent="Compass Dash "+VER}try{localStorage.removeItem("cgFbLog")}catch(e){}chMigrate();syncChar();applyCos();if(!hashGo())go("home");setTimeout(()=>typeof CEB!=="undefined"?CEB.sync():cdVerify());if(!PCK.get())setTimeout(ckBanner,700);fontsApply();stuWait();
 setTimeout(()=>{if(PCK.get())firstPops()},1600);
 </script>
 <script>/* One language across Compass Ed and Compass Dash: Compass Dash already translates its menus into French and Arabic
@@ -7724,10 +7727,101 @@ setTimeout(()=>{if(PCK.get())firstPops()},1600);
 try{const ce=localStorage.getItem("ce_lang");if(ce&&/^(en|fr|ar)$/.test(ce)&&(ST.lang||"en")!==ce){ST.lang=ce;saveST()}}catch(e){}
 {const own=setLang;setLang=function(v){try{localStorage.setItem("ce_lang",v)}catch(e){}return own(v)}}
 </script>
-<script>/* Inside the Compass Ed portal: a student who linked their Compass Dash account is signed in automatically.
-   Only same-site messages from the parent page are accepted, and only when nobody is signed in here already. */
-addEventListener("message",async e=>{if(e.origin!==location.origin||e.source!==window.parent)return;const d=e.data||{};if(d.type!=="ce-cd-signin"||!d.code||!d.user)return;if(window.__ceSSO||S.cd&&S.cd.code)return;window.__ceSSO=1;
-try{const r=await cdRpc("cd_login",{p_code:d.code,p_user:d.user});if(r&&r.ok)cdSignIn(r.code,r.username,"Welcome, ",r)}catch(x){}window.__ceSSO=0});
+<script>/* One sign-in for Compass Ed and Compass Dash. Both live on this site and share its storage, so Compass Dash reads the
+   Compass Ed session itself: no second code, password or admin key. Students get their Compass Ed account's own Compass
+   Dash account (made the first time, see supabase/compassed-v2.8-one-login.sql); staff get the Teacher Panel seat they
+   once signed in to here. Whoever is signed in to Compass Ed decides who Compass Dash is signed in as, so on a shared
+   computer the next person never lands in the last person's account. The account Compass Ed opened is marked in S.cd.ce
+   (S.cd survives every progress reload and is never uploaded). Preview mode only ever signs such an account out. */
+const CEB=(()=>{
+ const IDLE=20*60*1000,local=/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+ const preview=()=>{try{return local||localStorage.getItem("ce_demo")==="1"}catch(e){return true}};
+ const L=(en,fr,ar)=>{const l=UIL();return l===0?fr:l===1?ar:en};
+ const sess=()=>{try{const s=JSON.parse(localStorage.getItem("ce_auth")||"null");if(!s||!s.tok||!s.me)return null;
+   if(s.me.role!=="student"&&Date.now()-(s.at||0)>IDLE){localStorage.removeItem("ce_auth");return null}   /* Compass Ed's own 20-minute staff lock */
+   s.at=Date.now();localStorage.setItem("ce_auth",JSON.stringify(s));return s}catch(e){return null}};
+ const ss=(k,v)=>{try{if(v===undefined)return sessionStorage.getItem(k)||"";if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){}return ""};
+ const ceAcct=()=>!!(cdUser()&&S.cd.ce),mine=s=>!!(s&&cdUser()&&S.cd.ce===s.me.id);
+ const redraw=()=>{if(!G&&!M&&!SR&&!QZ&&window.CURP)go(window.CURP,window.CURI,1)};   /* never interrupt a game */
+ const forget=()=>{MY.d=null;MY.p=null;MY.t=0;ANN.d=null;ANN.t=0;LJ.rows=[];LJ.t=0};   /* the last account's class, notices and live PINs */
+ function wait(on){const r=document.documentElement;let w=document.getElementById("cewait");
+  if(!on){if(w)w.remove();r.classList.remove("ce-wait");return}
+  if(!document.getElementById("cewaitcss")){const st=document.createElement("style");st.id="cewaitcss";st.textContent="html.ce-wait body{visibility:hidden}#cewait{position:fixed;inset:0;display:grid;place-items:center;font:600 16px/1.4 system-ui,sans-serif;color:#667;background:#f6f7f9;z-index:2147483647}";document.head.appendChild(st)}
+  r.classList.add("ce-wait");if(!w){w=document.createElement("div");w.id="cewait";w.setAttribute("role","status");w.textContent=L("Signing in…","Connexion…","جارٍ تسجيل الدخول…");r.appendChild(w)}}
+ /* signing an account out: its unsent answers go to its own account first (at start-up nothing has loaded yet) */
+ async function out(){if(cdUser()&&S.cdDirty){if(!CDP.ready){try{await cdLoad()}catch(e){}}for(let n=0;CDP.busy&&n<60;n++)await new Promise(r=>setTimeout(r,100))}
+  if(cdUser())await cdSignOut()}
+ /* last resort when the network stalls: put the account aside on this device (answers kept as pending), show the guest */
+ function park(){try{if(S.cdDirty)localStorage.setItem("cgPending",JSON.stringify({code:S.cd.code,user:S.cd.user,p:cdProg(),base:cdBaseGet(),t:Date.now()}))}catch(e){}
+  let g={};try{g=JSON.parse(localStorage.getItem("cgGuest")||"{}")||{}}catch(e){}delete g.cd;delete g.cdRev;delete g.cdDirty;
+  CDP.ready=0;CDP.sent="";clearTimeout(CDP.tm);cdBaseSet(null,0);cdUse(g);forget()}   /* cgGuest stays, so a sign-out still running restores the same guest */
+ /* Teacher Panel: a session started here belongs to one Compass Ed person (cdCE = id, or "L"+id once they locked it);
+    one signed in by hand without linking is left alone */
+ function teachOff(){const ce=ss("cdCE");if(!ce)return;
+  if(ce.charAt(0)!=="L"){const k=ss("cdAK");if(k.slice(0,2)==="t:")cdRpc("cd_t_logout",{p_key:k}).catch(()=>{});["cdAK","cdAKt","cdT"].forEach(k=>ss(k,null));TC.d={};TC.me=null}
+  ss("cdCE",null);if(window.CURP==="teach")teach()}
+ async function teachOn(s){const id=String(s.me.id),ce=ss("cdCE");if(ce==="L"+id||ce===id&&cdKey())return;if(ce)teachOff();else if(ss("cdAK"))return;
+  const r=await cdRpc("ed_t_cd_session",{p_key:s.tok}).catch(()=>null);if(!r||!r.ok||!r.linked||!r.tok)return;
+  ss("cdAK",r.tok);ss("cdAKt",String(Date.now()));ss("cdT",JSON.stringify(r.t));ss("cdCE",id);
+  Object.assign(TC,{me:r.t,d:{},bad:0,err:0});if(TC.lq)TC.lq.s=r.t.subj;TA.mode="t";if(window.CURP==="teach")teach()}
+ /* student account */
+ const saidNo=s=>{try{return localStorage.getItem("cgCENo")===String(s.me.id)}catch(e){return false}};
+ async function off(){if(ceAcct()){await out();forget();redraw()}}
+ async function notMine(s){if(cdUser()&&!mine(s)){await out();forget();redraw()}else cdVerify()}   /* never keep someone else's account; re-check one's own */
+ async function on(s){
+  if(saidNo(s))return notMine(s);   /* they declined Compass Dash's agreement here: a guest until they choose Sign in */
+  const r=await cdRpc("ed_s_cd_session",{p_key:s.tok}).catch(()=>null);
+  if(r&&r.error==="bad_key"){try{localStorage.removeItem("ce_auth")}catch(e){}await off();return cdVerify()}
+  if(r&&r.error==="cd_relink")notify(L("Your Compass Dash account needs linking again: open Settings in Compass Ed.","Ton compte Compass Dash doit être relié à nouveau : ouvre les Paramètres de Compass Ed.","يجب ربط حسابك في Compass Dash من جديد: افتح الإعدادات في Compass Ed."),"info");
+  const v=r&&r.ok&&r.info;
+  if(!v||!v.ok)return notMine(s);   /* no answer: never keep another person's account */
+  if(cdUser()&&S.cd.code===v.code&&cdUser().toLowerCase()===String(v.username).toLowerCase()){S.cd.ce=s.me.id;saveQ();return cdVerify()}
+  if(cdUser()){const was=cdUser(),own=!S.cd.ce;await out();forget();
+   if(own)notify(L("Signed out of "+was+". To keep that account's progress, link it in Compass Ed Settings.","Déconnecté de "+was+". Pour garder la progression de ce compte, lie-le dans les Paramètres de Compass Ed.","تم تسجيل الخروج من "+was+". للاحتفاظ بتقدّم ذلك الحساب، اربطه من إعدادات Compass Ed."),"info")}
+  cdSignIn(v.code,v.username,r.made?L("Your Compass Dash account is ready: ","Ton compte Compass Dash est prêt : ","حسابك في Compass Dash جاهز: "):L("Welcome, ","Bienvenue, ","مرحبًا، "),v,true);   /* always fresh: the account's own progress loads, never a guest's progress or house */
+  S.cd.ce=s.me.id;saveQ();redraw()}
+ let busy=0,again=0,tok="";
+ async function sync(){if(busy){again=1;return}busy=1;let dl=0;
+  try{const s=sess();tok=s?s.tok:"";
+   if(document.documentElement.classList.contains("ce-wait"))dl=setTimeout(()=>{if(cdUser()&&!mine(sess()))park();forget();wait(false)},12000);
+   if(preview()){if(ceAcct())await off();return cdVerify()}
+   if(!s){await off();teachOff();cdVerify()}
+   else if(s.me.role==="student"){teachOff();await on(s)}
+   else{if(ceAcct())await off();else cdVerify();await teachOn(s)}}
+  catch(e){}finally{clearTimeout(dl);busy=0;wait(false);if(again){again=0;sync()}}}
+ /* before the first paint: if the account on screen may be someone else's, show "Signing in…" until it is sorted */
+ if(cdUser()){const s=sess();if(s&&s.me.role==="student"&&!preview()?!mine(s):ceAcct())wait(true)}
+ /* signing in or out of Compass Ed in another tab */
+ addEventListener("storage",e=>{if(e.key!=="ce_auth"&&e.key!==null)return;let t="";try{const x=JSON.parse(localStorage.getItem("ce_auth")||"null");t=x&&x.tok||""}catch(x){}if(t!==tok)sync()});
+ /* working in the Teacher Panel counts as staff activity, so Compass Ed's 20-minute lock does not end it mid-lesson */
+ let act=0;["pointerdown","keydown"].forEach(t=>addEventListener(t,()=>{const ce=ss("cdCE");if(ce&&ce.charAt(0)!=="L"&&Date.now()-act>60000){act=Date.now();sess()}},true));
+ const goTop=u=>{(window.top||window).location.href=new URL(u,location.href).href};
+ async function signOut(){fbClose();const s=sess();wait(true);setTimeout(()=>goTop("../signin.html"),12000);await out();teachOff();
+  if(s){await cdRpc("ed_logout",{p_key:s.tok}).catch(()=>{});try{localStorage.removeItem("ce_auth")}catch(e){}}goTop("../signin.html")}
+ /* every "Sign in" in Compass Dash now means the Compass Ed account; a student code from a teacher still works without one */
+ const own=cdOpen;cdOpen=function(){if(preview())return own();const s=sess(),u=cdUser(),x=`<button class="btn alt" onclick="fbClose()">${L("Close","Fermer","إغلاق")}</button>`;
+  if(s&&s.me.role!=="student")return cdShell(`<h2>${L("Staff account","Compte du personnel","حساب الطاقم")}</h2><p class="mut" style="margin-top:0">${L("You are signed in to Compass Ed as staff. Student accounts are for students; your tools are in the Teacher Panel.","Vous êtes connecté à Compass Ed en tant que membre du personnel. Les comptes élèves sont réservés aux élèves ; vos outils sont dans l'espace enseignant.","أنت مسجّل الدخول إلى Compass Ed كعضو في الطاقم. حسابات الطلاب مخصّصة للطلاب؛ وأدواتك في لوحة المعلم.")}</p><div class="fbr">${x}<button class="btn" onclick="fbClose();go('teach')">${L("Open the Teacher Panel","Ouvrir l'espace enseignant","فتح لوحة المعلم")}</button></div>`);
+  if(s&&mine(s)){const c=S.cd,h=c.house&&HS[c.house];return cdShell(`<h2>${L("Student account","Compte élève","حساب الطالب")}</h2><div class="acct">${h?hsCrest(c.house,64):""}<div><p style="margin:0">${L("Signed in with your Compass Ed account:","Connecté avec ton compte Compass Ed :","تم تسجيل الدخول بحساب Compass Ed:")} <b>${esc(s.me.name||s.me.username)}</b></p><p class="mut" style="margin:4px 0 0">${L("Compass Dash username","Nom d'utilisateur Compass Dash","اسم المستخدم في Compass Dash")} <b>${esc(u)}</b>${h?" · "+h[0]:""}${c.year?" · "+L("Year","Année","السنة")+" "+c.year:""}</p></div></div><p class="mut">${L("Compass Ed and Compass Dash share one sign-in, so your progress follows you to every device you sign in on.","Compass Ed et Compass Dash partagent une seule connexion : ta progression te suit sur chaque appareil où tu te connectes.","يتشارك Compass Ed وCompass Dash تسجيل دخول واحدًا، فيتبعك تقدّمك إلى كل جهاز تسجّل الدخول منه.")}</p><div class="fbr">${x}<button class="btn" onclick="CEB.signOut()">${L("Sign out of both","Se déconnecter des deux","تسجيل الخروج من كليهما")}</button></div>`)}
+  if(s){try{localStorage.removeItem("cgCENo")}catch(e){}sync();return cdShell(`<h2>${L("Student account","Compte élève","حساب الطالب")}</h2><p class="mut" style="margin-top:0">${L("Opening your Compass Dash account. If it does not open, check your connection and try again.","Ouverture de ton compte Compass Dash. S'il ne s'ouvre pas, vérifie ta connexion et réessaie.","جارٍ فتح حسابك في Compass Dash. إن لم يُفتح، تحقّق من اتصالك وحاول مجددًا.")}</p><div class="fbr">${x}</div>`)}
+  return cdShell(`<h2>${L("Sign in","Se connecter","تسجيل الدخول")}</h2><p class="mut" style="margin-top:0">${L("Compass Dash uses your Compass Ed account: sign in once and both are ready. You can keep playing without an account; your progress then stays on this device.","Compass Dash utilise ton compte Compass Ed : connecte-toi une fois et les deux sont prêts. Tu peux continuer à jouer sans compte ; ta progression reste alors sur cet appareil.","يستخدم Compass Dash حسابك في Compass Ed: سجّل الدخول مرة واحدة ويصبح الاثنان جاهزين. يمكنك مواصلة اللعب دون حساب؛ ويبقى تقدّمك حينها على هذا الجهاز.")}</p><div class="fbr"><button class="btn alt" onclick="CEB.code()">${L("Have a student code?","Tu as un code élève ?","لديك رمز طالب؟")}</button><button class="btn" onclick="CEB.signIn()">${L("Sign in with Compass Ed","Se connecter avec Compass Ed","تسجيل الدخول عبر Compass Ed")}</button></div>`)};
+ /* declining the agreement is remembered for this Compass Ed account on this device */
+ {const no=stuNo;stuNo=function(){const s=sess();if(s&&!preview())try{localStorage.setItem("cgCENo",String(s.me.id))}catch(e){}return no()}}
+ /* Teacher Panel: a sign-in by hand inside Compass Ed can be remembered for that Compass Ed account, after asking */
+ {const st=tStart;tStart=function(r){st(r);const s=sess();if(preview()||!s||s.me.role==="student"||!r||!r.tok)return;const nm=s.me.name||s.me.username,tu=r.t&&r.t.username||"";
+  if(!confirm(L(`Open this Teacher Panel (${tu}) without a password whenever ${nm} is signed in to Compass Ed?`,`Ouvrir cet espace enseignant (${tu}) sans mot de passe chaque fois que ${nm} est connecté à Compass Ed ?`,`فتح لوحة المعلم هذه (${tu}) دون كلمة مرور كلما سجّل ${nm} الدخول إلى Compass Ed؟`)))return;
+  cdRpc("ed_t_cd_link",{p_key:s.tok,p_tkey:r.tok}).then(x=>{if(x&&x.ok){ss("cdCE",String(s.me.id));notify(L("Linked to "+nm+": the Teacher Panel now opens without a password.","Lié à "+nm+" : l'espace enseignant s'ouvre désormais sans mot de passe.","تم الربط بـ "+nm+": تُفتح لوحة المعلم الآن دون كلمة مرور."))}
+   else if(x&&x.error==="cd_taken")notify(L("Another Compass Ed staff account already opens this Teacher Panel. It can be unlinked in that account's Settings.","Un autre compte du personnel Compass Ed ouvre déjà cet espace enseignant. Il peut être délié dans les Paramètres de ce compte.","حساب آخر للطاقم في Compass Ed يفتح لوحة المعلم هذه بالفعل. يمكن إلغاء الربط من إعدادات ذلك الحساب."),"info")}).catch(()=>{})}}
+ /* Lock in the Teacher Panel holds until this person signs out of Compass Ed or opens it by hand */
+ {const lk=tcLock;tcLock=function(){const s=sess();ss("cdCE",s&&s.me.role!=="student"?"L"+s.me.id:null);return lk()}}
+ Object.assign(UITR,{"sign in with your compass ed account to save your progress on every device. you can play without one.":["Connecte-toi avec ton compte Compass Ed pour enregistrer ta progression sur tous tes appareils. Tu peux jouer sans compte.","سجّل الدخول بحساب Compass Ed لحفظ تقدّمك على كل أجهزتك. يمكنك اللعب من دونه."],
+  "sign in with your compass ed account to see the leaderboard. to keep everyone safe, it is only shown to signed-in students.":["Connecte-toi avec ton compte Compass Ed pour voir le classement. Pour la sécurité de tous, il n'est visible que par les élèves connectés.","سجّل الدخول بحساب Compass Ed لرؤية لوحة الترتيب. حفاظًا على سلامة الجميع، لا تظهر إلا للطلاب المسجّلين."],
+  "sign in with your compass ed account. your assignments and quizzes then show here.":["Connecte-toi avec ton compte Compass Ed. Tes devoirs et quiz s'afficheront ici.","سجّل الدخول بحساب Compass Ed. ستظهر واجباتك واختباراتك هنا."],
+  "live quizzes and polls need you to sign in, so your teacher sees your answers.":["Les quiz et sondages en direct nécessitent une connexion, pour que ton enseignant voie tes réponses.","تتطلب الاختبارات والاستطلاعات المباشرة تسجيل الدخول، ليرى معلمك إجاباتك."],
+  "sign in with your compass ed account first.":["Connecte-toi d'abord avec ton compte Compass Ed.","سجّل الدخول بحساب Compass Ed أولًا."],
+  ". compass ed signs you in on every device.":[". Compass Ed te connecte sur chaque appareil.",". يسجّل Compass Ed دخولك على كل جهاز."]});
+ UIRX.push([/^· (\w+) house\. Compass Ed signs you in on every device\.$/i,m=>[`· maison ${uiH(m[1],0)}. Compass Ed te connecte sur chaque appareil.`,`· بيت ${uiH(m[1],1)}. يسجّل Compass Ed دخولك على كل جهاز.`]]);
+ return{sync,signOut,signIn:()=>goTop("../signin.html?next=student%23%2Fdash"),code:()=>own()};
+})();
 </script>
 <script>/* Compass Ed v2.7: interface text Compass Dash still showed in English when opened in French or Arabic
    (achievements, shop, settings, privacy banner). Lessons and questions stay in English, as before. */

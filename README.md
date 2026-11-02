@@ -33,6 +33,7 @@ supabase/compassed-v2.3.sql     Run after v2.1: login codes, consent, admin over
 supabase/compassed-v2.4.2-feedback.sql   Run after v2.3: the feedback button (admin-only inbox)
 supabase/compassed-v2.6-campus.sql       Run after v2.4.2: Student Voice (ideas and votes) and Campus Insights
 supabase/compassed-v2.7-dash.sql         Run after v2.6: lets the portal sign linked students into Compass Dash; points school links at /dash/
+supabase/compassed-v2.8-one-login.sql    Run after v2.7: one sign-in for Compass Ed and Compass Dash (student accounts made on first use, Teacher Panel without a password)
 supabase/content-pack-global.sql         Optional: 24 activities and 4 competitions in the spirit of Global Campus (inserts only titles that do not exist)
 privacy.html terms.html cookies.html consent.html   Legal pages and the printable parent/carer consent form
 parent.html / assets/parent.js  Read-only weekly summary opened from a student's private parent link
@@ -48,7 +49,7 @@ vercel.json                     Security headers for the Vercel copy (GitHub Pag
 1. Open your Supabase project > **SQL Editor** > **New query**.
 2. Open `supabase/compassed-v2.0.sql`. **Change the three values in section 8** near the end: the admin password, the student join code and the teacher invite code.
 3. Paste the whole file and **Run**. It is safe to run again; it never deletes anything.
-3b. Then paste and **Run**, in order: `supabase/compassed-v2.1.sql`, `supabase/compassed-v2.3.sql`, `supabase/compassed-v2.4.2-feedback.sql`, `supabase/compassed-v2.6-campus.sql`, `supabase/compassed-v2.7-dash.sql`.
+3b. Then paste and **Run**, in order: `supabase/compassed-v2.1.sql`, `supabase/compassed-v2.3.sql`, `supabase/compassed-v2.4.2-feedback.sql`, `supabase/compassed-v2.6-campus.sql`, `supabase/compassed-v2.7-dash.sql`, `supabase/compassed-v2.8-one-login.sql`.
 3c. Optional but recommended: run `supabase/content-pack.sql` once so the campus starts with real activities, competitions, clubs and news instead of empty pages.
 3d. For calendar feeds (Global Campus etc.) enable the **http** extension: Database > Extensions > search "http" > enable. Optional: schedule `select public.ed_feeds_sync_all();` hourly with pg_cron.
 4. `assets/config.js` must point at that project (`supabaseUrl` and the publishable/anon key from Project Settings > API). The key is safe to publish: every table is locked down and only the `ed_*` functions can be called.
