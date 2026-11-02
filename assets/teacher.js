@@ -824,7 +824,7 @@
     stage.append(h("div", { class: "stage-head" }, h("div", { class: "row" }, h("img", { src: CE.root + "assets/logo-white.svg", alt: "" }), h("b", {}, me.school || "Compass Ed")), clock), body, dots,
       h("div", { class: "stage-tools" }, h("button", { class: "btn sm ghost", onclick: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}) }, "Full screen"), h("a", { class: "btn sm ghost", href: "#/" }, "Exit")));
     page.append(stage); const vid = stage.querySelector("video"); vid.muted = true; vid.play().catch(() => {});
-    const time = () => { clock.textContent = new Date().toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit" }); }; time();
+    const time = () => { clock.textContent = new Date().toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }); }; time();
     let panels = [], i = 0;
     const show = () => { if (!panels.length) return; i %= panels.length; body.classList.remove("on"); body.innerHTML = ""; body.append(h("h2", {}, panels[i][0]), panels[i][1]); void body.offsetWidth; body.classList.add("on"); CE.$$("i", dots).forEach((d, k) => d.classList.toggle("on", k === i)); };
     const build = async () => {

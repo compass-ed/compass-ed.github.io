@@ -7,7 +7,7 @@ const CORE = ["./", "index.html", "about.html", "signin.html", "student/", "stud
   "assets/logo.svg", "assets/logo-white.svg", "assets/favicon.svg", "assets/art/signin-bg.jpg", "assets/art/band.jpg", "assets/versions/v2.4.svg", "assets/icon-192.png", "assets/icon-512.png", "assets/art/compass-rose.png", "assets/art/compass-needle.png", "assets/art/id-card.jpg"];
 /* Take over immediately so a new version applies on the very next load; the shell is cached right after activation. */
 self.addEventListener("install", e => { e.waitUntil(self.skipWaiting()); });
-self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x !== SHELL && x !== RT).map(x => caches.delete(x)))).then(() => self.clients.claim())
+self.addEventListener("activate", e => { e.waitUntil(caches.keys().then(k => Promise.all(k.filter(x => x.startsWith("ce-") && x !== SHELL && x !== RT).map(x => caches.delete(x)))).then(() => self.clients.claim())
   .then(() => caches.open(SHELL).then(c => Promise.all(CORE.map(u => c.add(new Request(u, { cache: "reload" })).catch(() => {})))))); });
 self.addEventListener("fetch", e => {
   const u = new URL(e.request.url);

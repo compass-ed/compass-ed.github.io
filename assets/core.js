@@ -137,7 +137,7 @@
     parse: v => v ? new Date(v) : null,
     short: v => { const d = D.parse(v); return d ? d.toLocaleDateString((CE.locale || "en-GB"), { weekday: "short", day: "numeric", month: "short" }) : ""; },
     long: v => { const d = D.parse(v); return d ? d.toLocaleDateString((CE.locale || "en-GB"), { weekday: "long", day: "numeric", month: "long", year: "numeric" }) : ""; },
-    time: v => { const d = D.parse(v); return d ? d.toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit" }) : ""; },
+    time: v => { const d = D.parse(v); return d ? d.toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }) : ""; },
     dt: v => { const d = D.parse(v); if (!d) return ""; const t = D.time(v); return D.short(v) + (t === "00:00" || t === "23:59" ? "" : ", " + t); },
     ago: v => { const d = D.parse(v); if (!d) return "never"; const m = Math.round((Date.now() - d) / 60000); if (m < 1) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " h ago"; const dd = Math.round(h / 24); if (dd < 7) return dd + " day" + (dd > 1 ? "s" : "") + " ago"; return D.short(v); },
     until: v => { const d = D.parse(v); if (!d) return ""; const ms = d - Date.now(); const h = Math.round(ms / 3600000); if (ms < 0) return "overdue"; if (h < 1) return "due within the hour"; if (h < 24) return "due in " + h + " h"; const dd = Math.round(h / 24); return "due in " + dd + " day" + (dd > 1 ? "s" : ""); },

@@ -2,10 +2,15 @@
 <html lang="en"><head><meta charset="utf-8">
 <script>/* Compass Dash now lives inside Compass Ed. A visit to the old address (compassdash.github.io/Compassdash) arrives here with
    that browser's saved progress in the address (#cg-move=...); copy it into this address's storage, then tidy the address.
-   Keys already here are kept, except the main save "cg", which is replaced only by a bigger (further on) save and backed up first. */
-(function(){var h=location.hash;if(h.indexOf("#cg-move=")!==0)return;try{var b=h.slice(9).replace(/-/g,"+").replace(/_/g,"/");var j=JSON.parse(decodeURIComponent(escape(atob(b))));
-for(var k in j){if(!/^cg/.test(k)||typeof j[k]!=="string")continue;var cur=localStorage.getItem(k);if(cur==null)localStorage.setItem(k,j[k]);else if(k==="cg"&&j[k].length>cur.length){localStorage.setItem("cgBeforeMove",cur);localStorage.setItem(k,j[k])}}
-localStorage.setItem("cgMoved",String(Date.now()))}catch(e){}history.replaceState(null,"",location.pathname+location.search)})();</script>
+   Only from the old address (the referrer) and only once per browser, because this storage is shared with Compass Ed; the
+   main save's scores are forced to numbers. Keys already here are kept; the main save "cg" is replaced only by one that has
+   answered more questions, and the replaced save is kept as "cgBeforeMove". */
+(function(){var h=location.hash;if(h.indexOf("#cg-move=")!==0)return;
+try{if(/^https:\/\/compassdash\.github\.io\//.test(document.referrer)&&!localStorage.getItem("cgMoved")){var b=h.slice(9).replace(/-/g,"+").replace(/_/g,"/");var j=JSON.parse(decodeURIComponent(escape(atob(b))));
+var num=function(o){["score","best","correct","played"].forEach(function(f){o[f]=Math.max(0,+o[f]||0)});return o},played=function(v){try{return +JSON.parse(v).played||0}catch(e){return -1}};
+if(typeof j.cg==="string"){try{var c=JSON.parse(j.cg);j.cg=c&&typeof c==="object"&&!Array.isArray(c)?JSON.stringify(num(c)):null}catch(e){j.cg=null}}
+for(var k in j){if(!/^cg[A-Za-z_]*$/.test(k)||k==="cgMoved"||typeof j[k]!=="string")continue;var cur=localStorage.getItem(k);if(cur==null)localStorage.setItem(k,j[k]);else if(k==="cg"&&played(j[k])>played(cur)){localStorage.setItem("cgBeforeMove",cur);localStorage.setItem(k,j[k])}}
+localStorage.setItem("cgMoved",String(Date.now()))}}catch(e){}history.replaceState(null,"",location.pathname+location.search)})();</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; media-src 'self' data: blob:; connect-src 'self' https://eqaxgofniwyhvwmdzwsm.supabase.co; worker-src 'self'; manifest-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="referrer" content="strict-origin-when-cross-origin">

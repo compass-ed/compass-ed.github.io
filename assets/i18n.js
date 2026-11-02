@@ -67,8 +67,8 @@
 
   const SKIP = new Set(["SCRIPT", "STYLE", "TEXTAREA", "NOSCRIPT", "CODE", "PRE", "SVG"]);
   const ATTRS = ["placeholder", "title", "aria-label", "alt"];
-  const written = new WeakMap();
-  const skipEl = el => !el || SKIP.has(el.tagName) || (el.closest && el.closest("[data-no-i18n],[contenteditable=''],[contenteditable=true],.ProseMirror"));
+  const written = new WeakMap(), wroteAttr = new WeakMap();
+  const skipEl = el => !el || SKIP.has(el.tagName) || (el.closest && el.closest("svg,[data-no-i18n],[contenteditable=''],[contenteditable=true],.ProseMirror"));   // svg tags are lowercase, so closest() catches them
   const doText = n => {
     if (written.get(n) === n.data) return;
     const p = n.parentElement; if (skipEl(p)) return;
@@ -76,7 +76,11 @@
     if (p.tagName === "OPTION" && !p.hasAttribute("value")) p.setAttribute("value", p.textContent);   // keep the value the form submits in English
     n.data = x; written.set(n, x);
   };
-  const doAttrs = el => { if (skipEl(el)) return; for (const a of ATTRS) { const v = el.getAttribute(a); if (v) { const x = tr(v); if (x != null) el.setAttribute(a, x); } } };
+  const doAttrs = el => {   // remembers what it wrote, so its own change (seen by the observer) is not translated a second time
+    if (skipEl(el)) return; const mine = wroteAttr.get(el) || {};
+    for (const a of ATTRS) { const v = el.getAttribute(a); if (!v || mine[a] === v) continue; const x = tr(v); if (x != null) { mine[a] = x; el.setAttribute(a, x); } }
+    wroteAttr.set(el, mine);
+  };
   const INLINE = new Set(["A", "B", "STRONG", "EM", "I", "CODE", "SMALL", "BR", "SPAN", "U", "KBD", "ABBR", "SUB", "SUP", "MARK", "Q", "TIME"]);
   const doUnit = el => {   // a sentence with bold, links or code inside, translated as a whole (static pages)
     if (!el.children.length || INLINE.has(el.tagName) || skipEl(el)) return false;
