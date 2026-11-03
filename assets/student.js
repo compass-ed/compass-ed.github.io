@@ -50,6 +50,51 @@
   }
 
   /* ---------- home ---------- */
+  /* ---------- My day (the class timetable) and permission slips: both from compassed-v2.9-features.sql ---------- */
+  const dow = d => (d.getDay() + 6) % 7 + 1, hhmm = d => String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const nowNext = rows => {   // the lesson on now, the next one today, else the first lesson of the next school day
+    const d = new Date(), today = dow(d), t = hhmm(d), td = rows.filter(r => r.day === today);
+    const now = td.find(r => r.starts <= t && t < r.ends), next = td.find(r => r.starts > t);
+    if (now || next) return { now, next };
+    for (let k = 1; k <= 7; k++) { const dd = (today - 1 + k) % 7 + 1, first = rows.find(r => r.day === dd); if (first) return { later: first, day: k === 1 ? "Tomorrow" : DAYS[dd - 1] }; }
+    return null; };
+  const lessonLine = r => [r.title, r.room, r.teacher].filter(Boolean).join(" · ");
+  async function myDayCards(slot) {
+    const [tt, sl] = await Promise.all([CE.capi("ed_s_timetable").catch(() => null), CE.capi("ed_s_slips").catch(() => null)]);
+    if (tt && tt.ok && tt.rows.length) {
+      const c = h("a", { class: "card myday", href: "#/day", style: { textDecoration: "none", color: "inherit" } }); slot.append(c);
+      const draw = () => { const nn = nowNext(tt.rows); c.innerHTML = ""; if (!nn) return c.remove();
+        c.append(h("div", { class: "kicker" }, "My day"), h("div", { class: "nn" },
+          nn.now ? h("div", {}, h("div", { class: "xs mut" }, "Now · until " + nn.now.ends), h("div", { class: "b" }, lessonLine(nn.now))) : null,
+          nn.next ? h("div", {}, h("div", { class: "xs mut" }, "Next · " + nn.next.starts), h("div", { class: "b" }, lessonLine(nn.next))) : null,
+          nn.later ? h("div", {}, h("div", { class: "xs mut" }, nn.day + " · " + nn.later.starts), h("div", { class: "b" }, lessonLine(nn.later))) : null)); };
+      draw(); const tick = setInterval(() => { if (!c.isConnected) return clearInterval(tick); draw(); }, 60000);
+    }
+    const open = sl && sl.ok ? sl.rows.filter(x => x.open) : [];
+    if (open.length) {
+      const waiting = open.filter(x => x.answer == null);
+      slot.append(h("div", { class: "card" + (waiting.length ? " tint" : "") }, h("div", { class: "hd" }, h("h3", {}, "Permission slips"), waiting.length ? h("a", { class: "btn sm cyan", href: "#/settings" }, "Show my parent link") : null),
+        h("div", { class: "list" }, ...open.map(x => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(x.event ? "bus" : "pencil")),
+          h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, x.answer == null ? "Ask a parent or carer to sign by " + D.short(x.due + "T12:00:00") : "Signed by " + x.signer)),
+          x.answer === true ? h("span", { class: "badge ok" }, "Yes") : x.answer === false ? h("span", { class: "badge bad" }, "No") : h("span", { class: "badge warn" }, "Waiting")))),
+        waiting.length ? h("p", { class: "xs mut", style: { margin: "8px 0 0" } }, "Your parent or carer signs from your private parent link (Settings). Share it with them, not with friends.") : null));
+    }
+  }
+  async function myDay() {
+    CE.title("My day"); CE.loading(page);
+    try {
+      const r = await CE.capi("ed_s_timetable"); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "My day"), h("div", { class: "sm mut" }, (r.class ? r.class + "'s" : "Your class's") + " timetable for the week."))));
+      if (!r.rows.length) return page.append(CE.emptyArt("sprout", "No timetable yet", r.class ? "Your teacher hasn't added this class's timetable yet." : "You're not in a class yet, so there's no timetable to show."));
+      const d = new Date(), today = dow(d), t = hhmm(d), days = [...new Set(r.rows.map(x => x.day))].sort((p, q) => p - q);
+      const grid = h("div", { class: "week" }); page.append(grid);
+      days.forEach(dd => grid.append(h("div", { class: "card day" + (dd === today ? " today" : "") }, h("div", { class: "hd" }, h("h3", {}, DAYS[dd - 1]), dd === today ? h("span", { class: "badge cyan" }, "Today") : null),
+        h("div", { class: "list" }, ...r.rows.filter(x => x.day === dd).map(x => { const on = dd === today && x.starts <= t && t < x.ends;
+          return h("div", { class: "item" + (on ? " on" : "") }, h("div", { class: "tm xs mut" }, x.starts, h("br"), x.ends), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, [x.room, x.teacher].filter(Boolean).join(" · "))), on ? h("span", { class: "badge ok" }, "Now") : null); })))));
+      requestAnimationFrame(() => { const el = grid.querySelector(".day.today"); if (el && grid.scrollWidth > grid.clientWidth) grid.scrollLeft = el.offsetLeft - grid.offsetLeft - 8; });
+    } catch (e) { CE.fail(page, e); }
+  }
   async function home() {
     CE.title("Home"); CE.loading(page);
     try {
@@ -61,6 +106,7 @@
       page.innerHTML = "";
       page.append(h("div", {}, h("h2", {}, greet + ", " + me.name.split(" ")[0] + "."), h("p", { class: "mut", style: { margin: 0 } }, todo.length ? todo.length + " thing" + (todo.length > 1 ? "s" : "") + " on your list" + (week.length ? ", " + week.length + " due this week" : "") + "." : "Your list is clear. Time to explore.")));
       page.append(h("a", { class: "card tint next", href: nx.href, style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "big" }, CE.icon(nx.icon)), h("div", {}, h("div", { class: "xs cy b", style: { letterSpacing: ".08em", textTransform: "uppercase" } }, "What to do next · " + nx.kicker), h("div", { class: "b", style: { fontSize: "18px" } }, nx.title), h("div", { class: "sm mut" }, nx.sub)), h("span", { class: "btn" }, nx.cta)));
+      const slot = h("div", { class: "stack", style: { gap: "inherit" } }); page.append(slot); myDayCards(slot);   /* timetable and permission slips, when the school uses them */
       if (hm.news.length) { const f = hm.news[0]; page.append(h("a", { class: "card ink", href: "#/news", style: { textDecoration: "none" } }, h("div", { class: "kicker", style: { color: "var(--cyan)" } }, "Campus news"), h("h3", { style: { color: "#fff" } }, f.title), h("p", { class: "mut", style: { margin: 0 } }, f.body.replace(/\*\*/g, "")))); }
       page.append(h("div", { class: "grid g4" },
         h("div", { class: "card stat" }, h("span", { class: "n" }, week.length), h("span", { class: "l" }, "Due this week")),
@@ -101,7 +147,7 @@
     try {
       const r = await CE.capi("ed_s_activity", { p_id: +p.id }); if (!r.ok) return CE.fail(page, r);
       CE.title(r.title); page.innerHTML = "";
-      page.append(h("div", {}, h("a", { class: "sm", href: "#/explore/" + r.cat }, "← " + CE.catName(r.cat)), h("h1", { style: { fontSize: "32px", marginTop: "6px" } }, r.title), h("div", { class: "row sm mut" }, h("span", { class: "row", style: { gap: "4px" } }, CE.icon("clock"), r.minutes + " min"), r.done ? h("span", { class: "badge ok" }, "Done") : null), r.blurb ? h("p", { class: "mut" }, r.blurb) : null));
+      page.append(h("div", {}, h("a", { class: "sm", href: "#/explore/" + r.cat }, "← " + CE.catName(r.cat)), h("h1", { style: { fontSize: "32px", marginTop: "6px" } }, r.title), h("div", { class: "row sm mut" }, h("span", { class: "row", style: { gap: "4px" } }, CE.icon("clock"), r.minutes + " min"), r.done ? h("span", { class: "badge ok" }, "Done") : null, CE.readAloud(() => [r.title, r.blurb, CE.blocksText(r.blocks)].filter(Boolean).join("\n"))), r.blurb ? h("p", { class: "mut" }, r.blurb) : null));
       page.append(CE.blocks(r.blocks));
       const done = h("div", { class: "card tint row between", style: { maxWidth: "780px" } }, h("div", {}, h("div", { class: "b" }, r.done ? "You've done this one." : "Finished?"), h("div", { class: "sm mut" }, "Mark it done to keep track of what you've tried.")), r.done ? null : h("button", { class: "btn cyan", onclick: async e => { e.target.disabled = true; const x = await CE.capi("ed_s_activity_done", { p_id: r.id }); if (x.ok) { CE.toast("Nice one ✓ +" + (x.pts || 5) + " house points", "ok"); S.home = null; done.firstChild.firstChild.textContent = "You've done this one."; e.target.remove(); } else { CE.toast(CE.errText(x), "bad"); e.target.disabled = false; } } }, "Mark as done"));
       page.append(done);
@@ -146,7 +192,7 @@
       const gal = (pub.gallery || []).slice(0, 4);
       if (gal.length) page.append(h("div", {}, h("div", { class: "kicker" }, "Highlights"), h("div", { class: "gallery" }, ...gal.map(CE.galleryTile))));
       if (!r.rows.length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("news")), h("div", { class: "b" }, "No news yet")));
-      r.rows.forEach(n => page.append(h("article", { class: "card" + (n.featured ? " tint" : ""), style: { maxWidth: "820px" } }, n.cover && /^https:\/\//.test(n.cover) ? h("img", { src: n.cover, alt: "", style: { borderRadius: "12px", marginBottom: "12px", width: "100%" }, loading: "lazy" }) : null, n.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("h3", { style: { marginTop: "6px" } }, n.title), h("div", { html: CE.rich(n.body) }), h("div", { class: "xs mut" }, (n.from ? n.from + " · " : "") + D.long(n.created)))));
+      r.rows.forEach(n => page.append(h("article", { class: "card" + (n.featured ? " tint" : ""), style: { maxWidth: "820px" } }, n.cover && /^https:\/\//.test(n.cover) ? h("img", { src: n.cover, alt: "", style: { borderRadius: "12px", marginBottom: "12px", width: "100%" }, loading: "lazy" }) : null, n.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("div", { class: "row between", style: { marginTop: "6px" } }, h("h3", { style: { margin: 0 } }, n.title), CE.readAloud(() => n.title + "\n" + CE.plain(CE.rich(n.body)))), h("div", { html: CE.rich(n.body) }), h("div", { class: "xs mut" }, (n.from ? n.from + " · " : "") + D.long(n.created)))));
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -203,7 +249,7 @@
     try {
       const r = await CE.capi("ed_s_lesson", { p_id: +p.id }); if (!r.ok) return CE.fail(page, r);
       CE.title(r.title); page.innerHTML = "";
-      page.append(h("div", {}, h("a", { class: "sm", href: "#/subject/" + r.unit.subj }, "← " + CE.subjName(r.unit.subj) + " · " + r.unit.title), h("h1", { style: { fontSize: "32px", marginTop: "6px" } }, r.title), h("div", { class: "row sm mut" }, h("span", { class: "row", style: { gap: "4px" } }, CE.icon("clock"), r.minutes + " min"), r.done ? h("span", { class: "badge ok" }, "Completed") : null)));
+      page.append(h("div", {}, h("a", { class: "sm", href: "#/subject/" + r.unit.subj }, "← " + CE.subjName(r.unit.subj) + " · " + r.unit.title), h("h1", { style: { fontSize: "32px", marginTop: "6px" } }, r.title), h("div", { class: "row sm mut" }, h("span", { class: "row", style: { gap: "4px" } }, CE.icon("clock"), r.minutes + " min"), r.done ? h("span", { class: "badge ok" }, "Completed") : null, CE.readAloud(() => r.title + "\n" + CE.blocksText(r.blocks)))));
       page.append(CE.blocks(r.blocks));
       const done = h("div", { class: "card tint row between", style: { maxWidth: "780px" } }, h("div", {}, h("div", { class: "b" }, r.done ? "You've completed this lesson." : "Finished reading?"), h("div", { class: "sm mut" }, "Key points go into your review queue so you don't forget them.")),
         h("div", { class: "row" }, r.done ? null : h("button", { class: "btn cyan", onclick: async e => { e.target.disabled = true; const x = await CE.capi("ed_s_lesson_done", { p_id: r.id }); if (x.ok) { CE.toast("Lesson completed ✓", "ok"); S.home = null; done.firstChild.firstChild.textContent = "You've completed this lesson."; e.target.remove(); loadBell(); } else { CE.toast(CE.errText(x), "bad"); e.target.disabled = false; } } }, "Mark as complete"), r.next ? h("a", { class: "btn ghost", href: "#/lesson/" + r.next.id }, "Next: " + r.next.title + " →") : h("a", { class: "btn ghost", href: "#/subject/" + r.unit.subj }, "Back to unit")));
@@ -263,7 +309,7 @@
       page.append(h("div", {}, h("a", { class: "sm", href: "#/assignments" }, "← Assignments"), h("div", { class: "row between", style: { marginTop: "6px" } }, h("div", {}, h("h2", { style: { margin: 0 } }, a.title), h("div", { class: "sm mut" }, CE.subjName(a.subj) + " · " + KIND[a.kind] + " · " + a.points + " points" + (a.due ? " · due " + D.dt(a.due) : ""))), statusBadge(Object.assign({ status: st, score: a.sub && a.sub.score }, a)))));
       const g = h("div", { class: "grid", style: { gridTemplateColumns: matchMedia("(max-width:900px)").matches ? "1fr" : "minmax(0,1.4fr) minmax(0,1fr)" } }); page.append(g);
       const left = h("div", { class: "stack" }), right = h("div", { class: "stack" }); g.append(left, right);
-      left.append(card("Instructions", h("div", { html: CE.rich(a.instr || "No instructions given.") })));
+      left.append(card("Instructions", h("div", { html: CE.rich(a.instr || "No instructions given.") }), a.instr ? CE.readAloud(() => a.title + "\n" + CE.plain(CE.rich(a.instr))) : null));
       if (a.kind === "quiz" && a.quiz_id) left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? "This is a quiz assignment." : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Your best score counts. You can retake it until the due date.")), h("a", { class: "btn cyan", href: "#/quiz/" + a.quiz_id + "?assign=" + a.id }, st === "todo" ? "Start quiz" : "Retake quiz")));
       else {
         const body = h("textarea", { class: "in", placeholder: "Type your answer, working or notes here. You can save a draft and come back.", style: { minHeight: "220px" } }, a.sub ? a.sub.body : "");
@@ -285,13 +331,14 @@
       const r = await CE.capi("ed_s_review"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
       page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Review queue"), h("div", { class: "sm mut" }, "Flashcards made from anything you got wrong, spaced out so it sticks. Each one you clear earns points."))));
-      if (!r.due.length) return page.append(CE.emptyArt("sprout", r.total ? "Nothing due today" : "Your review queue is empty", r.total ? "You have " + r.total + " cards. The next one is due " + (r.next ? D.short(r.next) : "soon") + "." : "Wrong quiz answers and lesson key points become flashcards here, spaced out so they stick."));
+      const tmr = r.tomorrow > 0 ? (r.tomorrow === 1 ? "1 card is due tomorrow." : r.tomorrow + " cards are due tomorrow.") : r.tomorrow === 0 ? "Nothing is due tomorrow." : "";   // r.tomorrow comes from compassed-v2.9-features.sql
+      if (!r.due.length) return page.append(CE.emptyArt("sprout", r.total ? "Nothing due today" : "Your review queue is empty", r.total ? (r.tomorrow > 0 ? tmr : "You have " + r.total + " cards. The next one is due " + (r.next ? D.short(r.next) : "soon") + ".") : "Wrong quiz answers and lesson key points become flashcards here, spaced out so they stick."));
       let i = 0, flipped = false, done = 0; const q = r.due.slice(); const box = h("div", { style: { maxWidth: "640px" } }); page.append(box);
       const render = () => {
         box.innerHTML = "";
-        if (i >= q.length) { box.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("spark")), h("div", { class: "b" }, "Done for today"), h("div", { class: "sm" }, done + " cards reviewed. Come back tomorrow."), h("a", { class: "btn cyan", href: "#/", style: { marginTop: "12px" } }, "Home"))); S.home = null; loadBell(); return; }
+        if (i >= q.length) { box.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("spark")), h("div", { class: "b" }, "Done for today"), h("div", { class: "sm" }, done + " cards reviewed. " + (tmr || "Come back tomorrow.")), h("a", { class: "btn cyan", href: "#/", style: { marginTop: "12px" } }, "Home"))); S.home = null; loadBell(); return; }
         const c = q[i];
-        box.append(h("div", { class: "row between sm mut", style: { marginBottom: "10px" } }, h("span", { class: "row", style: { gap: "6px" } }, CE.subjIcon(c.subj), CE.subjName(c.subj)), h("span", {}, (i + 1) + " / " + q.length)));
+        box.append(h("div", { class: "row between sm mut", style: { marginBottom: "10px" } }, h("span", { class: "row", style: { gap: "6px" } }, CE.subjIcon(c.subj), CE.subjName(c.subj)), h("span", {}, (i + 1) + " / " + q.length + (r.tomorrow > 0 ? " · " + r.tomorrow + " tomorrow" : ""))));
         box.append(h("div", { class: "flash" }, h("div", { class: "cardf" + (flipped ? " back" : ""), onclick: () => { flipped = !flipped; render(); } }, flipped ? c.back : c.front)));
         box.append(h("p", { class: "sm mut", style: { textAlign: "center", margin: "10px 0" } }, flipped ? "How well did you know it?" : "Think of the answer, then tap the card to flip it."));
         if (flipped) box.append(h("div", { class: "grid g4" }, ...[["Forgot", 0, "ghost"], ["Hard", 1, "ghost"], ["Good", 2, ""], ["Easy", 3, "cyan"]].map(([l, g, k]) => h("button", { class: "btn " + k, onclick: async () => { const x = await CE.capi("ed_s_review_done", { p_id: c.id, p_grade: g }); if (x.ok) { done++; i++; flipped = false; CE.toast(x.due_in ? "Again in " + x.due_in + " day" + (x.due_in > 1 ? "s" : "") : "You'll see it again today"); render(); } else CE.toast(CE.errText(x), "bad"); } }, l))));
@@ -347,7 +394,7 @@
       page.innerHTML = "";
       CE.capi("ed_s_cd").then(cd => { const rows = cd.ok && cd.anns && cd.anns.rows ? cd.anns.rows : []; if (!rows.length) return; page.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, "From your teacher on Compass Dash"), CE.srcTag("compassdash", "Compass Dash")), h("div", { class: "list" }, ...rows.slice(0, 6).map(a => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("bell")), h("div", { class: "grow" }, h("div", { class: "t sm" }, a.body), h("div", { class: "s xs" }, (a.class ? a.class : "Whole school") + (a.created ? " · " + D.ago(a.created) : "")))))))); }).catch(() => {});
       if (!r.rows.length) page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("megaphone")), h("div", { class: "b" }, "No announcements")));
-      r.rows.forEach(a => { const c = h("div", { class: "card" + (a.read ? "" : " tint") }, h("div", { class: "hd" }, h("div", { class: "row" }, a.pinned ? h("span", { class: "badge ink" }, CE.icon("pin"), "Pinned") : null, h("span", { class: "badge" }, a.class || "Whole school")), a.read ? h("span", { class: "xs mut" }, "Read") : h("button", { class: "btn sm cyan", onclick: async e => { await CE.capi("ed_s_ann_read", { p_id: a.id }); c.classList.remove("tint"); e.target.replaceWith(h("span", { class: "xs mut" }, "Read")); S.home = null; loadBell(); } }, "Mark as read")), h("h3", {}, a.title), h("div", { html: CE.rich(a.body) }), h("div", { class: "xs mut" }, (a.from ? a.from + " · " : "") + D.ago(a.created))); page.append(c); });
+      r.rows.forEach(a => { const c = h("div", { class: "card" + (a.read ? "" : " tint") }, h("div", { class: "hd" }, h("div", { class: "row" }, a.pinned ? h("span", { class: "badge ink" }, CE.icon("pin"), "Pinned") : null, h("span", { class: "badge" }, a.class || "Whole school")), a.read ? h("span", { class: "xs mut" }, "Read") : h("button", { class: "btn sm cyan", onclick: async e => { await CE.capi("ed_s_ann_read", { p_id: a.id }); c.classList.remove("tint"); e.target.replaceWith(h("span", { class: "xs mut" }, "Read")); S.home = null; loadBell(); } }, "Mark as read")), h("div", { class: "row between" }, h("h3", { style: { margin: 0 } }, a.title), CE.readAloud(() => a.title + "\n" + CE.plain(CE.rich(a.body)))), h("div", { html: CE.rich(a.body) }), h("div", { class: "xs mut" }, (a.from ? a.from + " · " : "") + D.ago(a.created))); page.append(c); });
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -514,7 +561,8 @@
     [["Activities", "#/explore", /^#\/(explore|activity)/], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"]],
     [["Subjects", "#/subjects", /^#\/(subjects|subject|lesson|quiz)/], ["Assignments", "#/assignments", /^#\/assignment/], ["Review queue", "#/review"]],
     [["Progress & badges", "#/progress"], ["House points", "#/house"]],
-    [["News", "#/news"], ["Announcements", "#/announcements"]]
+    [["News", "#/news"], ["Announcements", "#/announcements"]],
+    [["Calendar", "#/calendar"], ["My day", "#/day"]]
   ];
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g || []); };
   addEventListener("hashchange", setSub); setSub();
@@ -526,7 +574,7 @@
     { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: competition }, { path: "/news", handler: news },
     { path: "/subjects", handler: subjects }, { path: "/subject/:id", handler: subject }, { path: "/lesson/:id", handler: lesson }, { path: "/quiz/:id", handler: quiz },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignment }, { path: "/review", handler: review }, { path: "/progress", handler: progress },
-    { path: "/calendar", handler: calendar }, { path: "/announcements", handler: announcements }, { path: "/settings", handler: settings }
+    { path: "/calendar", handler: calendar }, { path: "/day", handler: myDay }, { path: "/announcements", handler: announcements }, { path: "/settings", handler: settings }
   ]);
   loadBell();
 })();

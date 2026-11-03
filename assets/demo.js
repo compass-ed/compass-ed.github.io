@@ -176,6 +176,18 @@
         { id: 2, uid: 103, name: nm(103), title: "A chess ladder for Years 7 and 8", body: "The tournament is great but a ladder would let us play every week.", status: "open", reply: "", created: day(-4) },
         { id: 3, uid: 102, name: nm(102), title: "Water fountain near the sports hall", body: "", status: "done", reply: "Installed over the summer; thanks for asking.", created: day(-30) }];
       db.voice_votes = [{ voice_id: 1, uid: 101 }, { voice_id: 1, uid: 102 }, { voice_id: 1, uid: 103 }, { voice_id: 2, uid: 103 }, { voice_id: 2, uid: 101 }, { voice_id: 3, uid: 102 }]; }
+    /* v2.9: permission slips and a week's timetable for 7A, added once to saved sample campuses */
+    if (!db.slips) {
+      const ymd = n => day(n).slice(0, 10);
+      db.slips = [{ id: 1, class_id: 1, event_id: null, title: "Year 7 trip to the Botanic Garden", body: "Coach leaves the front gate at 8:30 and returns by 15:30. Bring a packed lunch, a water bottle and a coat. No cost.", question: "Any medical or dietary needs we should know about?", due: ymd(6), uid: 2, created: day(-1) },
+        { id: 2, class_id: 2, event_id: 3, title: "Science museum trip (Year 8)", body: "Entry is free; bring £5 for the gift shop if you like.", question: "", due: ymd(9), uid: 3, created: day(-2) }];
+      db.slip_signs = [{ slip_id: 1, uid: 102, answer: true, signer: "Raj Kaur", relation: "Father", note: "", signed_at: day(-1) }];
+    }
+    if (!db.timetable) {
+      const P = [["08:30", "09:30"], ["09:40", "10:40"], ["11:00", "12:00"], ["12:50", "13:50"], ["14:00", "15:00"]], R = { Maths: "M4", English: "E2", Science: "S1", Geography: "G3", History: "H2", Art: "A1", PE: "Sports hall", French: "L5", Music: "Mu1", Computing: "C2" };
+      const W = [["Maths", "English", "Science", "PE", "French"], ["English", "Maths", "Geography", "Art", "Science"], ["Science", "History", "Maths", "Music", "English"], ["Maths", "Computing", "English", "French", "Geography"], ["PE", "Science", "Maths", "History", "Art"]];
+      db.timetable = []; W.forEach((d, i) => d.forEach((t, j) => db.timetable.push({ id: nid(), class_id: 1, day: i + 1, starts: P[j][0], ends: P[j][1], title: t, room: R[t], teacher: t === "Maths" || t === "Science" ? "Ms Khan" : "" })));
+    }
     db.users.forEach(u => { if (u.consent == null) u.consent = u.username === "dev.p" ? {} : { terms: u.created, privacy: u.created, v: 1 }; if (u.must_pw == null) u.must_pw = false; if (u.cd_code === undefined) { u.cd_code = u.username === "alice.j" ? "7K3Q" : null; u.cd_user = u.username === "alice.j" ? "alice_j" : null; } });
   };
   const load = () => { try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {} if (!db || !db.users) { db = seed(); } migrate(); save(); };
@@ -271,7 +283,7 @@
     ed_s_submit(a) { const u = who(a); if (!u) return err("bad_key"); const as = db.assigns.find(x => x.id === +a.p_assign && x.class_id === u.class_id); if (!as) return err("not_found"); const body = a.p_body || "", links = a.p_links || []; if (body.length > 20000) return err("too_big"); if (a.p_final && !body.trim() && !links.length) return err("empty");
       let s = db.subs.find(y => y.assign_id === as.id && y.uid === u.id); if (!s) { s = { id: nid(), assign_id: as.id, uid: u.id, status: "draft", ver: 0, body: "", links: [], sub_at: null, score: null, rub: null, feedback: null, graded_at: null }; db.subs.push(s); } if (s.status === "returned" && !a.p_final) return err("graded");
       s.ver++; db.sub_vers.push({ sub_id: s.id, ver: s.ver, body, links, at: now() }); s.body = body; s.links = links; if (a.p_final) { s.status = "submitted"; s.sub_at = now(); if (as.uid) db.notifs.push({ id: nid(), uid: as.uid, kind: "submission", title: u.name + ' handed in "' + as.title + '"', body: "", link: "#/assignment/" + as.id, created: now(), read_at: null }); } return { ok: true, ver: s.ver, status: s.status }; },
-    ed_s_review(a) { const u = who(a); if (!u) return err("bad_key"); const mine = db.review.filter(v => v.uid === u.id); const due = mine.filter(v => v.due <= today()).sort((p, q) => p.due < q.due ? -1 : p.id - q.id).slice(0, 40); return { ok: true, due: due.map(v => ({ id: v.id, subj: v.subj, front: v.front, back: v.back, reps: v.reps })), total: mine.length, next: mine.filter(v => v.due > today()).map(v => v.due).sort()[0] || null }; },
+    ed_s_review(a) { const u = who(a); if (!u) return err("bad_key"); const mine = db.review.filter(v => v.uid === u.id); const due = mine.filter(v => v.due <= today()).sort((p, q) => p.due < q.due ? -1 : p.id - q.id).slice(0, 40); return { ok: true, due: due.map(v => ({ id: v.id, subj: v.subj, front: v.front, back: v.back, reps: v.reps })), total: mine.length, next: mine.filter(v => v.due > today()).map(v => v.due).sort()[0] || null, tomorrow: mine.filter(v => v.due === new Date(Date.now() + 864e5).toISOString().slice(0, 10)).length }; },
     ed_s_review_done(a) { const u = who(a); if (!u) return err("bad_key"); const v = db.review.find(x => x.id === +a.p_id && x.uid === u.id); if (!v) return err("not_found"); const g = Math.min(3, Math.max(0, +a.p_grade || 0)); let iv, e; if (g === 0) { iv = 0; e = Math.max(1.3, v.ease - .2); } else { e = Math.max(1.3, v.ease + (g === 1 ? -.15 : g === 2 ? 0 : .15)); iv = v.reps === 0 ? 1 : v.reps === 1 ? 3 : Math.round(Math.max(v.ivl, 1) * e); if (g === 1) iv = Math.max(1, Math.floor(iv / 2)); } const days = Math.max(iv, g === 0 ? 0 : 1); const d = new Date(); d.setDate(d.getDate() + days); Object.assign(v, { ease: e, ivl: iv, reps: g === 0 ? 0 : v.reps + 1, due: d.toISOString().slice(0, 10) }); return { ok: true, due_in: days }; },
     ed_s_progress(a) { const u = who(a); if (!u) return err("bad_key");
       return { ok: true, subjects: db.subjects.map(s => { const us = db.units.filter(un => un.subj === s.id && unitFor(un, u)); const ls = us.flatMap(lessonsOf); const cps = db.quizzes.filter(q => q.subj === s.id && q.kind === "checkpoint" && us.some(un => un.id === q.unit_id)); const qr = db.quiz_res.filter(x => x.uid === u.id && db.quizzes.find(q => q.id === x.quiz_id && q.subj === s.id)); const as = db.assigns.filter(x => x.subj === s.id && x.class_id === u.class_id); const sb = as.map(x => db.subs.find(y => y.assign_id === x.id && y.uid === u.id)).filter(Boolean);
@@ -473,6 +485,47 @@
         houses: ["N", "E", "S", "W"].map(hh => ({ house: hh, pts: db.points.filter(p => st.some(s => s.id === p.uid && s.house === hh)).reduce((n, p) => n + p.pts, 0), week: db.points.filter(p => p.at >= ws && st.some(s => s.id === p.uid && s.house === hh)).reduce((n, p) => n + p.pts, 0) })).sort((p, q) => q.pts - p.pts),
         clubs: db.clubs.map(c => ({ title: c.title, members: db.club_members.filter(m => m.club_id === c.id).length, capacity: c.capacity })),
         weeks: Object.keys(wk).sort().map(k => ({ week: k, n: wk[k] })) }; }
+  });
+
+  /* v2.9: permission slips (signed through the parent link) and class timetables */
+  const slipFor = (sl, u) => u.role === "student" && (sl.class_id == null || sl.class_id === u.class_id);
+  const slipMine = (sl, u) => u.role === "admin" || sl.uid === u.id || (sl.class_id != null && canClass(u, sl.class_id)) || (sl.class_id == null && staff(u));
+  const slipSign = (sl, uid) => db.slip_signs.find(g => g.slip_id === sl.id && g.uid === uid) || null;
+  const slipsOf = x => db.slips.filter(sl => slipFor(sl, x) && sl.due >= new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10)).sort((p, q) => p.due < q.due ? -1 : p.due > q.due ? 1 : p.id - q.id).map(sl => { const g = slipSign(sl, x.id), e = db.events.find(v => v.id === sl.event_id);
+    return { id: sl.id, title: sl.title, body: sl.body, question: sl.question, due: sl.due, open: sl.due >= today(), event: e ? { title: e.title, starts: e.starts, place: e.place } : null, answer: g ? g.answer : null, signer: g ? g.signer : null, relation: g ? g.relation : null, note: g ? g.note : null, signed_at: g ? g.signed_at : null }; });
+  const ttRows = c => db.timetable.filter(r => r.class_id === c).sort((p, q) => p.day - q.day || (p.starts < q.starts ? -1 : 1)).map(r => ({ day: r.day, starts: r.starts, ends: r.ends, title: r.title, room: r.room, teacher: r.teacher }));
+  const HHMM = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
+  Object.assign(F, {
+    ed_t_slips(a) { const u = who(a); const e = mustStaff(u); if (e) return e; return { ok: true, rows: db.slips.filter(sl => slipMine(sl, u)).sort((p, q) => p.due < q.due ? 1 : p.due > q.due ? -1 : q.id - p.id).map(sl => { const ev = db.events.find(v => v.id === sl.event_id);
+      return { id: sl.id, title: sl.title, body: sl.body, question: sl.question, due: sl.due, class_id: sl.class_id, class: sl.class_id ? cls(sl.class_id).name : null, event_id: sl.event_id, event: ev ? { title: ev.title, starts: ev.starts } : null,
+        reach: db.users.filter(x => slipFor(sl, x) && !x.disabled).length, yes: db.slip_signs.filter(g => g.slip_id === sl.id && g.answer).length, no: db.slip_signs.filter(g => g.slip_id === sl.id && !g.answer).length, mine: sl.uid === u.id || u.role === "admin", created: sl.created }; }) }; },
+    ed_t_slip(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const sl = db.slips.find(x => x.id === +a.p_id); if (!sl || !slipMine(sl, u)) return err("not_found");
+      return { ok: true, slip: { id: sl.id, title: sl.title, body: sl.body, question: sl.question, due: sl.due, class_id: sl.class_id, event_id: sl.event_id, class: sl.class_id ? cls(sl.class_id).name : null, mine: sl.uid === u.id || u.role === "admin" },
+        rows: db.users.filter(x => slipFor(sl, x) && !x.disabled).sort((p, q) => p.name.localeCompare(q.name)).map(x => { const g = slipSign(sl, x.id); return { id: x.id, name: x.name, class: x.class_id ? cls(x.class_id).name : null, answer: g ? g.answer : null, signer: g ? g.signer : null, relation: g ? g.relation : null, note: g ? g.note : null, signed_at: g ? g.signed_at : null }; }) }; },
+    ed_t_slip_save(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const t = String(a.p_title || "").trim(), cl = +a.p_class || null, ev = +a.p_event || null;
+      if (!t || t.length > 120 || String(a.p_body || "").length > 3000 || String(a.p_question || "").length > 200 || !/^\d{4}-\d{2}-\d{2}$/.test(String(a.p_due || ""))) return err("bad_text");
+      if (cl == null && u.role !== "admin") return err("forbidden"); if (cl != null && !canClass(u, cl)) return err("forbidden"); if (ev && !db.events.some(v => v.id === ev)) return err("not_found");
+      if (+a.p_id) { const sl = db.slips.find(x => x.id === +a.p_id); if (!sl) return err("not_found"); if (!(sl.uid === u.id || u.role === "admin")) return err("forbidden");
+        Object.assign(sl, { class_id: cl, event_id: ev, title: t, body: a.p_body || "", question: String(a.p_question || "").trim(), due: a.p_due }); return { ok: true, id: sl.id }; }
+      if (a.p_due < today()) return err("bad_text");
+      const sl = { id: nid(), class_id: cl, event_id: ev, title: t, body: a.p_body || "", question: String(a.p_question || "").trim(), due: a.p_due, uid: u.id, created: now() }; db.slips.push(sl);
+      db.users.filter(x => x.role === "student" && !x.disabled && (cl == null || x.class_id === cl)).forEach(x => db.notifs.push({ id: nid(), uid: x.id, kind: "slip", title: "Permission slip: " + t, body: "Ask a parent or carer to sign it with your parent link by " + a.p_due + ".", link: "#/settings", created: now(), read_at: null }));
+      return { ok: true, id: sl.id }; },
+    ed_t_slip_del(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const i = db.slips.findIndex(x => x.id === +a.p_id && (x.uid === u.id || u.role === "admin")); if (i < 0) return { ok: false };
+      const id = db.slips[i].id; db.slips.splice(i, 1); db.slip_signs = db.slip_signs.filter(g => g.slip_id !== id); return { ok: true }; },
+    ed_s_slips(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); return { ok: true, rows: slipsOf(u) }; },
+    ed_s_parent_slips(a) { const uid = db.parent_toks[a.p_tok]; const x = uid && db.users.find(v => v.id === uid && v.role === "student" && !v.disabled); if (!x) return err("not_found"); return { ok: true, rows: slipsOf(x) }; },
+    ed_s_parent_slip_sign(a) { const uid = db.parent_toks[a.p_tok]; const x = uid && db.users.find(v => v.id === uid && v.role === "student" && !v.disabled); if (!x) return err("not_found");
+      const sl = db.slips.find(v => v.id === +a.p_slip); if (!sl || !slipFor(sl, x)) return err("not_found"); if (sl.due < today()) return err("closed");
+      const nm = String(a.p_signer || "").trim(); if (typeof a.p_answer !== "boolean" || nm.length < 2 || nm.length > 80 || String(a.p_relation || "").length > 40 || String(a.p_note || "").length > 500) return err("bad_text");
+      db.slip_signs = db.slip_signs.filter(g => !(g.slip_id === sl.id && g.uid === x.id)); db.slip_signs.push({ slip_id: sl.id, uid: x.id, answer: a.p_answer, signer: nm, relation: String(a.p_relation || "").trim(), note: String(a.p_note || "").trim(), signed_at: now() });
+      db.notifs.push({ id: nid(), uid: x.id, kind: "slip", title: (a.p_answer ? "Permission given: " : "Permission not given: ") + sl.title, body: "Signed by " + nm + ".", link: "#/", created: now(), read_at: null }); return { ok: true }; },
+    ed_s_timetable(a) { const u = who(a); if (!u) return err("bad_key"); return { ok: true, class: u.class_id ? cls(u.class_id).name : null, rows: u.class_id ? ttRows(u.class_id) : [] }; },
+    ed_t_timetable(a) { const u = who(a); if (!u) return err("bad_key"); if (!canClass(u, +a.p_class)) return err("forbidden"); return { ok: true, rows: ttRows(+a.p_class) }; },
+    ed_t_timetable_save(a) { const u = who(a); if (!u) return err("bad_key"); const c = +a.p_class; if (!canClass(u, c)) return err("forbidden"); const rows = a.p_rows;
+      if (!Array.isArray(rows)) return err("bad_text"); if (rows.length > 80) return err("too_many");
+      if (rows.some(r => !/^[1-7]$/.test(String(r.day)) || !HHMM.test(r.starts || "") || !HHMM.test(r.ends || "") || r.ends <= r.starts || !String(r.title || "").trim() || String(r.title).trim().length > 60 || String(r.room || "").length > 30 || String(r.teacher || "").length > 40)) return err("bad_text");
+      db.timetable = db.timetable.filter(r => r.class_id !== c).concat(rows.map(r => ({ id: nid(), class_id: c, day: +r.day, starts: r.starts, ends: r.ends, title: String(r.title).trim(), room: String(r.room || "").trim(), teacher: String(r.teacher || "").trim() }))); return { ok: true, n: rows.length }; }
   });
 
   window.CE_DEMO = {

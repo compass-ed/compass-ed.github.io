@@ -37,6 +37,8 @@
     inbox: '<path d="M4 13V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8"/><path d="M4 13h4l2 3h4l2-3h4v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>',
     menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     exit: '<path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4"/><path d="m15 8 4 4-4 4"/><path d="M19 12H9"/>',
+    volume: '<path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
     expand: '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
     shrink: '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
     arrow: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',

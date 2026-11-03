@@ -192,6 +192,34 @@
     });
     return wrap;
   };
+  /* ---------- read aloud: the browser's own voices. The voice follows the language of the text itself, because a
+     lesson is usually written in English even when the page around it is in French or Arabic. ---------- */
+  CE.plain = html => new DOMParser().parseFromString(String(html || ""), "text/html").body.textContent || "";
+  CE.blocksText = blocks => (blocks || []).map(b => b.t === "heading" ? b.text : b.t === "text" ? CE.plain(CE.rich(b.text)) : b.t === "list" ? (b.items || []).map(i => CE.plain(CE.rich(i))).join("\n")
+    : b.t === "key" ? [b.q, b.text].filter(Boolean).join("\n") : b.t === "check" ? b.q : b.t === "image" ? b.text : "").filter(Boolean).join("\n");   // never the quiz answer buttons
+  const SAY = window.speechSynthesis;
+  const sayLang = t => /[؀-ۿ]/.test(t) ? "ar"
+    : (t.match(/\b(le|la|les|des|est|et|une|pour|que|dans|vous|du|au|avec)\b/gi) || []).length > (t.match(/\b(the|and|is|to|of|in|for|you|that|with|it|on)\b/gi) || []).length ? "fr" : "en";
+  let saying = null;   // { btn, label }
+  CE.sayStop = () => { if (!SAY) return; SAY.cancel(); if (saying) { const s = saying; saying = null; s.label(false); } };
+  CE.readAloud = getText => {   // a Listen / Stop button, or null where the browser cannot speak
+    if (!SAY || !window.SpeechSynthesisUtterance) return null;
+    const btn = CE.h("button", { class: "btn sm ghost say", type: "button" });
+    const label = on => { btn.replaceChildren(CE.icon(on ? "stop" : "volume"), CE.t(on ? "Stop" : "Listen")); btn.setAttribute("aria-pressed", on ? "true" : "false"); };
+    btn.onclick = () => {
+      const mine = saying && saying.btn === btn; CE.sayStop(); if (mine) return;
+      const text = String(getText() || "").replace(/[ \t]+/g, " ").trim(); if (!text) return;
+      const lang = sayLang(text), pref = { en: "en-gb", fr: "fr-fr", ar: "ar-sa" }[lang], vs = SAY.getVoices(), rate = +CE.prefs.get().sayRate || 1;
+      const voice = vs.find(v => (v.lang || "").toLowerCase().replace("_", "-") === pref) || vs.find(v => (v.lang || "").toLowerCase().startsWith(lang));
+      const chunks = [];   // Chrome stops a long utterance after about 15 seconds, so speak a sentence or two at a time
+      (text.match(/[^.!?؟…\n]+[.!?؟…]*\n*/g) || [text]).forEach(s => { s = s.trim(); if (!s) return; if (chunks.length && (chunks[chunks.length - 1] + " " + s).length < 220) chunks[chunks.length - 1] += " " + s; else chunks.push(s); });
+      saying = { btn, label }; label(true);
+      chunks.forEach((c, i) => { const u = new SpeechSynthesisUtterance(c); u.lang = voice ? voice.lang : pref; if (voice) u.voice = voice; u.rate = rate;
+        if (i === chunks.length - 1) u.onend = u.onerror = () => { if (saying && saying.btn === btn) { saying = null; label(false); } }; SAY.speak(u); });
+    };
+    label(false); return btn;
+  };
+  if (SAY) { addEventListener("hashchange", () => CE.sayStop()); addEventListener("pagehide", () => CE.sayStop()); }
 
   /* ---------- hash router ---------- */
   CE.router = function (routes, notFound) {
@@ -279,6 +307,7 @@
     const box = h("div", { class: "stack" },
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Appearance"), h("div", { class: "sm mut" }, "Light, dark or follow the device.")), seg([["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]], p.theme, v => CE.prefs.set({ theme: v }))),
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Dyslexia-friendly reading"), h("div", { class: "sm mut" }, "Lexend typeface, wider spacing, shorter lines and a warmer page.")), h("label", { class: "chk" }, h("input", { type: "checkbox", checked: p.dys, onchange: e => CE.prefs.set({ dys: e.target.checked }) }), p.dys ? "On" : "Off")),
+      window.speechSynthesis ? h("div", { class: "row between" }, h("div", {}, h("b", {}, "Read aloud"), h("div", { class: "sm mut" }, "How fast the Listen button reads lessons and notices.")), seg([[1, "Normal"], [0.8, "Slower"]], p.sayRate || 1, v => CE.prefs.set({ sayRate: +v }))) : null,
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Detail level"), h("div", { class: "sm mut" }, "Compact shows less text per card; detailed shows more.")), seg([["compact", "Compact"], ["standard", "Standard"], ["detailed", "Detailed"]], p.detail, v => CE.prefs.set({ detail: v }))),
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Interface transparency"), h("div", { class: "sm mut" }, "Glass effect on cards and bars. 0 is solid.")), h("input", { type: "range", min: 0, max: 60, step: 5, value: p.glass, style: { width: "160px" }, oninput: e => CE.prefs.set({ glass: +e.target.value }) })));
     return box;

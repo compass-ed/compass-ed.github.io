@@ -160,13 +160,117 @@
     if (!(me.classes || []).length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("users")), h("div", { class: "b" }, "No classes yet"), h("div", { class: "sm" }, "Create classes and add students under People & classes."), h("a", { class: "btn", href: "#/people", style: { marginTop: "10px" } }, "People & classes")));
     page.append(h("div", { class: "grid g3" }, ...me.classes.map(c => h("a", { class: "subj", href: "#/class/" + c.id }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon("users")), c.subj != null ? h("span", { class: "badge" }, CE.subjName(c.subj)) : null), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, (c.n || 0) + " students" + (c.year ? " · Year " + c.year : ""))))));
   }
+  /* ---------- permission slips: a parent or carer signs through the private parent link the student shares ---------- */
+  const ymd = D.ymd, dueD = d => D.short(d + "T12:00:00");   // sign-by dates are plain dates: read them as local noon so no time zone moves the day
+  const stat = (n, l) => h("div", { class: "card stat" }, h("span", { class: "n" }, n), h("span", { class: "l" }, l));
+  const slipState = x => x.answer === true ? h("span", { class: "badge ok" }, "Yes") : x.answer === false ? h("span", { class: "badge bad" }, "No") : h("span", { class: "badge" }, "Waiting");
+  async function slipEditor(sl, done) {
+    sl = sl || { id: 0, class_id: ((me.classes || [])[0] || {}).id || 0, event_id: 0, title: "", body: "", question: "", due: "" };
+    let evs = []; try { const r = await api("ed_t_events", { p_from: ymd(new Date()), p_to: ymd(new Date(Date.now() + 180 * 864e5)) }); if (r.ok) evs = r.rows.filter(e => e.event_id && !e.src); } catch (x) {}
+    if (sl.event_id && !evs.some(e => e.event_id === sl.event_id)) evs.unshift({ event_id: sl.event_id, title: sl.event_title || "Linked event", starts: null });
+    const title = h("input", { class: "in", value: sl.title, maxlength: 120, placeholder: "e.g. Year 7 trip to the Botanic Garden" });
+    const cl = sel(classOpts(me.role === "admin" ? "Whole school" : null), sl.class_id || 0), ev = sel([[0, "None"]].concat(evs.map(e => [e.event_id, e.title + (e.starts ? " · " + D.short(e.starts) : "")])), sl.event_id || 0);
+    const body = h("textarea", { class: "in", rows: 4, maxlength: 3000, placeholder: "Dates and times, cost, what to bring, pick-up arrangements…" }, sl.body || "");
+    const qn = h("input", { class: "in", value: sl.question || "", maxlength: 200, placeholder: "e.g. Any medical or dietary needs?" });
+    const due = h("input", { class: "in", type: "date", value: sl.due || "", min: sl.id ? null : ymd(new Date()) });
+    ev.onchange = () => { const e = evs.find(x => x.event_id === +ev.value); if (e && !title.value.trim()) title.value = e.title; };
+    const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, sl.id ? "Edit permission slip" : "New permission slip"), field("Title", title), h("div", { class: "grid g2" }, field("For", cl), field("Sign by", due)),
+      field("Trip or event", ev, "Optional: the calendar entry this slip is for."), field("Details for parents", body), field("Question for parents", qn, "Optional. Their answer shows next to their signature."), h("div", { class: "err", id: "slerr" }),
+      h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async e => { if (!due.value) return $("#slerr", box).textContent = "Choose a sign-by date."; e.target.disabled = true;
+        const r = await api("ed_t_slip_save", { p_id: sl.id || 0, p_class: +cl.value, p_event: +ev.value, p_title: title.value, p_body: body.value, p_question: qn.value, p_due: due.value }); e.target.disabled = false;
+        if (!r.ok) return $("#slerr", box).textContent = r.error === "bad_text" ? "Add a title and a sign-by date that is not in the past." : CE.errText(r);
+        CE.closeModal(); CE.toast(sl.id ? "Saved" : "Slip sent: the students are asked to have a parent sign it", "ok"); done(r.id); } }, sl.id ? "Save" : "Send slip"))));
+  }
+  async function slipsPage() {
+    CE.title("Permission slips"); CE.loading(page);
+    try {
+      const r = await api("ed_t_slips"); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
+      page.append(h("div", { class: "page-lead row between" }, h("div", {}, h("h2", {}, "Permission slips"), h("div", { class: "sm mut" }, "Parents and carers sign from the private parent link their child shares with them. Each answer shows here as it comes in.")),
+        h("button", { class: "btn cyan", onclick: () => slipEditor(null, id => CE.nav("/slip/" + id)) }, "+ New slip")));
+      if (!r.rows.length) return page.append(CE.emptyArt("inbox", "No permission slips yet", "Make one for a trip or event; the students are told to ask a parent to sign it."));
+      const today = ymd(new Date());
+      page.append(h("div", { class: "list" }, ...r.rows.map(sl => { const wait = Math.max(0, sl.reach - sl.yes - sl.no);
+        return h("a", { class: "item", href: "#/slip/" + sl.id }, h("div", { class: "ico" }, CE.icon(sl.event ? "bus" : "pencil")),
+          h("div", { class: "grow" }, h("div", { class: "t" }, sl.title), h("div", { class: "s" }, [sl.class || "Whole school", (sl.due < today ? "Closed " : "Sign by ") + dueD(sl.due), sl.event ? sl.event.title : null].filter(Boolean).join(" · "))),
+          h("div", { class: "row", style: { gap: "6px", flexWrap: "wrap", justifyContent: "flex-end" } }, h("span", { class: "badge ok" }, sl.yes + " yes"), sl.no ? h("span", { class: "badge bad" }, sl.no + " no") : null, wait ? h("span", { class: "badge" }, wait + " waiting") : null)); })));
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function slipPage(p) {
+    CE.title("Permission slip"); CE.loading(page);
+    try {
+      const r = await api("ed_t_slip", { p_id: +p.id }); if (!r.ok) return CE.fail(page, r); const sl = r.slip; CE.title(sl.title); page.innerHTML = "";
+      const yes = r.rows.filter(x => x.answer === true).length, no = r.rows.filter(x => x.answer === false).length;
+      page.append(h("div", { class: "row between" }, h("div", {}, h("a", { class: "sm noprint", href: "#/slips" }, "← Permission slips"), h("h2", { style: { margin: "4px 0 0" } }, sl.title), h("div", { class: "sm mut" }, (sl.class || "Whole school") + " · sign by " + dueD(sl.due))),
+        h("div", { class: "row noprint" }, h("button", { class: "btn ghost", onclick: () => print() }, "Print"),
+          sl.mine ? h("button", { class: "btn ghost", onclick: () => slipEditor(Object.assign({}, sl), () => slipPage(p)) }, "Edit") : null,
+          sl.mine ? h("button", { class: "btn bad", onclick: async () => { if (await CE.confirm("Delete this slip and every answer to it?", "Delete")) { const x = await api("ed_t_slip_del", { p_id: sl.id }); if (x.ok) { CE.toast("Deleted", "ok"); CE.nav("/slips"); } else CE.toast(CE.errText(x), "bad"); } } }, "Delete") : null)));
+      page.append(h("div", { class: "grid g3" }, stat(yes, "Permission given"), stat(no, "Not given"), stat(r.rows.length - yes - no, "Waiting")));
+      if (sl.body || sl.question) page.append(card("What parents are asked", h("div", { class: "stack" }, sl.body ? h("div", { html: CE.rich(sl.body) }) : null, sl.question ? h("div", { class: "sm" }, h("b", {}, "Question: "), sl.question) : null)));
+      page.append(h("div", { class: "card" }, h("div", { class: "tbw" }, h("table", { class: "tb" }, h("thead", {}, h("tr", {}, ...["Student", "Class", "Answer", "Signed by", "When", "Note"].map(t => h("th", {}, t)))),
+        h("tbody", {}, ...r.rows.map(x => h("tr", {}, h("td", { class: "b" }, x.name), h("td", {}, x.class || "–"), h("td", {}, slipState(x)), h("td", {}, x.signer ? x.signer + (x.relation ? " (" + x.relation + ")" : "") : "–"), h("td", { class: "sm" }, x.signed_at ? D.dt(x.signed_at) : "–"), h("td", { class: "sm" }, x.note || ""))))))));
+      if (!r.rows.length) page.append(h("div", { class: "empty" }, "Nobody is in this class yet."));
+    } catch (e) { CE.fail(page, e); }
+  }
+  /* ---------- a class's weekly timetable (students see Now / Next on Home, and My day) ---------- */
+  const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  const addMin = (t, m) => { const [a, b] = String(t || "08:30").split(":").map(Number), x = Math.min(23 * 60 + 59, a * 60 + b + m); return String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0"); };
+  async function timetableTab(id, box) {
+    const r = await api("ed_t_timetable", { p_class: id }); if (!r.ok) return box.append(h("div", { class: "err" }, CE.errText(r)));
+    let rows = r.rows.map(x => Object.assign({}, x)); const body = h("tbody", {}), er = h("div", { class: "err" });
+    const draw = () => { body.innerHTML = ""; rows.sort((p, q) => p.day - q.day || (p.starts < q.starts ? -1 : p.starts > q.starts ? 1 : 0));
+      if (!rows.length) body.append(h("tr", {}, h("td", { colspan: 7, class: "mut" }, "No lessons yet. Add the first one below.")));
+      rows.forEach(x => { const inp = (k, a) => h("input", Object.assign({ class: "in", value: x[k] || "", oninput: e => { x[k] = e.target.value; } }, a));
+        body.append(h("tr", {}, h("td", {}, sel(DAYS.map((d, j) => [j + 1, d]), x.day, { onchange: e => { x.day = +e.target.value; } })), h("td", {}, inp("starts", { type: "time", "aria-label": "Starts" })), h("td", {}, inp("ends", { type: "time", "aria-label": "Ends" })),
+          h("td", {}, inp("title", { maxlength: 60, placeholder: "Maths", "aria-label": "Lesson" })), h("td", {}, inp("room", { maxlength: 30, placeholder: "M4", "aria-label": "Room" })), h("td", {}, inp("teacher", { maxlength: 40, "aria-label": "Teacher" })),
+          h("td", {}, h("button", { class: "btn sm ghost", type: "button", "aria-label": "Remove this lesson", onclick: () => { rows = rows.filter(y => y !== x); draw(); } }, CE.icon("cross"))))); }); };
+    const add = () => { const last = rows[rows.length - 1]; const st = last ? last.ends : "08:30"; rows.push({ day: last ? last.day : 1, starts: st, ends: addMin(st, 60), title: "", room: "", teacher: "" }); draw(); const ins = body.querySelectorAll("input[maxlength='60']"); const t = [...ins].find(i => !i.value); if (t) t.focus(); };
+    const others = (me.classes || []).filter(c => c.id !== id);
+    const copy = others.length ? sel([[0, "Copy from another class…"]].concat(others.map(c => [c.id, c.name])), 0, { onchange: async e => { const c = +e.target.value; e.target.value = 0; if (!c) return; const x = await api("ed_t_timetable", { p_class: c }); if (!x.ok) return CE.toast(CE.errText(x), "bad");
+      if (rows.length && !(await CE.confirm("Replace the lessons below with that class's timetable? Nothing is saved until you press Save.", "Replace"))) return; rows = x.rows.map(y => Object.assign({}, y)); draw(); } }) : null;
+    const save = async e => { er.textContent = ""; e.target.disabled = true;
+      const x = await api("ed_t_timetable_save", { p_class: id, p_rows: rows.map(y => ({ day: +y.day, starts: y.starts, ends: y.ends, title: String(y.title || "").trim(), room: String(y.room || "").trim(), teacher: String(y.teacher || "").trim() })) }); e.target.disabled = false;
+      if (!x.ok) return er.textContent = x.error === "bad_text" ? "Check that every lesson has a name, and starts before it ends." : CE.errText(x); CE.toast("Timetable saved", "ok"); };
+    draw();
+    box.append(card("Weekly timetable", h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, "Students in this class see it on their Home page as Now and Next, and on My day. Times are the school's local time."),
+      h("div", { class: "tbw" }, h("table", { class: "tb tt-edit" }, h("thead", {}, h("tr", {}, ...["Day", "Starts", "Ends", "Lesson", "Room", "Teacher", ""].map(t => h("th", {}, t)))), body)), er,
+      h("div", { class: "row" }, h("button", { class: "btn ghost", type: "button", onclick: add }, "+ Add lesson"), copy, h("button", { class: "btn cyan right", type: "button", onclick: save }, "Save timetable")))));
+  }
+  /* Mark book: every piece of work set to the class (marks out of 100, or handed in / missing) and each unit's best
+     checkpoint, as an Excel file with two sheets. Built from the same calls the class pages use, four at a time. */
+  async function markbook(r, btn) {
+    btn.disabled = true; const t = CE.t;
+    try {
+      const [a, hm] = await Promise.all([api("ed_t_assigns"), api("ed_t_heatmap", { p_class: r.class.id })]); if (!a.ok) throw a; if (!hm.ok) throw hm;
+      const work = a.rows.filter(x => x.class_id === r.class.id).sort((x, y) => String(x.due || "").localeCompare(String(y.due || "")));
+      const subs = []; for (let i = 0; i < work.length; i += 4) subs.push(...await Promise.all(work.slice(i, i + 4).map(x => api("ed_t_subs", { p_assign: x.id }))));
+      const bad = subs.find(x => !x.ok); if (bad) throw bad;
+      const now = Date.now(), cell = (w, sub) => sub && sub.score != null ? sub.score : sub && sub.status !== "draft" ? t("Handed in") : w.due && new Date(w.due).getTime() < now ? t("Missing") : "";
+      const marks = [[t("Student"), t("Username"), ...work.map(w => w.title + (w.due ? " (" + D.short(w.due) + ")" : "")), t("Average")]].concat(r.students.map(st => {
+        const row = work.map((w, i) => cell(w, ((subs[i].rows || []).find(x => x.id === st.id) || {}).sub)), nums = row.filter(v => typeof v === "number");
+        return [st.name, st.username, ...row, nums.length ? Math.round(nums.reduce((p, q) => p + q, 0) / nums.length) : ""]; }));
+      const mastery = [[t("Student"), ...hm.units.map(u => CE.subjName(u.subj) + ": " + u.title)]].concat(hm.students.map(st => [st.name, ...hm.units.map(u => { const c = (st.cells || {})[u.id]; return c && c.cp != null ? c.cp : ""; })]));
+      const name = (t("Mark book") + " - " + r.class.name + " - " + new Date().toISOString().slice(0, 10)).replace(/[\\/:*?"<>|]+/g, "-");
+      try {
+        const X = window.XLSX || await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = CE.root + "dash/vendor/xlsx-0.18.5.full.min.js"; sc.integrity = "sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw"; sc.onload = () => ok(window.XLSX); sc.onerror = no; document.head.append(sc); });
+        const wb = X.utils.book_new(), ws = X.utils.aoa_to_sheet(marks), wm = X.utils.aoa_to_sheet(mastery);
+        ws["!cols"] = [{ wch: 22 }, { wch: 14 }, ...work.map(() => ({ wch: 16 })), { wch: 9 }]; wm["!cols"] = [{ wch: 22 }, ...hm.units.map(() => ({ wch: 18 }))];
+        X.utils.book_append_sheet(wb, ws, t("Marks").slice(0, 31)); X.utils.book_append_sheet(wb, wm, t("Mastery").slice(0, 31)); X.writeFile(wb, name + ".xlsx");
+        CE.toast(t("Mark book downloaded"), "ok");
+      } catch (x) {   // Excel library blocked or offline: a CSV of the marks still opens in Excel
+        const csv = "\ufeff" + marks.map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+        const link = h("a", { href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })), download: name + ".csv" }); document.body.append(link); link.click(); setTimeout(() => { URL.revokeObjectURL(link.href); link.remove(); }, 500);
+        CE.toast(t("Excel could not load, so a CSV (opens in Excel) was downloaded instead."));
+      }
+    } catch (e) { CE.toast(CE.errText(e), "bad"); }
+    btn.disabled = false;
+  }
   async function classPage(p, tab) {
     const id = +p.id; CE.title("Class"); CE.loading(page);
     try {
       const r = await api("ed_t_class", { p_class: id }); if (!r.ok) return CE.fail(page, r);
       CE.title(r.class.name); page.innerHTML = "";
-      page.append(h("div", { class: "row between" }, h("div", {}, h("a", { class: "sm", href: "#/classes" }, "← Classes"), h("h2", { style: { margin: "4px 0 0" } }, r.class.name), h("div", { class: "sm mut" }, r.students.length + " students" + (r.class.year ? " · Year " + r.class.year : "") + (r.class.subj != null ? " · " + CE.subjName(r.class.subj) : ""))), h("div", { class: "row" }, h("button", { class: "btn", onclick: () => assignEditor(null, id) }, "+ Set work"), h("button", { class: "btn ghost", onclick: () => annEditor(null, id) }, "+ Announce"), h("button", { class: "btn ghost", onclick: () => awardModal(r.students, id) }, "+ Points"))));
-      page.append(h("div", { class: "tabs" }, ...[["students", "Students"], ["register", "Register & seating"], ["heatmap", "Class overview heatmap"], ["topics", "Topics"], ["progress", "Progress monitoring"]].map(([k, l]) => h("button", { class: k === (tab || "students") ? "on" : "", onclick: () => CE.nav("/class/" + id + "/" + k) }, l))));
+      page.append(h("div", { class: "row between" }, h("div", {}, h("a", { class: "sm", href: "#/classes" }, "← Classes"), h("h2", { style: { margin: "4px 0 0" } }, r.class.name), h("div", { class: "sm mut" }, r.students.length + " students" + (r.class.year ? " · Year " + r.class.year : "") + (r.class.subj != null ? " · " + CE.subjName(r.class.subj) : ""))), h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: e => markbook(r, e.currentTarget) }, CE.icon("chart"), "Export mark book"), h("button", { class: "btn", onclick: () => assignEditor(null, id) }, "+ Set work"), h("button", { class: "btn ghost", onclick: () => annEditor(null, id) }, "+ Announce"), h("button", { class: "btn ghost", onclick: () => awardModal(r.students, id) }, "+ Points"))));
+      page.append(h("div", { class: "tabs" }, ...[["students", "Students"], ["register", "Register & seating"], ["timetable", "Timetable"], ["heatmap", "Class overview heatmap"], ["topics", "Topics"], ["progress", "Progress monitoring"]].map(([k, l]) => h("button", { class: k === (tab || "students") ? "on" : "", onclick: () => CE.nav("/class/" + id + "/" + k) }, l))));
       const box = h("div", { class: "stack" }); page.append(box);
       if ((tab || "students") === "students") {
         const tb = h("table", { class: "tb" }, h("thead", {}, h("tr", {}, h("th", {}, "Student"), h("th", {}, "House"), h("th", {}, "Points"), h("th", {}, "Last seen"), h("th", {}, "Lessons"), h("th", {}, "Activities"), h("th", {}, "Quiz avg"), h("th", {}, "Handed in"), h("th", {}, "Grade avg"), h("th", {}, ""))), h("tbody", {}));
@@ -174,6 +278,7 @@
         box.append(h("div", { class: "card" }, r.students.length ? h("div", { class: "tbw" }, tb) : h("div", { class: "empty" }, "No students in this class yet. Add them under People & classes.")));
       } else if (tab === "heatmap") await heatmap(id, box);
       else if (tab === "register") registerTab(id, r, box);
+      else if (tab === "timetable") await timetableTab(id, box);
       else if (tab === "topics") await topicsTab(id, box);
       else await progressTab(id, r, box);
     } catch (e) { CE.fail(page, e); }
@@ -417,7 +522,7 @@
     e = e || { class_id: 0, kind: "event", title: "", starts: null, ends: null, place: "" };
     const title = h("input", { class: "in", value: e.title, placeholder: "e.g. End-of-unit test" }), kind = sel([["event", "Event"], ["exam", "Exam / test"], ["deadline", "Deadline"], ["trip", "Trip"], ["competition", "Competition fixture"]], e.kind), cl = sel(classOpts("Whole school"), e.class_id || 0), st = h("input", { class: "in", type: "datetime-local", value: e.starts ? D.local(e.starts) : "" }), en = h("input", { class: "in", type: "datetime-local", value: e.ends ? D.local(e.ends) : "" }), pl = h("input", { class: "in", value: e.place, placeholder: "Room or place" });
     const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, e.event_id ? "Edit event" : "New event"), field("Title", title), h("div", { class: "grid g2" }, field("Type", kind), field("For", cl)), h("div", { class: "grid g2" }, field("Starts", st), field("Ends", en)), field("Place", pl), h("div", { class: "err", id: "eerr" }),
-      h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { if (!st.value) return $("#eerr", box).textContent = "Set a start time."; const r = await api("ed_t_event_save", { p_id: e.event_id || 0, p_class: +cl.value, p_kind: kind.value, p_title: title.value, p_starts: new Date(st.value).toISOString(), p_ends: en.value ? new Date(en.value).toISOString() : null, p_place: pl.value }); if (!r.ok) return $("#eerr", box).textContent = CE.errText(r); CE.closeModal(); CE.toast("Saved", "ok"); done(); } }, "Save"), e.event_id ? h("button", { class: "btn bad right", onclick: async () => { if (await CE.confirm("Delete this event?", "Delete")) { await api("ed_t_event_del", { p_id: e.event_id }); CE.closeModal(); done(); } } }, "Delete") : null)));
+      h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async () => { if (!st.value) return $("#eerr", box).textContent = "Set a start time."; const r = await api("ed_t_event_save", { p_id: e.event_id || 0, p_class: +cl.value, p_kind: kind.value, p_title: title.value, p_starts: new Date(st.value).toISOString(), p_ends: en.value ? new Date(en.value).toISOString() : null, p_place: pl.value }); if (!r.ok) return $("#eerr", box).textContent = CE.errText(r); CE.closeModal(); CE.toast("Saved", "ok"); done(); } }, "Save"), e.event_id && !e.src ? h("button", { class: "btn ghost", type: "button", onclick: () => { CE.closeModal(); slipEditor({ id: 0, class_id: e.class_id || 0, event_id: e.event_id, event_title: e.title, title: e.title, body: "", question: "", due: "" }, id => CE.nav("/slip/" + id)); } }, "+ Permission slip") : null, e.event_id ? h("button", { class: "btn bad right", onclick: async () => { if (await CE.confirm("Delete this event?", "Delete")) { await api("ed_t_event_del", { p_id: e.event_id }); CE.closeModal(); done(); } } }, "Delete") : null)));
   }
 
   /* ---------- people & classes ---------- */
@@ -854,7 +959,7 @@
     [["Campus Hub", "#/campus"], ["Student Voice", "#/voice"], ["Insights", "#/insights"], ["Display mode", "#/display"]],
     [["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["News", "#/news"]],
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
-    [["Announcements", "#/announcements"], ["Calendar", "#/calendar"]],
+    [["Announcements", "#/announcements"], ["Calendar", "#/calendar"], ["Permission slips", "#/slips", /^#\/slip/]],
     [["People & classes", "#/people", /^#\/people/], ["House points", "#/points"]],
     [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"]],
     [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
@@ -869,7 +974,7 @@
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignmentPage },
-    { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }, { path: "/admin", handler: admin }, { path: "/admin/:tab", handler: admin }
+    { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/slips", handler: slipsPage }, { path: "/slip/:id", handler: slipPage }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }, { path: "/admin", handler: admin }, { path: "/admin/:tab", handler: admin }
   ]);
   loadBell();
 })();
