@@ -72,7 +72,8 @@
       s.at = Date.now(); LS.set("ce_auth", s); return s;
     },
     set(tok, me) { LS.set("ce_auth", { tok, me, at: Date.now() }); },
-    clear() { LS.del("ce_auth"); dashOut(); },
+    clear() { LS.del("ce_auth"); dashOut();   // and stop deadline reminders reaching this device for the next person who signs in
+      try { navigator.serviceWorker.getRegistration().then(r => r && r.pushManager && r.pushManager.getSubscription()).then(x => x && x.unsubscribe()).catch(() => {}); } catch (e) {} },
     args() { const s = CE.auth.get(); return s ? { p_key: s.tok } : {}; }
   };
   CE.capi = async (fn, a) => {
@@ -224,6 +225,32 @@
     label(false); return btn;
   };
   if (SAY) { addEventListener("hashchange", () => CE.sayStop()); addEventListener("pagehide", () => CE.sayStop()); }
+
+  /* ---------- the year portfolio (v2.9): one school year of a student's record, shared by both portals and made to print ---------- */
+  CE.ayLabel = y => y + "–" + String(y + 1).slice(2);
+  CE.GOAL_ST = { active: ["In progress", ""], done: ["Achieved", "ok"], dropped: ["Let go", "warn"] };
+  CE.portfolio = (r, href) => {
+    const h = CE.h, D = CE.date, s = r.student, TERMS = ["Autumn term", "Spring term", "Summer term"], PLACE = ["", "1st place", "2nd place", "3rd place"];
+    const sec = (title, ...kids) => h("section", { class: "card" }, h("h3", {}, title), ...kids), none = t => h("p", { class: "sm mut", style: { margin: 0 } }, t);
+    const stat = (n, l) => h("div", { class: "card stat" }, h("span", { class: "n" }, n), h("span", { class: "l" }, l));
+    const goal = g => h("div", { class: "pf-goal" }, h("div", { class: "row between" }, h("b", {}, g.title), h("span", { class: "badge " + CE.GOAL_ST[g.status][1] }, CE.GOAL_ST[g.status][0])),
+      g.subj != null ? h("div", { class: "xs mut" }, CE.subjName(g.subj)) : null, g.plan ? h("p", { class: "sm" }, g.plan) : null, g.reflection ? h("blockquote", { class: "refl sm" }, g.reflection) : null);
+    return h("div", { class: "stack pf" },
+      h("div", { class: "row between noprint" }, h("div", { class: "row" }, r.ay > r.first_ay ? h("a", { class: "btn sm ghost", href: href(r.ay - 1) }, "← " + CE.ayLabel(r.ay - 1)) : null,
+        r.ay < r.now_ay ? h("a", { class: "btn sm ghost", href: href(r.ay + 1) }, CE.ayLabel(r.ay + 1) + " →") : null), h("button", { class: "btn cyan", onclick: () => print() }, "Print")),
+      h("header", { class: "card ink pf-head" }, h("div", { class: "kicker" }, r.school || "Compass Ed"), h("h1", {}, s.name),
+        h("div", {}, "Year portfolio " + CE.ayLabel(r.ay)), h("div", { class: "sm" }, [s.class, s.year ? "Year " + s.year : null, s.house ? CE.HOUSE_NAMES[s.house] : null].filter(Boolean).join(" · "))),
+      h("div", { class: "grid g4" }, stat(r.lessons, "Lessons completed"), stat(r.checkpoints, "Checkpoints passed"), stat(r.activities.length, "Activities done"), stat(r.points, "House points")),
+      sec("Goals and reflections", ...(r.goals.length ? [1, 2, 3].filter(t => r.goals.some(g => g.term === t)).map(t => h("div", { class: "pf-term" }, h("h4", {}, TERMS[t - 1]), ...r.goals.filter(g => g.term === t).map(goal))) : [none("No goals set this year.")])),
+      h("div", { class: "grid g2" },
+        sec("Competitions", r.competitions.length ? h("div", { class: "list" }, ...r.competitions.map(c => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(c.place ? "medal" : "trophy")),
+          h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, (c.place ? PLACE[c.place] || c.place + "th place" : "Entered") + " · " + D.short(c.at)))))) : none("No competitions entered this year.")),
+        sec("Clubs", r.clubs.length ? h("div", { class: "list" }, ...r.clubs.map(c => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("users")), h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, c.day))))) : none("No clubs this year."))),
+      sec("Activities", r.activities.length ? h("div", { class: "row", style: { gap: "6px" } }, ...r.activities.map(a => h("span", { class: "badge" }, a.title))) : none("No activities done this year.")),
+      sec("Work handed in", r.work.length ? h("div", { class: "tbw" }, h("table", { class: "tb" }, h("thead", {}, h("tr", {}, ...["Work", "Subject", "Handed in", "Mark"].map(t => h("th", {}, t)))),
+        h("tbody", {}, ...r.work.map(w => h("tr", {}, h("td", {}, w.title), h("td", {}, w.subj != null ? CE.subjName(w.subj) : "–"), h("td", {}, D.short(w.at)), h("td", {}, w.score != null ? w.score + "%" : w.status === "returned" ? "Returned" : "Not marked yet")))))) : none("No work handed in this year.")),
+      h("p", { class: "xs mut" }, "From Compass Ed · " + D.long(new Date())));
+  };
 
   /* ---------- hash router ---------- */
   CE.router = function (routes, notFound) {
