@@ -177,8 +177,8 @@
     const box = CE.modal(h("div", { class: "stack" }, h("h3", {}, sl.id ? "Edit permission slip" : "New permission slip"), field("Title", title), h("div", { class: "grid g2" }, field("For", cl), field("Sign by", due)),
       field("Trip or event", ev, "Optional: the calendar entry this slip is for."), field("Details for parents", body), field("Question for parents", qn, "Optional. Their answer shows next to their signature."), h("div", { class: "err", id: "slerr" }),
       h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async e => { if (!due.value) return $("#slerr", box).textContent = "Choose a sign-by date."; e.target.disabled = true;
-        const r = await api("ed_t_slip_save", { p_id: sl.id || 0, p_class: +cl.value, p_event: +ev.value, p_title: title.value, p_body: body.value, p_question: qn.value, p_due: due.value }); e.target.disabled = false;
-        if (!r.ok) return $("#slerr", box).textContent = r.error === "bad_text" ? "Add a title and a sign-by date that is not in the past." : CE.errText(r);
+        const r = await api("ed_t_slip_save", { p_id: sl.id || 0, p_class: +cl.value, p_event: +ev.value, p_title: title.value, p_body: body.value, p_question: qn.value, p_due: due.value }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
+        if (!r.ok) return $("#slerr", box).textContent = r.error === "bad_text" ? "Add a title and a sign-by date that is not in the past." : r.error === "signed" ? "Parents have already answered, so the class, details and question can't change. Make a new slip instead." : CE.errText(r);
         CE.closeModal(); CE.toast(sl.id ? "Saved" : "Slip sent: the students are asked to have a parent sign it", "ok"); done(r.id); } }, sl.id ? "Save" : "Send slip"))));
   }
   async function slipsPage() {
@@ -217,23 +217,24 @@
   async function timetableTab(id, box) {
     const r = await api("ed_t_timetable", { p_class: id }); if (!r.ok) return box.append(h("div", { class: "err" }, CE.errText(r)));
     let rows = r.rows.map(x => Object.assign({}, x)); const body = h("tbody", {}), er = h("div", { class: "err" });
-    const draw = () => { body.innerHTML = ""; rows.sort((p, q) => p.day - q.day || (p.starts < q.starts ? -1 : p.starts > q.starts ? 1 : 0));
+    const draw = () => { body.innerHTML = ""; rows.sort((p, q) => p.day % 7 - q.day % 7 || (p.starts < q.starts ? -1 : p.starts > q.starts ? 1 : 0));
       if (!rows.length) body.append(h("tr", {}, h("td", { colspan: 7, class: "mut" }, "No lessons yet. Add the first one below.")));
       rows.forEach(x => { const inp = (k, a) => h("input", Object.assign({ class: "in", value: x[k] || "", oninput: e => { x[k] = e.target.value; } }, a));
-        body.append(h("tr", {}, h("td", {}, sel(DAYS.map((d, j) => [j + 1, d]), x.day, { onchange: e => { x.day = +e.target.value; } })), h("td", {}, inp("starts", { type: "time", "aria-label": "Starts" })), h("td", {}, inp("ends", { type: "time", "aria-label": "Ends" })),
+        body.append(h("tr", {}, h("td", {}, sel(DAYS.map((d, j) => [j + 1, d]), x.day, { "aria-label": "Day", onchange: e => { x.day = +e.target.value; } })), h("td", {}, inp("starts", { type: "time", "aria-label": "Starts" })), h("td", {}, inp("ends", { type: "time", "aria-label": "Ends" })),
           h("td", {}, inp("title", { maxlength: 60, placeholder: "Maths", "aria-label": "Lesson" })), h("td", {}, inp("room", { maxlength: 30, placeholder: "M4", "aria-label": "Room" })), h("td", {}, inp("teacher", { maxlength: 40, "aria-label": "Teacher" })),
-          h("td", {}, h("button", { class: "btn sm ghost", type: "button", "aria-label": "Remove this lesson", onclick: () => { rows = rows.filter(y => y !== x); draw(); } }, CE.icon("cross"))))); }); };
+          h("td", {}, h("button", { class: "btn sm ghost", type: "button", "aria-label": "Remove this lesson", onclick: () => { const i = rows.indexOf(x); rows = rows.filter(y => y !== x); draw(); (body.querySelectorAll("button")[i] || addBtn).focus(); } }, CE.icon("cross"))))); }); };
     const add = () => { const last = rows[rows.length - 1]; const st = last ? last.ends : "08:30"; rows.push({ day: last ? last.day : 1, starts: st, ends: addMin(st, 60), title: "", room: "", teacher: "" }); draw(); const ins = body.querySelectorAll("input[maxlength='60']"); const t = [...ins].find(i => !i.value); if (t) t.focus(); };
     const others = (me.classes || []).filter(c => c.id !== id);
-    const copy = others.length ? sel([[0, "Copy from another class…"]].concat(others.map(c => [c.id, c.name])), 0, { onchange: async e => { const c = +e.target.value; e.target.value = 0; if (!c) return; const x = await api("ed_t_timetable", { p_class: c }); if (!x.ok) return CE.toast(CE.errText(x), "bad");
+    const copy = others.length ? sel([[0, "Copy from another class…"]].concat(others.map(c => [c.id, c.name])), 0, { "aria-label": "Copy from another class…", onchange: async e => { const c = +e.target.value; e.target.value = 0; if (!c) return; const x = await api("ed_t_timetable", { p_class: c }); if (!x.ok) return CE.toast(CE.errText(x), "bad");
       if (rows.length && !(await CE.confirm("Replace the lessons below with that class's timetable? Nothing is saved until you press Save.", "Replace"))) return; rows = x.rows.map(y => Object.assign({}, y)); draw(); } }) : null;
     const save = async e => { er.textContent = ""; e.target.disabled = true;
-      const x = await api("ed_t_timetable_save", { p_class: id, p_rows: rows.map(y => ({ day: +y.day, starts: y.starts, ends: y.ends, title: String(y.title || "").trim(), room: String(y.room || "").trim(), teacher: String(y.teacher || "").trim() })) }); e.target.disabled = false;
-      if (!x.ok) return er.textContent = x.error === "bad_text" ? "Check that every lesson has a name, and starts before it ends." : CE.errText(x); CE.toast("Timetable saved", "ok"); };
+      const x = await api("ed_t_timetable_save", { p_class: id, p_rows: rows.map(y => ({ day: +y.day, starts: y.starts, ends: y.ends, title: String(y.title || "").trim(), room: String(y.room || "").trim(), teacher: String(y.teacher || "").trim() })) }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
+      if (!x.ok) return er.textContent = x.error === "bad_text" ? "Check that every lesson has a name, and starts before it ends." : x.error === "too_many" ? "A timetable can hold up to 80 lessons." : CE.errText(x); CE.toast("Timetable saved", "ok"); };
+    const addBtn = h("button", { class: "btn ghost", type: "button", onclick: add }, "+ Add lesson");
     draw();
     box.append(card("Weekly timetable", h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, "Students in this class see it on their Home page as Now and Next, and on My day. Times are the school's local time."),
       h("div", { class: "tbw" }, h("table", { class: "tb tt-edit" }, h("thead", {}, h("tr", {}, ...["Day", "Starts", "Ends", "Lesson", "Room", "Teacher", ""].map(t => h("th", {}, t)))), body)), er,
-      h("div", { class: "row" }, h("button", { class: "btn ghost", type: "button", onclick: add }, "+ Add lesson"), copy, h("button", { class: "btn cyan right", type: "button", onclick: save }, "Save timetable")))));
+      h("div", { class: "row" }, addBtn, copy, h("button", { class: "btn cyan right", type: "button", onclick: save }, "Save timetable")))));
   }
   /* Mark book: every piece of work set to the class (marks out of 100, or handed in / missing) and each unit's best
      checkpoint, as an Excel file with two sheets. Built from the same calls the class pages use, four at a time. */
@@ -248,8 +249,8 @@
       const marks = [[t("Student"), t("Username"), ...work.map(w => w.title + (w.due ? " (" + D.short(w.due) + ")" : "")), t("Average")]].concat(r.students.map(st => {
         const row = work.map((w, i) => cell(w, ((subs[i].rows || []).find(x => x.id === st.id) || {}).sub)), nums = row.filter(v => typeof v === "number");
         return [st.name, st.username, ...row, nums.length ? Math.round(nums.reduce((p, q) => p + q, 0) / nums.length) : ""]; }));
-      const mastery = [[t("Student"), ...hm.units.map(u => CE.subjName(u.subj) + ": " + u.title)]].concat(hm.students.map(st => [st.name, ...hm.units.map(u => { const c = (st.cells || {})[u.id]; return c && c.cp != null ? c.cp : ""; })]));
-      const name = (t("Mark book") + " - " + r.class.name + " - " + new Date().toISOString().slice(0, 10)).replace(/[\\/:*?"<>|]+/g, "-");
+      const mastery = [[t("Student"), ...hm.units.map(u => t(CE.subjName(u.subj)) + ": " + u.title)]].concat(hm.students.map(st => [st.name, ...hm.units.map(u => { const c = (st.cells || {})[u.id]; return c && c.cp != null ? c.cp : ""; })]));
+      const name = (t("Mark book") + " - " + r.class.name + " - " + D.ymd(new Date())).replace(/[\\/:*?"<>|]+/g, "-");
       try {
         const X = window.XLSX || await new Promise((ok, no) => { const sc = document.createElement("script"); sc.src = CE.root + "dash/vendor/xlsx-0.18.5.full.min.js"; sc.integrity = "sha384-vtjasyidUo0kW94K5MXDXntzOJpQgBKXmE7e2Ga4LG0skTTLeBi97eFAXsqewJjw"; sc.onload = () => ok(window.XLSX); sc.onerror = no; document.head.append(sc); });
         const wb = X.utils.book_new(), ws = X.utils.aoa_to_sheet(marks), wm = X.utils.aoa_to_sheet(mastery);
@@ -257,7 +258,7 @@
         X.utils.book_append_sheet(wb, ws, t("Marks").slice(0, 31)); X.utils.book_append_sheet(wb, wm, t("Mastery").slice(0, 31)); X.writeFile(wb, name + ".xlsx");
         CE.toast(t("Mark book downloaded"), "ok");
       } catch (x) {   // Excel library blocked or offline: a CSV of the marks still opens in Excel
-        const csv = "\ufeff" + marks.map(row => row.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(",")).join("\r\n");
+        const csv = "\ufeff" + marks.map(row => row.map(v => '"' + (typeof v === "string" ? v.replace(/^[=+\-@\t\r]/, "'$&") : String(v)).replace(/"/g, '""') + '"').join(",")).join("\r\n");
         const link = h("a", { href: URL.createObjectURL(new Blob([csv], { type: "text/csv" })), download: name + ".csv" }); document.body.append(link); link.click(); setTimeout(() => { URL.revokeObjectURL(link.href); link.remove(); }, 500);
         CE.toast(t("Excel could not load, so a CSV (opens in Excel) was downloaded instead."));
       }

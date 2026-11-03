@@ -51,7 +51,9 @@ begin
       'class_id', s.class_id, 'class', (select name from public.ed_class where id = s.class_id), 'event_id', s.event_id,
       'event', (select json_build_object('title', e.title, 'starts', e.starts) from public.ed_event e where e.id = s.event_id),
       'reach', (select count(*) from public.ed_user x where public.ed_slip_for(s, x) and not x.disabled),
-      'yes', (select count(*) from public.ed_slip_sign g where g.slip_id = s.id and g.answer), 'no', (select count(*) from public.ed_slip_sign g where g.slip_id = s.id and not g.answer),
+      -- only answers from students the slip still reaches (a student may have moved class)
+      'yes', (select count(*) from public.ed_slip_sign g join public.ed_user x on x.id = g.uid where g.slip_id = s.id and g.answer and public.ed_slip_for(s, x) and not x.disabled),
+      'no', (select count(*) from public.ed_slip_sign g join public.ed_user x on x.id = g.uid where g.slip_id = s.id and not g.answer and public.ed_slip_for(s, x) and not x.disabled),
       'mine', s.uid = u.id or u.role = 'admin', 'created', s.created) order by s.due desc, s.id desc), '[]'::json)
     from public.ed_slip s where public.ed_slip_mine(s, u)));
 end $$;
@@ -78,10 +80,12 @@ begin
   if p_due is null then return public.ed_err('bad_text'); end if;
   if cl is null and u.role <> 'admin' then return public.ed_err('forbidden'); end if;
   if cl is not null and not public.ed_can_class(u, cl) then return public.ed_err('forbidden'); end if;
-  if ev is not null and not exists (select 1 from public.ed_event where id = ev) then return public.ed_err('not_found'); end if;
+  if ev is not null and not exists (select 1 from public.ed_event where id = ev and (class_id is null or public.ed_can_class(u, class_id))) then return public.ed_err('not_found'); end if;
   if p_id is not null and p_id > 0 then
     select * into s from public.ed_slip where id = p_id; if s.id is null then return public.ed_err('not_found'); end if;
     if not (s.uid = u.id or u.role = 'admin') then return public.ed_err('forbidden'); end if;
+    -- a parent's answer was to these words and this class: once anyone has answered, only the title, date and event can change
+    if exists (select 1 from public.ed_slip_sign where slip_id = s.id) and (cl is distinct from s.class_id or coalesce(p_body, '') <> s.body or btrim(coalesce(p_question, '')) <> s.question) then return public.ed_err('signed'); end if;
     update public.ed_slip set class_id = cl, event_id = ev, title = btrim(p_title), body = coalesce(p_body, ''), question = btrim(coalesce(p_question, '')), due = p_due where id = s.id;
     return json_build_object('ok', true, 'id', s.id);
   end if;
@@ -121,16 +125,19 @@ begin
   return json_build_object('ok', true, 'rows', public.ed_slips_of(x));
 end $$;
 create or replace function public.ed_s_parent_slip_sign(p_tok text, p_slip int, p_answer boolean, p_signer text, p_relation text, p_note text) returns json language plpgsql security definer set search_path = public, extensions as $$
-declare x public.ed_user; s public.ed_slip; nm text := btrim(coalesce(p_signer, ''));
+declare x public.ed_user; s public.ed_slip; nm text := btrim(coalesce(p_signer, '')); prev boolean;
 begin
   if coalesce(p_tok, '') !~ '^[0-9a-f]{36}$' then return public.ed_err('not_found'); end if;
   select * into x from public.ed_user where parent_tok = p_tok and role = 'student' and not disabled; if x.id is null then return public.ed_err('not_found'); end if;
   select * into s from public.ed_slip where id = p_slip; if s.id is null or not public.ed_slip_for(s, x) then return public.ed_err('not_found'); end if;
   if s.due < current_date then return public.ed_err('closed'); end if;
   if p_answer is null or length(nm) not between 2 and 80 or length(coalesce(p_relation, '')) > 40 or length(coalesce(p_note, '')) > 500 then return public.ed_err('bad_text'); end if;
+  select answer into prev from public.ed_slip_sign where slip_id = s.id and uid = x.id;
   insert into public.ed_slip_sign (slip_id, uid, answer, signer, relation, note) values (s.id, x.id, p_answer, nm, btrim(coalesce(p_relation, '')), btrim(coalesce(p_note, '')))
     on conflict (slip_id, uid) do update set answer = excluded.answer, signer = excluded.signer, relation = excluded.relation, note = excluded.note, signed_at = now();
-  insert into public.ed_notif (uid, kind, title, body, link) values (x.id, 'slip', case when p_answer then 'Permission given: ' else 'Permission not given: ' end || s.title, 'Signed by ' || nm || '.', '#/');
+  if prev is distinct from p_answer then   -- tell the student when the answer changes, not on every save
+    insert into public.ed_notif (uid, kind, title, body, link) values (x.id, 'slip', case when p_answer then 'Permission given: ' else 'Permission not given: ' end || s.title, 'Signed by ' || nm || '.', '#/');
+  end if;
   return json_build_object('ok', true);
 end $$;
 

@@ -51,7 +51,7 @@
         h("fieldset", { class: "choice" }, h("legend", { class: "b" }, "Your answer"), h("label", { class: "chk" }, yes, "Yes, I give permission"), h("label", { class: "chk" }, no, "No, I do not give permission")),
         h("div", { class: "grid g2" }, h("label", { class: "f" }, "Your full name", who), h("label", { class: "f" }, "Relationship to the student", rel)),
         h("label", { class: "f" }, x.question || "Anything the school should know? (optional)", note),
-        h("datalist", { id: "relations" }, ...["Mother", "Father", "Parent", "Carer", "Guardian"].map(v => h("option", { value: v }))), er,
+        h("datalist", { id: "relations" }, ...["Mother", "Father", "Parent", "Carer", "Guardian"].map(v => h("option", { value: CE.t(v) }))), er,
         h("div", { class: "row" }, h("button", { class: "btn cyan", type: "submit" }, "Sign"), x.answer != null ? h("button", { class: "btn ghost", type: "button", onclick: signed }, "Cancel") : null),
         h("p", { class: "xs mut", style: { margin: 0 } }, "Typing your name here counts as your signature. The school sees your answer, name, relationship and note.")));
     }

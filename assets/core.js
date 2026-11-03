@@ -194,25 +194,29 @@
   };
   /* ---------- read aloud: the browser's own voices. The voice follows the language of the text itself, because a
      lesson is usually written in English even when the page around it is in French or Arabic. ---------- */
-  CE.plain = html => new DOMParser().parseFromString(String(html || ""), "text/html").body.textContent || "";
+  CE.plain = html => new DOMParser().parseFromString(String(html || "").replace(/<br\s*\/?>|<\/(p|li|h\d)>/gi, "$&\n"), "text/html").body.textContent || "";   // keep line breaks so sentences don't run together
   CE.blocksText = blocks => (blocks || []).map(b => b.t === "heading" ? b.text : b.t === "text" ? CE.plain(CE.rich(b.text)) : b.t === "list" ? (b.items || []).map(i => CE.plain(CE.rich(i))).join("\n")
     : b.t === "key" ? [b.q, b.text].filter(Boolean).join("\n") : b.t === "check" ? b.q : b.t === "image" ? b.text : "").filter(Boolean).join("\n");   // never the quiz answer buttons
   const SAY = window.speechSynthesis;
-  const sayLang = t => /[؀-ۿ]/.test(t) ? "ar"
-    : (t.match(/\b(le|la|les|des|est|et|une|pour|que|dans|vous|du|au|avec)\b/gi) || []).length > (t.match(/\b(the|and|is|to|of|in|for|you|that|with|it|on)\b/gi) || []).length ? "fr" : "en";
+  const sayLang = t => {
+    if ((t.match(/[؀-ۿ]/g) || []).length > (t.match(/[A-Za-z]/g) || []).length) return "ar";
+    const fr = (t.match(/\b(le|la|les|des|de|du|un|une|est|et|en|sur|pas|ne|pour|que|dans|vous|au|avec)\b|\bl'|[éèêàçùœ]/gi) || []).length, en = (t.match(/\b(the|and|is|to|of|in|for|you|that|with|it)\b/gi) || []).length;
+    return fr > en ? "fr" : fr < en ? "en" : CE.lang === "fr" ? "fr" : "en";   // a tie follows the page language
+  };
   let saying = null;   // { btn, label }
   CE.sayStop = () => { if (!SAY) return; SAY.cancel(); if (saying) { const s = saying; saying = null; s.label(false); } };
   CE.readAloud = getText => {   // a Listen / Stop button, or null where the browser cannot speak
     if (!SAY || !window.SpeechSynthesisUtterance) return null;
     const btn = CE.h("button", { class: "btn sm ghost say", type: "button" });
-    const label = on => { btn.replaceChildren(CE.icon(on ? "stop" : "volume"), CE.t(on ? "Stop" : "Listen")); btn.setAttribute("aria-pressed", on ? "true" : "false"); };
+    const label = on => { btn.replaceChildren(CE.icon(on ? "stop" : "volume"), CE.t(on ? "Stop" : "Listen")); btn.classList.toggle("on", on); };   // the label already says Listen or Stop
     btn.onclick = () => {
       const mine = saying && saying.btn === btn; CE.sayStop(); if (mine) return;
       const text = String(getText() || "").replace(/[ \t]+/g, " ").trim(); if (!text) return;
       const lang = sayLang(text), pref = { en: "en-gb", fr: "fr-fr", ar: "ar-sa" }[lang], vs = SAY.getVoices(), rate = +CE.prefs.get().sayRate || 1;
       const voice = vs.find(v => (v.lang || "").toLowerCase().replace("_", "-") === pref) || vs.find(v => (v.lang || "").toLowerCase().startsWith(lang));
       const chunks = [];   // Chrome stops a long utterance after about 15 seconds, so speak a sentence or two at a time
-      (text.match(/[^.!?؟…\n]+[.!?؟…]*\n*/g) || [text]).forEach(s => { s = s.trim(); if (!s) return; if (chunks.length && (chunks[chunks.length - 1] + " " + s).length < 220) chunks[chunks.length - 1] += " " + s; else chunks.push(s); });
+      (text.match(/(?:[^.!?؟…\n]|[.!?؟…](?=\S))+[.!?؟…]*\n*/g) || [text]).forEach(s => (s.trim().match(/.{1,200}(?:\s|$)|.{1,200}/g) || []).forEach(p => {   // "3.14" and web addresses stay whole; a very long sentence is cut at a space
+        p = p.trim(); if (!p) return; if (chunks.length && (chunks[chunks.length - 1] + " " + p).length < 220) chunks[chunks.length - 1] += " " + p; else chunks.push(p); }));
       saying = { btn, label }; label(true);
       chunks.forEach((c, i) => { const u = new SpeechSynthesisUtterance(c); u.lang = voice ? voice.lang : pref; if (voice) u.voice = voice; u.rate = rate;
         if (i === chunks.length - 1) u.onend = u.onerror = () => { if (saying && saying.btn === btn) { saying = null; label(false); } }; SAY.speak(u); });
@@ -303,24 +307,25 @@
   /* the settings card every portal shows */
   CE.prefsCard = () => {
     const p = CE.prefs.get(), h = CE.h;
-    const seg = (opts, val, on) => h("div", { class: "seg" }, ...opts.map(([v, l]) => h("button", { class: String(v) === String(val) ? "on" : "", onclick: () => { on(v); CE.prefsCard.refresh && CE.prefsCard.refresh(); } }, l)));
+    const seg = (opts, val, on) => h("div", { class: "seg" }, ...opts.map(([v, l]) => h("button", { class: String(v) === String(val) ? "on" : "", "aria-pressed": String(String(v) === String(val)), onclick: e => { on(v);
+      for (const b of e.currentTarget.parentNode.children) { const s = b === e.currentTarget; b.classList.toggle("on", s); b.setAttribute("aria-pressed", String(s)); } } }, l)));
     const box = h("div", { class: "stack" },
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Appearance"), h("div", { class: "sm mut" }, "Light, dark or follow the device.")), seg([["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]], p.theme, v => CE.prefs.set({ theme: v }))),
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Dyslexia-friendly reading"), h("div", { class: "sm mut" }, "Lexend typeface, wider spacing, shorter lines and a warmer page.")), h("label", { class: "chk" }, h("input", { type: "checkbox", checked: p.dys, onchange: e => CE.prefs.set({ dys: e.target.checked }) }), p.dys ? "On" : "Off")),
-      window.speechSynthesis ? h("div", { class: "row between" }, h("div", {}, h("b", {}, "Read aloud"), h("div", { class: "sm mut" }, "How fast the Listen button reads lessons and notices.")), seg([[1, "Normal"], [0.8, "Slower"]], p.sayRate || 1, v => CE.prefs.set({ sayRate: +v }))) : null,
+      window.speechSynthesis && CE.me && CE.me.role === "student" ? h("div", { class: "row between" }, h("div", {}, h("b", {}, "Read aloud"), h("div", { class: "sm mut" }, "How fast the Listen button reads lessons and notices.")), seg([[1, "Normal"], [0.8, "Slower"]], p.sayRate || 1, v => CE.prefs.set({ sayRate: +v }))) : null,
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Detail level"), h("div", { class: "sm mut" }, "Compact shows less text per card; detailed shows more.")), seg([["compact", "Compact"], ["standard", "Standard"], ["detailed", "Detailed"]], p.detail, v => CE.prefs.set({ detail: v }))),
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Interface transparency"), h("div", { class: "sm mut" }, "Glass effect on cards and bars. 0 is solid.")), h("input", { type: "range", min: 0, max: 60, step: 5, value: p.glass, style: { width: "160px" }, oninput: e => CE.prefs.set({ glass: +e.target.value }) })));
     return box;
   };
 
   /* ---------- offline: keep the last copy of what you read, serve it when the network is down ---------- */
-  const READ = /^ed_(s_(home|explore|activity|comp|subjects|lesson|quiz|assigns|review|progress|calendar|anns|news|clubs|badges)|me|board|t_(home|content|assigns|subs|class|heatmap|anns|events|clubs|bank))$/;
+  const READ = /^ed_(s_(home|explore|activity|comp|subjects|lesson|quiz|assigns|review|progress|calendar|anns|news|clubs|badges|timetable|slips)|me|board|t_(home|content|assigns|subs|class|heatmap|anns|events|clubs|bank))$/;
   const rawApi = CE.api;
   CE.api = async function (fn, args) {
     const key = "ce_off_" + fn + ":" + JSON.stringify(Object.assign({}, args, { p_key: undefined }));
     try {
       const r = await rawApi(fn, args);
-      if (READ.test(fn) && r && r.ok) { try { sessionStorage.setItem(key, JSON.stringify(r)); } catch (e) {} }
+      if (READ.test(fn) && r && r.ok) { try { sessionStorage.setItem(key, JSON.stringify(r)); } catch (e) { Object.keys(sessionStorage).forEach(k => k.startsWith("ce_off_") && sessionStorage.removeItem(k)); } }   // full: start the offline copies again
       CE.offline(false); return r;
     } catch (e) {
       if (e.message === "Failed to fetch" && READ.test(fn)) { const c = sessionStorage.getItem(key); if (c) { CE.offline(true); return JSON.parse(c); } }
@@ -367,7 +372,7 @@
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
     let had = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !sessionStorage.getItem("ce_reloaded")) { sessionStorage.setItem("ce_reloaded", "1"); location.reload(); } had = true; });
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !sessionStorage.getItem("ce_reloaded")) { try { sessionStorage.setItem("ce_reloaded", "1"); } catch (e) {} location.reload(); } had = true; });
     navigator.serviceWorker.register(ROOT + "sw.js").then(r => { r.update().catch(() => {}); }).catch(() => {});
     setTimeout(() => sessionStorage.removeItem("ce_reloaded"), 15000);
   }

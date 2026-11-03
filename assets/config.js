@@ -7,5 +7,8 @@ window.CE_CONFIG = {
 
   // Preview mode: a built-in sample campus kept in this browser only, so the site can be tried without the database.
   // It switches on automatically on localhost or with ?demo=1; set to false to disable entirely.
-  allowDemo: true
+  allowDemo: true,
+
+  // Deadline reminders (v2.9): the public half of the Web Push key pair. The private half is a Supabase secret, never here.
+  vapidPublicKey: "BKyKGNMaYRadvsfHxqfu5vfdWYEcj8vISM5OSu3-7UJ_RPC8sT-5vTcxE5_yMLtJzkXXkKWVv9YID5lUNK34lSw"
 };

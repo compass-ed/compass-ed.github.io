@@ -336,7 +336,7 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
   body{background:#fff!important}
   .print-only{display:block!important} .print-head{display:block;margin-bottom:12px;font-size:12px;color:#000}
   .codesheet{grid-template-columns:repeat(2,1fr);gap:10px} .codesheet .cc{border-color:#999}
-  .page>*:not(.print-only){display:none!important} .subnav,.topbar,.side,.banner,.scrim{display:none!important} .shell,.main,.page{display:block!important;padding:0!important;margin:0!important}
+  .page:has(>.print-only)>*:not(.print-only){display:none!important} .subnav,.topbar,.side,.banner,.scrim{display:none!important} .shell,.main,.page{display:block!important;padding:0!important;margin:0!important}
 }
 /* integration cards */
 .ext{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg);text-decoration:none;color:inherit;transition:.12s}
@@ -548,5 +548,19 @@ html.tx-in::after{left:50%;top:50%;width:min(54vmin,320px);height:min(54vmin,320
 html.dash-max-on,html.dash-max-on body{overflow:hidden}
 
 /* ===== v2.9: read aloud ===== */
-.btn.say[aria-pressed="true"]{background:var(--cyan-soft);border-color:var(--cyan2);color:var(--ink)}
+.btn.say.on{background:var(--cyan-soft);border-color:var(--cyan2);color:var(--ink)}
 .btn.say .i{width:16px;height:16px}
+
+/* ===== v2.9: My day, timetable editor, permission slips ===== */
+.myday .nn{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px 18px;margin-top:6px}
+.myday .nn .b{font-size:16px}
+.week{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,1fr);gap:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
+.week .day{scroll-snap-align:start;min-width:0} .week .day.today{border-color:var(--cyan2);box-shadow:0 0 0 2px var(--cyan-soft)}
+.week .item{align-items:flex-start} .week .item.on{background:var(--cyan-tint);border-radius:10px}
+.week .tm{min-width:44px;line-height:1.35;font-variant-numeric:tabular-nums}
+@media (max-width:700px){.week{grid-auto-flow:row;grid-auto-columns:auto}}
+.tt-edit td{padding:6px} .tt-edit .in{min-width:0;width:100%;padding:8px 10px} .tt-edit select{min-width:120px} .tt-edit td:nth-child(2) .in,.tt-edit td:nth-child(3) .in{min-width:104px}
+:is(.page,.stack)>.stack:empty{display:none}   /* the Home and parent-page slots when there is no timetable or slip */
+.slip fieldset.choice{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:0;display:flex;flex-wrap:wrap;gap:8px 20px} .slip fieldset.choice legend{padding:0 6px}
+@media print{.topbar,.side,.subnav,.fab,.fab-fb,.noprint,#bellWrap{display:none!important} .main,.page{margin:0!important;padding:0!important} .card{box-shadow:none!important;break-inside:avoid}}
+
