@@ -27,6 +27,7 @@ assets/config.js      Supabase URL / key, preview-mode switch
 assets/demo.js        Preview mode: a sample campus in the browser that mirrors every database function
 assets/art/           Artwork: compass rose and needle (page transitions), hero and sign-in loops, ID-card backdrop, category patterns, empty-state art
 assets/versions/ assets/trailer/   Version previews and the 30-second trailer
+tools/fix-video.py    Run on every video exported from Moda before adding it: python3 tools/fix-video.py in.mp4 out.mp4 (gives it a real length, so it plays properly on slow school networks)
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
 supabase/compassed-v2.1.sql     Run after v2.0: houses and points, clubs, question bank, timed quizzes, peer review, newsletter issues, gallery, parent links, uploads
 supabase/compassed-v2.3.sql     Run after v2.1: login codes, consent, admin overview, calendar feeds (.ics), Compass Dash link
