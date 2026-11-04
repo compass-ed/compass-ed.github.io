@@ -195,8 +195,9 @@
         { id: nid(), uid: 101, ay: y, term: t, subj: null, title: "Enter one competition", plan: "Look at the Competitions page every Monday.", status: "done", reflection: "I entered the photo competition and came second. Next time I'll take more photos before choosing one.", created: day(-12), updated: day(-2) }];
       db.push = []; db.school.wellbeing = false;
       db.moods = [[103, -5, 3], [103, -4, 3], [103, -2, 2], [103, -1, 2, true, "I'm worried about the maths test."], [102, 0, 4], [104, -3, 1, false, "", 2], [105, -1, 5]]
-        .map(([uid, n, mood, talk, note, seen]) => ({ id: nid(), uid, day: dd(n), mood, talk: !!talk, note: note || "", at: day(n), seen_by: seen || null, seen_at: seen ? day(n + 1) : null }));
+        .map(([uid, n, mood, talk, note, seen]) => ({ id: nid(), uid, day: dd(n), mood, talk: !!talk, note: note || "", at: day(n), seen_by: seen || null, seen_at: seen ? day(n + 1) : null, alerted: talk ? 2 : mood <= 2 ? 1 : 0 }));
     }
+    (db.moods || []).forEach(m => { if (m.alerted == null) m.alerted = m.talk ? 2 : m.mood <= 2 ? 1 : 0; });
     db.users.forEach(u => { if (u.consent == null) u.consent = u.username === "dev.p" ? {} : { terms: u.created, privacy: u.created, v: 1 }; if (u.must_pw == null) u.must_pw = false; if (u.cd_code === undefined) { u.cd_code = u.username === "alice.j" ? "7K3Q" : null; u.cd_user = u.username === "alice.j" ? "alice_j" : null; } });
   };
   const load = () => { try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {} if (!db || !db.users) { db = seed(); } migrate(); save(); };
@@ -556,7 +557,7 @@
       clubs: db.club_members.filter(m => m.uid === s.id && ayOf(m.at) <= y).map(m => { const c = db.clubs.find(v => v.id === m.club_id) || {}; return { title: c.title, day: c.day }; }).sort((p, q) => String(p.title).localeCompare(q.title)),
       work: db.subs.filter(w => w.uid === s.id && w.status !== "draft" && inY(w.sub_at)).sort((p, q) => p.sub_at < q.sub_at ? -1 : 1)
         .map(w => { const x = db.assigns.find(v => v.id === w.assign_id) || {}; return { title: x.title, subj: x.subj, kind: x.kind, status: w.status, score: w.score, at: w.sub_at }; }) }; };
-  const MOODN = ["", "Struggling", "Not great", "Okay", "Good", "Great"], flag = (m, t) => m <= 2 || !!t, pastoral = u => u.role === "admin" || (u.role === "teacher" && !!u.pastoral);
+  const MOODN = ["", "Struggling", "Not great", "Okay", "Good", "Great"], pastoral = u => u.role === "admin" || (u.role === "teacher" && !!u.pastoral);
   const tidyMoods = () => { const cut = new Date(Date.now() - 180 * 864e5); db.moods = db.moods.filter(m => m.day >= cut.toISOString().slice(0, 10));
     db.notifs = db.notifs.filter(n => n.kind !== "wellbeing" || (new Date(n.created) >= cut && db.users.some(t => t.id === n.uid && pastoral(t)))); };
   const PUSH_HOST = /^https:\/\/(fcm\.googleapis\.com|android\.googleapis\.com|updates\.push\.services\.mozilla\.com|[a-z0-9.-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)\/[!-~]+$/;
@@ -565,7 +566,9 @@
     ed_s_goal_save(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); const t = String(a.p_title || "").trim(), st = a.p_status || "active";
       if (!t || t.length > 120 || String(a.p_plan || "").length > 1000 || String(a.p_reflection || "").length > 2000 || !["active", "done", "dropped"].includes(st)) return err("bad_text");
       const f = { subj: a.p_subj != null && db.subjects.some(x => x.id === +a.p_subj) ? +a.p_subj : null, title: t, plan: String(a.p_plan || "").trim(), status: st, reflection: String(a.p_reflection || "").trim(), updated: now() };
-      if (+a.p_id) { const g = db.goals.find(x => x.id === +a.p_id && x.uid === u.id); if (!g) return err("not_found"); Object.assign(g, f); return { ok: true, id: g.id }; }
+      if (+a.p_id) { const g = db.goals.find(x => x.id === +a.p_id && x.uid === u.id); if (!g) return err("not_found");
+        if (st === "active" && g.status !== "active" && db.goals.filter(x => x.uid === u.id && x.ay === g.ay && x.term === g.term && x.status === "active").length >= 6) return err("too_many");
+        Object.assign(g, f); return { ok: true, id: g.id }; }
       const y = ayOf(now()), tm = termOf(now()); if (db.goals.filter(g => g.uid === u.id && g.ay === y && g.term === tm && g.status === "active").length >= 6) return err("too_many");
       const g = Object.assign({ id: nid(), uid: u.id, ay: y, term: tm, created: now() }, f); db.goals.push(g); return { ok: true, id: g.id }; },
     ed_s_goal_del(a) { const u = who(a); if (!u) return err("bad_key"); const n = db.goals.length; db.goals = db.goals.filter(g => !(g.id === +a.p_id && g.uid === u.id)); return { ok: db.goals.length < n }; },
@@ -580,15 +583,15 @@
       const m = db.moods.find(x => x.uid === u.id && x.day === today()); return { ok: true, on: true, today: m ? { mood: m.mood, talk: m.talk, note: m.note } : null }; },
     ed_s_checkin_save(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); if (!db.school.wellbeing) return err("off");
       const mood = +a.p_mood, talk = !!a.p_talk; if (!(mood >= 1 && mood <= 5) || String(a.p_note || "").length > 500) return err("bad_text");
-      let m = db.moods.find(x => x.uid === u.id && x.day === today()); const old = m ? { mood: m.mood, talk: m.talk } : null;
-      if (!m) { m = { id: nid(), uid: u.id, day: today(), seen_by: null, seen_at: null }; db.moods.push(m); } Object.assign(m, { mood, talk, note: String(a.p_note || "").trim(), at: now() });
-      if (flag(mood, talk) && (!old || !flag(old.mood, old.talk) || (talk && !old.talk))) { m.seen_by = null; m.seen_at = null;
+      let m = db.moods.find(x => x.uid === u.id && x.day === today()); const old = m ? { mood: m.mood, talk: m.talk, alerted: m.alerted || 0, seen: m.seen_at } : null, lvl = talk ? 2 : mood <= 2 ? 1 : 0, note = String(a.p_note || "").trim();
+      if (!m) { m = { id: nid(), uid: u.id, day: today(), seen_by: null, seen_at: null, alerted: 0 }; db.moods.push(m); } Object.assign(m, { mood, talk, at: now(), note: m.alerted > 0 && !note ? m.note : note });
+      if (lvl > (old ? old.alerted : 0) || (lvl > 0 && old && old.seen && (mood < old.mood || (talk && !old.talk)))) { m.seen_by = null; m.seen_at = null; m.alerted = Math.max(m.alerted || 0, lvl);
         db.users.filter(t => pastoral(t) && !t.disabled).forEach(t => db.notifs.push({ id: nid(), uid: t.id, kind: "wellbeing", title: "Wellbeing check-in: " + u.name, body: "Checked in: " + MOODN[mood] + (talk ? " · would like to talk to someone" : ""), link: "#/wellbeing", created: now(), read_at: null })); }
       tidyMoods(); return { ok: true }; },
     ed_t_wellbeing(a) { const u = who(a); if (!u) return err("bad_key"); if (!pastoral(u)) return err("forbidden"); tidyMoods();
       const n = Math.min(Math.max(+a.p_days || 14, 1), 60), from = new Date(Date.now() - n * 864e5).toISOString().slice(0, 10), win = db.moods.filter(m => m.day > from);
       return { ok: true, on: !!db.school.wellbeing, days: n, counts: [1, 2, 3, 4, 5].map(k => win.filter(m => m.mood === k).length), students: new Set(win.map(m => m.uid)).size,
-        rows: win.filter(m => flag(m.mood, m.talk)).sort((p, q) => (!!p.seen_at - !!q.seen_at) || (p.day < q.day ? 1 : p.day > q.day ? -1 : p.at < q.at ? 1 : -1)).map(m => { const s = db.users.find(x => x.id === m.uid) || {}, by = db.users.find(x => x.id === m.seen_by);
+        rows: win.filter(m => m.alerted > 0).sort((p, q) => (!!p.seen_at - !!q.seen_at) || (p.day < q.day ? 1 : p.day > q.day ? -1 : p.at < q.at ? 1 : -1)).map(m => { const s = db.users.find(x => x.id === m.uid) || {}, by = db.users.find(x => x.id === m.seen_by);
           return { id: m.id, uid: m.uid, name: s.name, class: s.class_id ? cls(s.class_id).name : null, day: m.day, at: m.at, mood: m.mood, talk: m.talk, note: m.note, seen_at: m.seen_at, seen_by: by ? by.name : null,
             recent: db.moods.filter(x => x.uid === m.uid).sort((p, q) => p.day < q.day ? 1 : -1).slice(0, 7).reverse().map(x => x.mood) }; }) }; },
     ed_t_wellbeing_seen(a) { const u = who(a); if (!u) return err("bad_key"); if (!pastoral(u)) return err("forbidden"); const m = db.moods.find(x => x.id === +a.p_id); if (!m) return { ok: false }; m.seen_by = u.id; m.seen_at = now(); return { ok: true }; },

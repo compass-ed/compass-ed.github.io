@@ -106,7 +106,7 @@
   }
   async function wellbeingTab() {
     const r = await api("ed_a_wellbeing"); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
-    const on = h("input", { type: "checkbox", checked: r.on }), picks = new Map(), er = h("div", { class: "err" });
+    const on = h("input", { type: "checkbox", checked: r.on }), picks = new Map(), er = h("div", { class: "err", role: "alert" });
     page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Wellbeing check-ins"), h("div", { class: "sm mut" }, "Optional. When on, students see a short question on their Home page: how they are feeling today, and whether they would like to talk to someone."))),
       card("Check-ins", h("div", { class: "stack" }, h("label", { class: "chk" }, on, "Ask students how they are feeling"),
         h("p", { class: "sm mut", style: { margin: 0 } }, "Students are told that only the school's wellbeing staff see their answers, and that they are kept for six months. When a student says they are struggling or not great, or asks to talk, the staff below get a notification. Check your school's safeguarding policy first: this does not replace it, and nobody watches it out of hours."))),

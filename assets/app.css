@@ -565,7 +565,7 @@ html.dash-max-on,html.dash-max-on body{overflow:hidden}
 @media print{.topbar,.side,.subnav,.fab,.fab-fb,.noprint,#bellWrap{display:none!important} .main,.page{margin:0!important;padding:0!important} .card{box-shadow:none!important;break-inside:avoid}}
 
 /* ===== v2.9: goals, year portfolio, wellbeing check-ins ===== */
-.refl{margin:8px 0 0;padding:8px 12px;border-inline-start:3px solid var(--cyan2);background:var(--bg2);border-radius:0 10px 10px 0;white-space:pre-wrap}
+.refl{unicode-bidi:plaintext;margin:8px 0 0;padding:8px 12px;border-inline-start:3px solid var(--cyan2);background:var(--bg2);border-radius:0 10px 10px 0;white-space:pre-wrap}
 [dir="rtl"] .refl{border-radius:10px 0 0 10px}
 .goal h3{margin:8px 0 0}
 .pf .pf-head h1{margin:6px 0 4px;color:#fff} .pf .pf-head .kicker{color:var(--cyan)}
@@ -573,7 +573,7 @@ html.dash-max-on,html.dash-max-on body{overflow:hidden}
 .pf-goal{padding:10px 0;border-top:1px solid var(--line)} .pf-goal:first-of-type{border-top:0} .pf-goal p{margin:4px 0 0}
 .checkin .chk{margin:2px 0}
 .mood-bar{display:flex;height:12px;border-radius:999px;overflow:hidden;background:var(--bg3);margin-top:8px} .mood-bar i{display:block;min-width:4px}
-.mood-dot{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--bg3);color:#fff;font:700 10px/1 var(--body,inherit);font-style:normal} .mood-dot.m3{color:#1d2b2e}   /* the number (1 struggling to 5 great) is there for colour-blind readers */
+.mood-dot{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:50%;background:var(--bg3);color:#000;font:700 10px/1 var(--font);font-style:normal} .mood-dot.m1{color:#fff} .mood-dot.m3{color:var(--ink)}   /* the number (1 struggling to 5 great) is there for colour-blind readers */
 body.compact .pf .stat .l,body.compact .pf .item .s{display:block}   /* the portfolio keeps its labels in Compact mode */
 .m5{background:var(--ok)!important} .m4{background:var(--cyan2)!important} .m3{background:var(--line2)!important} .m2{background:var(--warn)!important} .m1{background:var(--bad)!important}
 @media print{.pf .pf-head{background:#fff!important;color:#000!important;border:1px solid #999!important} .pf .pf-head *{color:#000!important} .pf .grid.g4{grid-template-columns:repeat(4,1fr)} .refl{background:none}}

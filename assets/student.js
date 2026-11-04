@@ -105,7 +105,7 @@
     const form = t => { let mood = t ? t.mood : 0;
       const btns = MOODS.map(([v, l]) => h("button", { type: "button", class: "btn sm " + (v === mood ? "cyan" : "ghost"), "aria-pressed": String(v === mood), onclick: e => { mood = v;
         btns.forEach(b => { const on = b === e.currentTarget; b.className = "btn sm " + (on ? "cyan" : "ghost"); b.setAttribute("aria-pressed", String(on)); }); } }, l));
-      const talk = h("input", { type: "checkbox", checked: !!(t && t.talk) }), note = h("textarea", { class: "in", rows: 2, maxlength: 500, placeholder: "Anything you'd like a teacher to know? (optional)", "aria-label": "Note" }, t ? t.note : ""), er = h("div", { class: "err" });
+      const talk = h("input", { type: "checkbox", checked: !!(t && t.talk) }), note = h("textarea", { class: "in", rows: 2, maxlength: 500, placeholder: "Anything you'd like a teacher to know? (optional)", "aria-label": "Note" }, t ? t.note : ""), er = h("div", { class: "err", role: "alert" });
       c.className = "card checkin tint";
       c.replaceChildren(h("h3", { id: "ckq" }, "How are you feeling today?"), h("div", { class: "row", role: "group", "aria-labelledby": "ckq", style: { gap: "6px" } }, ...btns),
         h("label", { class: "chk" }, talk, "I'd like to talk to someone at school"), note, er,
@@ -129,22 +129,24 @@
     const plan = h("textarea", { class: "in", rows: 3, maxlength: 1000, placeholder: "e.g. Ten minutes of practice every school night" }, g.plan);
     const stBox = h("div", { class: "seg", role: "group", "aria-label": "Status" }, ...Object.entries(CE.GOAL_ST).map(([k, [l]]) => h("button", { type: "button", class: k === st ? "on" : "", "aria-pressed": String(k === st), onclick: e => { st = k;
       for (const b of stBox.children) { const on = b === e.currentTarget; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); } } }, l)));
-    const refl = h("textarea", { class: "in", rows: 4, maxlength: 2000, placeholder: "What went well? What would you do differently next time?" }, g.reflection), er = h("div", { class: "err" });
+    const refl = h("textarea", { class: "in", rows: 4, maxlength: 2000, placeholder: "What went well? What would you do differently next time?" }, g.reflection), er = h("div", { class: "err", role: "alert" });
     CE.modal(h("div", { class: "stack" }, h("h3", {}, g.id ? "Update goal" : "New goal"), h("label", { class: "f" }, "Goal", title), h("label", { class: "f" }, "Subject", subj), h("label", { class: "f" }, "How I'll do it", plan),
       g.id ? h("div", { class: "f" }, h("span", {}, "Status"), stBox) : null, g.id ? h("label", { class: "f" }, "How did it go?", refl, h("span", { class: "help" }, "Your reflection goes into your year portfolio.")) : null, er,
       h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async e => { e.target.disabled = true;
         const x = await CE.capi("ed_s_goal_save", { p_id: g.id || 0, p_subj: subj.value === "" ? null : +subj.value, p_title: title.value, p_plan: plan.value, p_status: st, p_reflection: refl.value }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
         if (!x.ok) return er.textContent = x.error === "bad_text" ? "Give your goal a name." : x.error === "too_many" ? "Six goals a term is plenty. Achieve or let go of one first." : CE.errText(x);
         CE.closeModal(); CE.toast("Goal saved", "ok"); done(); } }, "Save"),
-        g.id ? h("button", { class: "btn ghost right", onclick: async () => { if (!(await CE.confirm("Delete this goal?", "Delete"))) return; const x = await CE.capi("ed_s_goal_del", { p_id: g.id }).catch(() => ({})); if (x.ok) { CE.closeModal(); done(); } } }, "Delete") : null)));
+        g.id ? h("button", { class: "btn ghost right", onclick: async () => { if (!confirm("Delete this goal?")) return;   // not CE.confirm: it would replace this editor
+          const x = await CE.capi("ed_s_goal_del", { p_id: g.id }).catch(z => ({ ok: false, error: z.message })); if (!x.ok) return er.textContent = CE.errText(x); CE.closeModal(); done(); } }, "Delete") : null)));
   }
+  const again = () => goals().then(() => { const t = page.querySelector("h2"); if (t) { t.tabIndex = -1; t.focus(); } });   // after the editor closes, focus the redrawn page
   async function goals() {
     CE.title("Goals"); CE.loading(page);
     try {
       const r = await CE.capi("ed_s_goals"); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
-      const now = r.rows.filter(g => g.ay === r.ay && g.term === r.term), past = r.rows.filter(g => !now.includes(g)), edit = g => goalEditor(g, goals);
+      const now = r.rows.filter(g => g.ay === r.ay && g.term === r.term), past = r.rows.filter(g => !now.includes(g)), edit = g => goalEditor(g, again);
       page.append(h("div", { class: "page-lead row between" }, h("div", {}, h("h2", {}, "Goals"), h("div", { class: "sm mut" }, "A few goals each term, and a look back at how they went. They go into your year portfolio.")),
-        h("div", { class: "row" }, h("a", { class: "btn ghost", href: "#/portfolio" }, "Year portfolio"), now.filter(g => g.status === "active").length < 6 ? h("button", { class: "btn cyan", onclick: () => goalEditor(null, goals) }, "+ New goal") : null)));
+        h("div", { class: "row" }, h("a", { class: "btn ghost", href: "#/portfolio" }, "Year portfolio"), now.filter(g => g.status === "active").length < 6 ? h("button", { class: "btn cyan", onclick: () => goalEditor(null, again) }, "+ New goal") : null)));
       page.append(h("h3", { style: { margin: "4px 0 0" } }, TERMS[r.term - 1] + " " + CE.ayLabel(r.ay)));
       page.append(now.length ? h("div", { class: "grid g2" }, ...now.map(g => goalCard(g, edit))) : CE.emptyArt("sprout", "No goals yet this term", "Pick one or two things to get better at. Small and specific works best: \"read for 20 minutes a night\" beats \"read more\"."));
       [...new Set(past.map(g => g.ay * 10 + g.term))].forEach(k => { const list = past.filter(g => g.ay * 10 + g.term === k);
@@ -158,6 +160,7 @@
   }
 
   /* ---------- v2.9: deadline reminders on this device (Web Push). Shows once the school's sender has run. ---------- */
+  const pushSave = s => { const j = s.toJSON(); return CE.capi("ed_s_push_save", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_lang: CE.lang || "en", p_tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" }); };
   const b64key = k => Uint8Array.from(atob(k.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - k.length % 4) % 4)), c => c.charCodeAt(0));
   async function remindCard() {
     const key = CE.cfg.vapidPublicKey, can = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
@@ -165,15 +168,13 @@
     let sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
     const st = await CE.capi("ed_s_push", { p_endpoint: sub ? sub.endpoint : "" }).catch(() => null);
     if (!key || !st || !st.ok || !(st.ready || CE.demo)) return null;
-    const save = s => { const j = s.toJSON(); return CE.capi("ed_s_push_save", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_lang: CE.lang || "en", p_tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" }); };
-    if (sub && st.on) save(sub).catch(() => {});   // keeps the language and time zone up to date
     const box = h("div", { class: "stack" });
     const toggle = async cb => { cb.disabled = true;
       try {
         if (cb.checked) {
           if (await Notification.requestPermission() !== "granted") { draw(false); return CE.toast("Notifications are blocked for this site. Allow them in your browser's site settings, then try again.", "bad"); }
           sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(key) });
-          const x = await save(sub); if (!x.ok) throw new Error(CE.errText(x));
+          const x = await pushSave(sub); if (!x.ok) throw new Error(CE.errText(x));
           reg.showNotification("Compass Ed", { body: CE.t("Reminders are on. You'll get one the day before work is due."), icon: CE.root + "assets/icon-192.png", tag: "remind-on" }).catch(() => {});
           draw(true);
         } else { if (sub) { await CE.capi("ed_s_push_del", { p_endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe().catch(() => {}); sub = null; } draw(false); }
@@ -657,6 +658,9 @@
   ];
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g || []); };
   addEventListener("hashchange", setSub); setSub();
+  // reminders follow the language and time zone this device uses now
+  if (!CE.demo && "serviceWorker" in navigator) navigator.serviceWorker.getRegistration().then(r => r && r.pushManager && r.pushManager.getSubscription())
+    .then(s => s && CE.capi("ed_s_push", { p_endpoint: s.endpoint }).then(st => st.ok && st.on && pushSave(s))).catch(() => {});
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); };
   CE.router([
     { path: "/house", handler: house }, { path: "/clubs", handler: clubs }, { path: "/search", handler: search },

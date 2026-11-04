@@ -38,13 +38,13 @@ export async function encrypt(text: string, p256dh: string, auth: string) {
   return cat(head, as, ct);
 }
 
-type Msg = { endpoint: string; p256dh: string; auth: string; title: string; body: string; url: string; tag: string; ttl: number };
+type Msg = { endpoint: string; p256dh: string; auth: string; title: string; body: string; url: string; tag: string; ttl: number; assign_id: number };
 async function send(m: Msg) {
   if (!HOSTS.test(m.endpoint)) return 400;
   const res = await fetch(m.endpoint, { method: "POST", headers: {
     Authorization: await vapid(m.endpoint, env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"), env("VAPID_SUBJECT") || "mailto:admin@example.com"),
     "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream", TTL: String(Math.min(43200, m.ttl || 43200)), Urgency: "normal" },
-    body: await encrypt(JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag }), m.p256dh, m.auth) });
+    body: await encrypt(JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag }), m.p256dh, m.auth), signal: AbortSignal.timeout(10000) });
   await res.body?.cancel();
   return res.status;
 }
@@ -54,18 +54,23 @@ async function handler(req: Request) {
   const key = env("SUPABASE_SERVICE_ROLE_KEY");
   const rpc = (fn: string, body = {}) => fetch(env("SUPABASE_URL") + "/rest/v1/rpc/" + fn, { method: "POST", body: JSON.stringify(body),
     headers: Object.assign({ "Content-Type": "application/json", apikey: key }, /^eyJ/.test(key) ? { Authorization: "Bearer " + key } : {}) });
-  // check the keys before asking for the list: ed_push_due marks each reminder as sent, so a bad key would lose them all
-  try { await vapid("https://fcm.googleapis.com/", env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"), "mailto:check@example.com"); }
-  catch { return new Response("VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY missing or not a pair", { status: 500 }); }
+  // check the keys before asking for the list: ed_push_due marks each reminder as sent, so a bad key would lose them all.
+  // Sign a token and verify it with the public key, which proves the two halves are a pair.
+  try {
+    const t = await vapid("https://fcm.googleapis.com/", env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"), "mailto:check@example.com"), [h, b, g] = t.slice(8, t.indexOf(",")).split(".");
+    const pub = await crypto.subtle.importKey("raw", unb64u(env("VAPID_PUBLIC_KEY")), { name: "ECDSA", namedCurve: "P-256" }, false, ["verify"]);
+    if (!await crypto.subtle.verify({ name: "ECDSA", hash: "SHA-256" }, pub, unb64u(g), enc.encode(h + "." + b))) throw new Error("not a pair");
+  } catch { return new Response("VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY missing or not a pair", { status: 500 }); }
   const r = await rpc("ed_push_due");
   if (!r.ok) return new Response("database said " + r.status + ": " + await r.text(), { status: 500 });
-  const due: Msg[] = await r.json(), gone: string[] = []; let sent = 0, failed = 0;
+  const due: Msg[] = await r.json(), gone: string[] = [], again: Msg[] = []; let sent = 0, failed = 0;
   for (let i = 0; i < due.length; i += 20) await Promise.all(due.slice(i, i + 20).map(async m => {
-    try { const s = await send(m); if (s === 404 || s === 410) gone.push(m.endpoint); else if (s < 300) sent++; else { failed++; console.log("push", s, new URL(m.endpoint).host); } }
-    catch (e) { failed++; console.log("push failed", String(e)); }
+    try { const s = await send(m); if (s === 404 || s === 410) gone.push(m.endpoint); else if (s < 300) sent++; else { failed++; if (s === 429 || s >= 500) again.push(m); console.log("push", s, new URL(m.endpoint).host); } }
+    catch (e) { failed++; again.push(m); console.log("push failed", String(e)); }   // network trouble or the 10-second limit
   }));
   if (gone.length) await rpc("ed_push_gone", { p_endpoints: gone });
-  return Response.json({ due: due.length, sent, gone: gone.length, failed });
+  if (again.length) await rpc("ed_push_retry", { p_endpoints: again.map(m => m.endpoint), p_assign: again.map(m => m.assign_id) });   // next hour tries these again
+  return Response.json({ due: due.length, sent, gone: gone.length, failed, retry: again.length });
 }
 
 (globalThis as any).Deno?.serve(handler);

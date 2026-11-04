@@ -163,11 +163,12 @@
     let m = CE.$("#modal"); if (!m) { m = CE.h("div", { id: "modal", class: "modal", onclick: e => { if (e.target === m && !m.dataset.lock) CE.closeModal(); } }); document.body.append(m); }
     const box = CE.h("div", { class: "box" + (opts.wide ? " wide" : ""), role: "dialog", "aria-modal": "true" }, CE.h("button", { class: "ib x", "aria-label": "Close", onclick: CE.closeModal }, CE.icon("cross")));
     if (typeof content === "string") box.insertAdjacentHTML("beforeend", content); else box.append(content);
+    if (!m.contains(document.activeElement)) m._back = document.activeElement;   // where focus goes back to when it closes
     m.innerHTML = ""; m.append(box); m.classList.add("show"); m.dataset.lock = opts.lock ? "1" : "";
     const f = box.querySelector("input,textarea,select,button:not(.x)"); if (f) setTimeout(() => f.focus(), 30);
     return box;
   };
-  CE.closeModal = () => { const m = CE.$("#modal"); if (m) { m.classList.remove("show"); m.innerHTML = ""; } };
+  CE.closeModal = () => { const m = CE.$("#modal"); if (m) { m.classList.remove("show"); m.innerHTML = ""; if (m._back && m._back.isConnected) m._back.focus(); m._back = null; } };
   CE.confirm = (text, okLabel) => new Promise(res => {
     CE.modal(CE.h("div", { class: "stack" }, CE.h("h3", {}, "Are you sure?"), CE.h("p", {}, text),
       CE.h("div", { class: "row" }, CE.h("button", { class: "btn bad", onclick: () => { CE.closeModal(); res(true); } }, okLabel || "Yes, do it"), CE.h("button", { class: "btn ghost", onclick: () => { CE.closeModal(); res(false); } }, "Cancel"))));
@@ -237,7 +238,7 @@
     const goal = g => h("div", { class: "pf-goal" }, h("div", { class: "row between" }, h("b", {}, g.title), h("span", { class: "badge " + CE.GOAL_ST[g.status][1] }, CE.GOAL_ST[g.status][0])),
       g.subj != null ? h("div", { class: "xs mut" }, CE.subjName(g.subj)) : null, g.plan ? h("p", { class: "sm" }, g.plan) : null, g.reflection ? h("blockquote", { class: "refl sm" }, g.reflection) : null);
     return h("div", { class: "stack pf" },
-      h("div", { class: "row between noprint" }, h("div", { class: "row" }, r.ay > r.first_ay ? h("a", { class: "btn sm ghost", href: href(r.ay - 1) }, "← " + CE.ayLabel(r.ay - 1)) : null,
+      h("div", { class: "row between noprint" }, h("div", { class: "row" }, r.ay > r.first_ay ? h("a", { class: "btn sm ghost", href: href(r.ay - 1) }, (document.documentElement.dir === "rtl" ? "→ " : "← ") + CE.ayLabel(r.ay - 1)) : null,
         r.ay < r.now_ay ? h("a", { class: "btn sm ghost", href: href(r.ay + 1) }, CE.ayLabel(r.ay + 1) + (document.documentElement.dir === "rtl" ? " ←" : " →")) : null), h("button", { class: "btn cyan", onclick: () => print() }, "Print")),
       h("header", { class: "card ink pf-head" }, h("div", { class: "kicker" }, r.school || "Compass Ed"), h("h1", {}, s.name),
         h("div", {}, "Year portfolio " + CE.ayLabel(r.ay)), h("div", { class: "sm" }, [s.class, s.year ? "Year " + s.year : null, s.house ? CE.HOUSE_NAMES[s.house] : null].filter(Boolean).join(" · "))),

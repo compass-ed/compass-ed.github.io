@@ -233,6 +233,7 @@ begin
   if sj is not null and not exists (select 1 from public.ed_subject where id = sj) then sj := null; end if;
   if p_id is not null and p_id > 0 then
     select * into g from public.ed_goal where id = p_id and uid = u.id; if g.id is null then return public.ed_err('not_found'); end if;
+    if st = 'active' and g.status <> 'active' and (select count(*) from public.ed_goal where uid = u.id and ay = g.ay and term = g.term and status = 'active') >= 6 then return public.ed_err('too_many'); end if;
     update public.ed_goal set subj = sj, title = btrim(p_title), plan = btrim(coalesce(p_plan, '')), status = st, reflection = btrim(coalesce(p_reflection, '')), updated = now() where id = g.id;
     return json_build_object('ok', true, 'id', g.id);
   end if;
@@ -354,11 +355,11 @@ begin
       and extract(hour from now() at time zone p.tz) between 7 and 20
       and public.ed_push_host(p.endpoint)
       and not exists (select 1 from public.ed_sub w where w.assign_id = a.id and w.uid = s.id and w.status <> 'draft')
-      and not exists (select 1 from public.ed_push_sent x where x.uid = s.id and x.assign_id = a.id)
+      and not exists (select 1 from public.ed_push_sent x where x.uid = s.id and x.assign_id = a.id and x.at >= a.due - interval '24 hours')   -- a moved deadline gets a new reminder
   ), mark as (
-    insert into public.ed_push_sent (uid, assign_id) select distinct uid, assign_id from due on conflict do nothing
+    insert into public.ed_push_sent (uid, assign_id) select distinct uid, assign_id from due on conflict (uid, assign_id) do update set at = excluded.at
   )
-  select coalesce(json_agg(json_build_object('endpoint', endpoint, 'p256dh', p256dh, 'auth', auth, 'title', title, 'tag', 'assign-' || assign_id,
+  select coalesce(json_agg(json_build_object('endpoint', endpoint, 'p256dh', p256dh, 'auth', auth, 'title', title, 'tag', 'assign-' || assign_id, 'assign_id', assign_id,
       'ttl', greatest(60, extract(epoch from due - now())::int),   -- the push service drops it once the work is due
       'url', 'student/#/assignment/' || assign_id,
       'body', case lang when 'fr' then case when today then 'À rendre aujourd''hui à ' else 'À rendre demain à ' end
@@ -366,6 +367,9 @@ begin
                         else case when today then 'Due today at ' else 'Due tomorrow at ' end end || hm)), '[]'::json) into out from due;
   return out;
 end $$;
+-- For the sender only: a push that failed for a passing reason (busy service, network) is tried again on the next run
+create or replace function public.ed_push_retry(p_endpoints text[], p_assign int[]) returns void language sql security definer set search_path = public as $$
+  delete from public.ed_push_sent x using public.ed_push p, unnest(p_endpoints, p_assign) f(e, a) where p.endpoint = f.e and x.uid = p.uid and x.assign_id = f.a $$;
 create or replace function public.ed_push_gone(p_endpoints text[]) returns json language sql security definer set search_path = public as $$
   with d as (delete from public.ed_push where endpoint = any(p_endpoints) returning 1) select json_build_object('ok', true, 'n', (select count(*) from d)) $$;
 
@@ -384,12 +388,13 @@ create table if not exists public.ed_mood (
   seen_at timestamptz,
   unique (uid, day)
 );
+alter table public.ed_mood add column if not exists alerted int not null default 0;   -- alerts already sent today: 1 for a low mood, 2 for asking to talk
+update public.ed_mood set alerted = case when talk then 2 else 1 end where alerted = 0 and (talk or mood <= 2);   -- check-ins saved before this column existed
 create index if not exists ed_mood_day on public.ed_mood (day);
 alter table public.ed_mood enable row level security;
 revoke all on public.ed_mood from anon, authenticated;
 
 create or replace function public.ed_pastoral(u public.ed_user) returns boolean language sql immutable as $$ select u.role = 'admin' or (u.role = 'teacher' and u.pastoral) $$;
-create or replace function public.ed_mood_flag(p_mood int, p_talk boolean) returns boolean language sql immutable as $$ select p_mood <= 2 or p_talk $$;
 create or replace function public.ed_mood_tidy() returns void language sql security definer set search_path = public as $$
   delete from public.ed_mood where day < current_date - 180;   -- kept for six months: the students are told this
   -- and so are the alerts, which also go when their reader is no longer one of the wellbeing staff
@@ -404,16 +409,20 @@ begin
 end $$;
 create or replace function public.ed_s_checkin_save(p_key text, p_mood int, p_talk boolean, p_note text) returns json language plpgsql security definer set search_path = public, extensions as $$
 declare u public.ed_user := public.ed_who(p_key); old public.ed_mood; tk boolean := coalesce(p_talk, false);
+  lvl int := case when coalesce(p_talk, false) then 2 when p_mood <= 2 then 1 else 0 end;
 begin
   if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'student' then return public.ed_err('forbidden'); end if;
   if not coalesce((select wellbeing from public.ed_school where id = 1), false) then return public.ed_err('off'); end if;
   if p_mood is null or p_mood not between 1 and 5 or length(coalesce(p_note, '')) > 500 then return public.ed_err('bad_text'); end if;
   select * into old from public.ed_mood where uid = u.id and day = current_date;
   insert into public.ed_mood (uid, mood, talk, note) values (u.id, p_mood, tk, btrim(coalesce(p_note, '')))
-    on conflict (uid, day) do update set mood = excluded.mood, talk = excluded.talk, note = excluded.note, at = now();
-  -- newly worrying (or a new request to talk): alert the wellbeing staff, once, and put it back on their to-do list
-  if public.ed_mood_flag(p_mood, tk) and (old.id is null or not public.ed_mood_flag(old.mood, old.talk) or (tk and not old.talk)) then
-    update public.ed_mood set seen_by = null, seen_at = null where uid = u.id and day = current_date;
+    -- once staff have been alerted, a later calmer answer can't wipe what the student wrote
+    on conflict (uid, day) do update set mood = excluded.mood, talk = excluded.talk, at = now(),
+      note = case when ed_mood.alerted > 0 and excluded.note = '' then ed_mood.note else excluded.note end;
+  -- alert the wellbeing staff once for a low mood and once for asking to talk (so switching answers can't flood them),
+  -- and again if it gets worse after someone has followed it up; either way it goes back on their to-do list
+  if lvl > coalesce(old.alerted, 0) or (lvl > 0 and old.seen_at is not null and (p_mood < old.mood or (tk and not old.talk))) then
+    update public.ed_mood set seen_by = null, seen_at = null, alerted = greatest(alerted, lvl) where uid = u.id and day = current_date;
     insert into public.ed_notif (uid, kind, title, body, link)
       select t.id, 'wellbeing', 'Wellbeing check-in: ' || u.name,
         'Checked in: ' || (array['Struggling','Not great','Okay','Good','Great'])[p_mood] || case when tk then ' · would like to talk to someone' else '' end, '#/wellbeing'
@@ -437,7 +446,7 @@ begin
         'recent', (select json_agg(r.mood order by r.day) from (select x.mood, x.day from public.ed_mood x where x.uid = m.uid order by x.day desc limit 7) r))
         order by (m.seen_at is null) desc, m.day desc, m.at desc), '[]'::json)
       from public.ed_mood m join public.ed_user s on s.id = m.uid left join public.ed_class c on c.id = s.class_id
-      where m.day > current_date - n and public.ed_mood_flag(m.mood, m.talk)));
+      where m.day > current_date - n and m.alerted > 0));   -- alerted stays set even if the student later picks a calmer answer
 end $$;
 create or replace function public.ed_t_wellbeing_seen(p_key text, p_id int) returns json language plpgsql security definer set search_path = public, extensions as $$
 declare u public.ed_user := public.ed_who(p_key);
@@ -478,4 +487,4 @@ do $$ declare f record; begin
 end $$;
 grant usage on schema public to anon, authenticated;
 -- the reminder sender (the ed-remind Edge Function) signs in as service_role; the browser can't call these
-grant execute on function public.ed_push_due(), public.ed_push_gone(text[]) to service_role;
+grant execute on function public.ed_push_due(), public.ed_push_gone(text[]), public.ed_push_retry(text[], int[]) to service_role;
