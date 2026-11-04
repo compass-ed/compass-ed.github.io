@@ -64,7 +64,8 @@
   const IDLE = 20 * 60 * 1000;   // staff sessions lock in this browser after 20 minutes without use
   // one sign-in with Compass Dash: leaving Compass Ed also ends a Teacher Panel session open in this tab
   // (Compass Dash signs its student account out by itself the next time it opens without this session)
-  const dashOut = () => { try { const k = sessionStorage.getItem("cdAK") || ""; if (/^t:/.test(k) && !demo) CE.api("cd_t_logout", { p_key: k }).catch(() => {}); ["cdAK", "cdAKt", "cdT", "cdCE"].forEach(x => sessionStorage.removeItem(x)); } catch (e) {} };
+  const dashOut = () => { try { const k = sessionStorage.getItem("cdAK") || ""; if (/^t:/.test(k) && !demo) CE.api("cd_t_logout", { p_key: k }).catch(() => {}); ["cdAK", "cdAKt", "cdT", "cdCE"].forEach(x => sessionStorage.removeItem(x));
+    Object.keys(sessionStorage).forEach(x => x.startsWith("ce_off_") && sessionStorage.removeItem(x)); } catch (e) {} };   // the offline copies belong to the person leaving
   CE.auth = {
     get() {
       const s = LS.get("ce_auth"); if (!s || !s.tok) return null;
@@ -227,7 +228,7 @@
   if (SAY) { addEventListener("hashchange", () => CE.sayStop()); addEventListener("pagehide", () => CE.sayStop()); }
 
   /* ---------- the year portfolio (v2.9): one school year of a student's record, shared by both portals and made to print ---------- */
-  CE.ayLabel = y => y + "–" + String(y + 1).slice(2);
+  CE.ayLabel = y => y + "/" + String(y + 1).slice(2);   // a slash keeps "2026/27" in order inside Arabic text; a dash flips it
   CE.GOAL_ST = { active: ["In progress", ""], done: ["Achieved", "ok"], dropped: ["Let go", "warn"] };
   CE.portfolio = (r, href) => {
     const h = CE.h, D = CE.date, s = r.student, TERMS = ["Autumn term", "Spring term", "Summer term"], PLACE = ["", "1st place", "2nd place", "3rd place"];
@@ -237,7 +238,7 @@
       g.subj != null ? h("div", { class: "xs mut" }, CE.subjName(g.subj)) : null, g.plan ? h("p", { class: "sm" }, g.plan) : null, g.reflection ? h("blockquote", { class: "refl sm" }, g.reflection) : null);
     return h("div", { class: "stack pf" },
       h("div", { class: "row between noprint" }, h("div", { class: "row" }, r.ay > r.first_ay ? h("a", { class: "btn sm ghost", href: href(r.ay - 1) }, "← " + CE.ayLabel(r.ay - 1)) : null,
-        r.ay < r.now_ay ? h("a", { class: "btn sm ghost", href: href(r.ay + 1) }, CE.ayLabel(r.ay + 1) + " →") : null), h("button", { class: "btn cyan", onclick: () => print() }, "Print")),
+        r.ay < r.now_ay ? h("a", { class: "btn sm ghost", href: href(r.ay + 1) }, CE.ayLabel(r.ay + 1) + (document.documentElement.dir === "rtl" ? " ←" : " →")) : null), h("button", { class: "btn cyan", onclick: () => print() }, "Print")),
       h("header", { class: "card ink pf-head" }, h("div", { class: "kicker" }, r.school || "Compass Ed"), h("h1", {}, s.name),
         h("div", {}, "Year portfolio " + CE.ayLabel(r.ay)), h("div", { class: "sm" }, [s.class, s.year ? "Year " + s.year : null, s.house ? CE.HOUSE_NAMES[s.house] : null].filter(Boolean).join(" · "))),
       h("div", { class: "grid g4" }, stat(r.lessons, "Lessons completed"), stat(r.checkpoints, "Checkpoints passed"), stat(r.activities.length, "Activities done"), stat(r.points, "House points")),
@@ -247,7 +248,7 @@
           h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, (c.place ? PLACE[c.place] || c.place + "th place" : "Entered") + " · " + D.short(c.at)))))) : none("No competitions entered this year.")),
         sec("Clubs", r.clubs.length ? h("div", { class: "list" }, ...r.clubs.map(c => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("users")), h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, c.day))))) : none("No clubs this year."))),
       sec("Activities", r.activities.length ? h("div", { class: "row", style: { gap: "6px" } }, ...r.activities.map(a => h("span", { class: "badge" }, a.title))) : none("No activities done this year.")),
-      sec("Work handed in", r.work.length ? h("div", { class: "tbw" }, h("table", { class: "tb" }, h("thead", {}, h("tr", {}, ...["Work", "Subject", "Handed in", "Mark"].map(t => h("th", {}, t)))),
+      sec("Work handed in", r.work.length ? h("div", { class: "tbw" }, h("table", { class: "tb" }, h("thead", {}, h("tr", {}, ...["Work", "Subject", "Handed in", "Score"].map(t => h("th", {}, t)))),
         h("tbody", {}, ...r.work.map(w => h("tr", {}, h("td", {}, w.title), h("td", {}, w.subj != null ? CE.subjName(w.subj) : "–"), h("td", {}, D.short(w.at)), h("td", {}, w.score != null ? w.score + "%" : w.status === "returned" ? "Returned" : "Not marked yet")))))) : none("No work handed in this year.")),
       h("p", { class: "xs mut" }, "From Compass Ed · " + D.long(new Date())));
   };
@@ -338,7 +339,7 @@
       for (const b of e.currentTarget.parentNode.children) { const s = b === e.currentTarget; b.classList.toggle("on", s); b.setAttribute("aria-pressed", String(s)); } } }, l)));
     const box = h("div", { class: "stack" },
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Appearance"), h("div", { class: "sm mut" }, "Light, dark or follow the device.")), seg([["auto", "Auto"], ["light", "Light"], ["dark", "Dark"]], p.theme, v => CE.prefs.set({ theme: v }))),
-      h("div", { class: "row between" }, h("div", {}, h("b", {}, "Dyslexia-friendly reading"), h("div", { class: "sm mut" }, "Lexend typeface, wider spacing, shorter lines and a warmer page.")), h("label", { class: "chk" }, h("input", { type: "checkbox", checked: p.dys, onchange: e => CE.prefs.set({ dys: e.target.checked }) }), p.dys ? "On" : "Off")),
+      h("div", { class: "row between" }, h("div", {}, h("b", {}, "Dyslexia-friendly reading"), h("div", { class: "sm mut" }, "Lexend typeface, wider spacing, shorter lines and a warmer page.")), h("label", { class: "chk" }, h("input", { type: "checkbox", checked: p.dys, "aria-label": "Dyslexia-friendly reading", onchange: e => CE.prefs.set({ dys: e.target.checked }) }), p.dys ? "On" : "Off")),
       window.speechSynthesis && CE.me && CE.me.role === "student" ? h("div", { class: "row between" }, h("div", {}, h("b", {}, "Read aloud"), h("div", { class: "sm mut" }, "How fast the Listen button reads lessons and notices.")), seg([[1, "Normal"], [0.8, "Slower"]], p.sayRate || 1, v => CE.prefs.set({ sayRate: +v }))) : null,
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Detail level"), h("div", { class: "sm mut" }, "Compact shows less text per card; detailed shows more.")), seg([["compact", "Compact"], ["standard", "Standard"], ["detailed", "Detailed"]], p.detail, v => CE.prefs.set({ detail: v }))),
       h("div", { class: "row between" }, h("div", {}, h("b", {}, "Interface transparency"), h("div", { class: "sm mut" }, "Glass effect on cards and bars. 0 is solid.")), h("input", { type: "range", min: 0, max: 60, step: 5, value: p.glass, style: { width: "160px" }, oninput: e => CE.prefs.set({ glass: +e.target.value }) })));

@@ -95,6 +95,96 @@
       requestAnimationFrame(() => { const el = grid.querySelector(".day.today"); if (el && grid.scrollWidth > grid.clientWidth) grid.scrollLeft = el.offsetLeft - grid.offsetLeft - 8; });
     } catch (e) { CE.fail(page, e); }
   }
+  /* ---------- v2.9: daily wellbeing check-in, only when the school has switched it on ---------- */
+  const MOODS = [[5, "Great"], [4, "Good"], [3, "Okay"], [2, "Not great"], [1, "Struggling"]];
+  async function checkinCard(slot) {
+    const r = await CE.capi("ed_s_checkin").catch(() => null); if (!r || !r.ok || !r.on) return;
+    const c = h("div", { class: "card checkin" }); slot.prepend(c);
+    const done = t => { c.className = "card checkin"; c.replaceChildren(h("div", { class: "row between" }, h("div", { class: "sm" }, h("b", {}, "Checked in today:"), " ", h("span", {}, (MOODS.find(m => m[0] === t.mood) || [0, ""])[1])),
+      h("button", { class: "btn sm ghost", onclick: () => { form(t); (c.querySelector('[aria-pressed="true"]') || c.querySelector("button")).focus(); } }, "Change"))); };
+    const form = t => { let mood = t ? t.mood : 0;
+      const btns = MOODS.map(([v, l]) => h("button", { type: "button", class: "btn sm " + (v === mood ? "cyan" : "ghost"), "aria-pressed": String(v === mood), onclick: e => { mood = v;
+        btns.forEach(b => { const on = b === e.currentTarget; b.className = "btn sm " + (on ? "cyan" : "ghost"); b.setAttribute("aria-pressed", String(on)); }); } }, l));
+      const talk = h("input", { type: "checkbox", checked: !!(t && t.talk) }), note = h("textarea", { class: "in", rows: 2, maxlength: 500, placeholder: "Anything you'd like a teacher to know? (optional)", "aria-label": "Note" }, t ? t.note : ""), er = h("div", { class: "err" });
+      c.className = "card checkin tint";
+      c.replaceChildren(h("h3", { id: "ckq" }, "How are you feeling today?"), h("div", { class: "row", role: "group", "aria-labelledby": "ckq", style: { gap: "6px" } }, ...btns),
+        h("label", { class: "chk" }, talk, "I'd like to talk to someone at school"), note, er,
+        h("div", { class: "row between" }, h("p", { class: "xs mut", style: { margin: 0, maxWidth: "62ch" } }, "Only the school's wellbeing staff see your check-ins, and they are kept for six months. If you or someone else is in danger, tell a trusted adult straight away."),
+          h("button", { class: "btn cyan", onclick: async e => { if (!mood) return er.textContent = "Choose how you're feeling."; e.target.disabled = true;
+            const x = await CE.capi("ed_s_checkin_save", { p_mood: mood, p_talk: talk.checked, p_note: note.value }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
+            if (!x.ok) return er.textContent = CE.errText(x);
+            CE.toast(talk.checked || mood <= 2 ? "Thank you for telling us. The school's wellbeing staff have been told." : "Thanks for checking in.", "ok"); done({ mood, talk: talk.checked, note: note.value.trim() }); c.querySelector("button").focus(); } }, "Check in"))); };
+    r.today ? done(r.today) : form(null);
+  }
+
+  /* ---------- v2.9: termly goals, and the year portfolio they go into ---------- */
+  const TERMS = ["Autumn term", "Spring term", "Summer term"];
+  const goalCard = (g, edit) => h("div", { class: "card goal" }, h("div", { class: "hd" }, h("div", { class: "row", style: { gap: "6px" } }, h("span", { class: "badge " + CE.GOAL_ST[g.status][1] }, CE.GOAL_ST[g.status][0]),
+      g.subj != null ? h("span", { class: "badge" }, CE.subjName(g.subj)) : null), h("button", { class: "btn sm ghost", onclick: () => edit(g) }, "Update")),
+    h("h3", {}, g.title), g.plan ? h("p", { class: "sm", style: { margin: "4px 0 0" } }, g.plan) : null, g.reflection ? h("blockquote", { class: "refl sm" }, g.reflection) : null);
+  function goalEditor(g, done) {
+    g = g || { id: 0, subj: null, title: "", plan: "", status: "active", reflection: "" }; let st = g.status;
+    const title = h("input", { class: "in", value: g.title, maxlength: 120, placeholder: "e.g. Know my times tables up to 12" });
+    const subj = h("select", { class: "in" }, h("option", { value: "" }, "Any subject"), ...CE.subjects.map(x => h("option", { value: x.id, selected: x.id === g.subj }, x.name)));
+    const plan = h("textarea", { class: "in", rows: 3, maxlength: 1000, placeholder: "e.g. Ten minutes of practice every school night" }, g.plan);
+    const stBox = h("div", { class: "seg", role: "group", "aria-label": "Status" }, ...Object.entries(CE.GOAL_ST).map(([k, [l]]) => h("button", { type: "button", class: k === st ? "on" : "", "aria-pressed": String(k === st), onclick: e => { st = k;
+      for (const b of stBox.children) { const on = b === e.currentTarget; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); } } }, l)));
+    const refl = h("textarea", { class: "in", rows: 4, maxlength: 2000, placeholder: "What went well? What would you do differently next time?" }, g.reflection), er = h("div", { class: "err" });
+    CE.modal(h("div", { class: "stack" }, h("h3", {}, g.id ? "Update goal" : "New goal"), h("label", { class: "f" }, "Goal", title), h("label", { class: "f" }, "Subject", subj), h("label", { class: "f" }, "How I'll do it", plan),
+      g.id ? h("div", { class: "f" }, h("span", {}, "Status"), stBox) : null, g.id ? h("label", { class: "f" }, "How did it go?", refl, h("span", { class: "help" }, "Your reflection goes into your year portfolio.")) : null, er,
+      h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async e => { e.target.disabled = true;
+        const x = await CE.capi("ed_s_goal_save", { p_id: g.id || 0, p_subj: subj.value === "" ? null : +subj.value, p_title: title.value, p_plan: plan.value, p_status: st, p_reflection: refl.value }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
+        if (!x.ok) return er.textContent = x.error === "bad_text" ? "Give your goal a name." : x.error === "too_many" ? "Six goals a term is plenty. Achieve or let go of one first." : CE.errText(x);
+        CE.closeModal(); CE.toast("Goal saved", "ok"); done(); } }, "Save"),
+        g.id ? h("button", { class: "btn ghost right", onclick: async () => { if (!(await CE.confirm("Delete this goal?", "Delete"))) return; const x = await CE.capi("ed_s_goal_del", { p_id: g.id }).catch(() => ({})); if (x.ok) { CE.closeModal(); done(); } } }, "Delete") : null)));
+  }
+  async function goals() {
+    CE.title("Goals"); CE.loading(page);
+    try {
+      const r = await CE.capi("ed_s_goals"); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
+      const now = r.rows.filter(g => g.ay === r.ay && g.term === r.term), past = r.rows.filter(g => !now.includes(g)), edit = g => goalEditor(g, goals);
+      page.append(h("div", { class: "page-lead row between" }, h("div", {}, h("h2", {}, "Goals"), h("div", { class: "sm mut" }, "A few goals each term, and a look back at how they went. They go into your year portfolio.")),
+        h("div", { class: "row" }, h("a", { class: "btn ghost", href: "#/portfolio" }, "Year portfolio"), now.filter(g => g.status === "active").length < 6 ? h("button", { class: "btn cyan", onclick: () => goalEditor(null, goals) }, "+ New goal") : null)));
+      page.append(h("h3", { style: { margin: "4px 0 0" } }, TERMS[r.term - 1] + " " + CE.ayLabel(r.ay)));
+      page.append(now.length ? h("div", { class: "grid g2" }, ...now.map(g => goalCard(g, edit))) : CE.emptyArt("sprout", "No goals yet this term", "Pick one or two things to get better at. Small and specific works best: \"read for 20 minutes a night\" beats \"read more\"."));
+      [...new Set(past.map(g => g.ay * 10 + g.term))].forEach(k => { const list = past.filter(g => g.ay * 10 + g.term === k);
+        page.append(h("details", { class: "card" }, h("summary", { class: "b" }, TERMS[k % 10 - 1] + " " + CE.ayLabel(Math.floor(k / 10)) + " · " + list.length), h("div", { class: "grid g2", style: { marginTop: "10px" } }, ...list.map(g => goalCard(g, edit))))); });
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function portfolio(p) {
+    CE.title("Year portfolio"); CE.loading(page);
+    try { const r = await CE.capi("ed_s_portfolio", { p_ay: p && p.ay ? +p.ay : null }); if (!r.ok) return CE.fail(page, r);
+      page.innerHTML = ""; page.append(h("a", { class: "sm noprint", href: "#/goals" }, "← Goals"), CE.portfolio(r, y => "#/portfolio/" + y)); } catch (e) { CE.fail(page, e); }
+  }
+
+  /* ---------- v2.9: deadline reminders on this device (Web Push). Shows once the school's sender has run. ---------- */
+  const b64key = k => Uint8Array.from(atob(k.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - k.length % 4) % 4)), c => c.charCodeAt(0));
+  async function remindCard() {
+    const key = CE.cfg.vapidPublicKey, can = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const reg = can ? await navigator.serviceWorker.getRegistration().catch(() => null) : null;
+    let sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
+    const st = await CE.capi("ed_s_push", { p_endpoint: sub ? sub.endpoint : "" }).catch(() => null);
+    if (!key || !st || !st.ok || !(st.ready || CE.demo)) return null;
+    const save = s => { const j = s.toJSON(); return CE.capi("ed_s_push_save", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_lang: CE.lang || "en", p_tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" }); };
+    if (sub && st.on) save(sub).catch(() => {});   // keeps the language and time zone up to date
+    const box = h("div", { class: "stack" });
+    const toggle = async cb => { cb.disabled = true;
+      try {
+        if (cb.checked) {
+          if (await Notification.requestPermission() !== "granted") { draw(false); return CE.toast("Notifications are blocked for this site. Allow them in your browser's site settings, then try again.", "bad"); }
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(key) });
+          const x = await save(sub); if (!x.ok) throw new Error(CE.errText(x));
+          reg.showNotification("Compass Ed", { body: CE.t("Reminders are on. You'll get one the day before work is due."), icon: CE.root + "assets/icon-192.png", tag: "remind-on" }).catch(() => {});
+          draw(true);
+        } else { if (sub) { await CE.capi("ed_s_push_del", { p_endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe().catch(() => {}); sub = null; } draw(false); }
+      } catch (e) { draw(!cb.checked); CE.toast(String(e.message || e), "bad"); }
+      finally { const i = box.querySelector("input"); if (i) i.focus(); } };   // the switch is redrawn: keep keyboard focus on it
+    const draw = on => box.replaceChildren(h("div", { class: "row between" }, h("div", {}, h("b", {}, "Deadline reminders"), h("div", { class: "sm mut" }, "A notification on this device the day before work is due, if you haven't handed it in yet.")),
+        reg && !CE.demo ? h("label", { class: "chk" }, h("input", { type: "checkbox", checked: on, "aria-label": "Deadline reminders", onchange: e => toggle(e.target) }), on ? "On" : "Off") : null),
+      !reg || CE.demo ? h("p", { class: "xs mut", style: { margin: 0 } }, CE.demo ? "Preview: the sample campus can't send reminders." : /iPhone|iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ? "On iPhone or iPad, add Compass Ed to your Home Screen first (Share, then Add to Home Screen) and turn reminders on there." : "This browser can't show reminders.") : null);
+    draw(!!(sub && st.on)); return box;
+  }
+
   async function home() {
     CE.title("Home"); CE.loading(page);
     try {
@@ -106,7 +196,7 @@
       page.innerHTML = "";
       page.append(h("div", {}, h("h2", {}, greet + ", " + me.name.split(" ")[0] + "."), h("p", { class: "mut", style: { margin: 0 } }, todo.length ? todo.length + " thing" + (todo.length > 1 ? "s" : "") + " on your list" + (week.length ? ", " + week.length + " due this week" : "") + "." : "Your list is clear. Time to explore.")));
       page.append(h("a", { class: "card tint next", href: nx.href, style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "big" }, CE.icon(nx.icon)), h("div", {}, h("div", { class: "xs cy b", style: { letterSpacing: ".08em", textTransform: "uppercase" } }, "What to do next · " + nx.kicker), h("div", { class: "b", style: { fontSize: "18px" } }, nx.title), h("div", { class: "sm mut" }, nx.sub)), h("span", { class: "btn" }, nx.cta)));
-      const slot = h("div", { class: "stack", style: { gap: "inherit" } }); page.append(slot); myDayCards(slot);   /* timetable and permission slips, when the school uses them */
+      const slot = h("div", { class: "stack", style: { gap: "inherit" } }); page.append(slot); myDayCards(slot); checkinCard(slot);   /* timetable, permission slips and the check-in, when the school uses them */
       if (hm.news.length) { const f = hm.news[0]; page.append(h("a", { class: "card ink", href: "#/news", style: { textDecoration: "none" } }, h("div", { class: "kicker", style: { color: "var(--cyan)" } }, "Campus news"), h("h3", { style: { color: "#fff" } }, f.title), h("p", { class: "mut", style: { margin: 0 } }, f.body.replace(/\*\*/g, "")))); }
       page.append(h("div", { class: "grid g4" },
         h("div", { class: "card stat" }, h("span", { class: "n" }, week.length), h("span", { class: "l" }, "Due this week")),
@@ -402,6 +492,7 @@
     CE.title("Settings"); page.innerHTML = "";
     page.append(card("My account", h("div", { class: "stack" }, h("div", {}, h("b", {}, me.name), " · ", h("span", { class: "kbd" }, me.username)), h("div", { class: "sm mut" }, "Class: " + (me.class ? me.class.name : "none yet") + " · Year " + (me.year || "?") + ". A teacher can change these from the People page."), h("div", { class: "row" }, h("button", { class: "btn ghost", onclick: CE.signOut }, "Sign out")))));
     page.append(card("Reading and display", CE.prefsCard()));
+    const rm = h("div"); page.append(rm); remindCard().then(c => c ? rm.replaceWith(card("Reminders", c)) : rm.remove()).catch(() => rm.remove());
     const pl = h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, "A private link that shows a parent or carer a read-only weekly summary: what is due, what has been marked, points and events. Anyone with the link can see it, so only share it with them. Making a new link stops the old one working."), h("div", { class: "row" }, h("button", { class: "btn", onclick: () => parentLink(pl, false) }, "Show my link"), h("button", { class: "btn ghost", onclick: () => parentLink(pl, true) }, "Make a new link")));
     page.append(card("Parent summary link", pl));
     const cdBox = h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, "Loading…")); page.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, "Compass Dash"), CE.srcTag("compassdash", "Compass Dash")), cdBox));
@@ -560,7 +651,7 @@
     [["Campus Hub", "#/campus"], ["Student Voice", "#/voice"], ["Showcase", "#/showcase"], ["Culture & community", "#/community"], ["My ID", "#/id"]],
     [["Activities", "#/explore", /^#\/(explore|activity)/], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"]],
     [["Subjects", "#/subjects", /^#\/(subjects|subject|lesson|quiz)/], ["Assignments", "#/assignments", /^#\/assignment/], ["Review queue", "#/review"]],
-    [["Progress & badges", "#/progress"], ["House points", "#/house"]],
+    [["Progress & badges", "#/progress"], ["Goals", "#/goals", /^#\/(goals|portfolio)/], ["House points", "#/house"]],
     [["News", "#/news"], ["Announcements", "#/announcements"]],
     [["Calendar", "#/calendar"], ["My day", "#/day"]]
   ];
@@ -574,7 +665,7 @@
     { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: competition }, { path: "/news", handler: news },
     { path: "/subjects", handler: subjects }, { path: "/subject/:id", handler: subject }, { path: "/lesson/:id", handler: lesson }, { path: "/quiz/:id", handler: quiz },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignment }, { path: "/review", handler: review }, { path: "/progress", handler: progress },
-    { path: "/calendar", handler: calendar }, { path: "/day", handler: myDay }, { path: "/announcements", handler: announcements }, { path: "/settings", handler: settings }
+    { path: "/calendar", handler: calendar }, { path: "/day", handler: myDay }, { path: "/goals", handler: goals }, { path: "/portfolio", handler: portfolio }, { path: "/portfolio/:ay", handler: portfolio }, { path: "/announcements", handler: announcements }, { path: "/settings", handler: settings }
   ]);
   loadBell();
 })();

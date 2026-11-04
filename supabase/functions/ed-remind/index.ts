@@ -38,12 +38,12 @@ export async function encrypt(text: string, p256dh: string, auth: string) {
   return cat(head, as, ct);
 }
 
-type Msg = { endpoint: string; p256dh: string; auth: string; title: string; body: string; url: string; tag: string };
+type Msg = { endpoint: string; p256dh: string; auth: string; title: string; body: string; url: string; tag: string; ttl: number };
 async function send(m: Msg) {
   if (!HOSTS.test(m.endpoint)) return 400;
   const res = await fetch(m.endpoint, { method: "POST", headers: {
     Authorization: await vapid(m.endpoint, env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"), env("VAPID_SUBJECT") || "mailto:admin@example.com"),
-    "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream", TTL: "43200", Urgency: "normal" },
+    "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream", TTL: String(Math.min(43200, m.ttl || 43200)), Urgency: "normal" },
     body: await encrypt(JSON.stringify({ title: m.title, body: m.body, url: m.url, tag: m.tag }), m.p256dh, m.auth) });
   await res.body?.cancel();
   return res.status;
@@ -54,6 +54,9 @@ async function handler(req: Request) {
   const key = env("SUPABASE_SERVICE_ROLE_KEY");
   const rpc = (fn: string, body = {}) => fetch(env("SUPABASE_URL") + "/rest/v1/rpc/" + fn, { method: "POST", body: JSON.stringify(body),
     headers: Object.assign({ "Content-Type": "application/json", apikey: key }, /^eyJ/.test(key) ? { Authorization: "Bearer " + key } : {}) });
+  // check the keys before asking for the list: ed_push_due marks each reminder as sent, so a bad key would lose them all
+  try { await vapid("https://fcm.googleapis.com/", env("VAPID_PUBLIC_KEY"), env("VAPID_PRIVATE_KEY"), "mailto:check@example.com"); }
+  catch { return new Response("VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY missing or not a pair", { status: 500 }); }
   const r = await rpc("ed_push_due");
   if (!r.ok) return new Response("database said " + r.status + ": " + await r.text(), { status: 500 });
   const due: Msg[] = await r.json(), gone: string[] = []; let sent = 0, failed = 0;

@@ -73,8 +73,54 @@
       g.append(card("Assignments", r.assigns.length ? h("div", { class: "list" }, ...r.assigns.slice(0, 8).map(a => h("a", { class: "item", href: "#/assignment/" + a.id }, h("div", { class: "ico sm" }, CE.icon(a.kind === "quiz" ? "question" : "pencil")), h("div", { class: "grow" }, h("div", { class: "t" }, a.title), h("div", { class: "s" }, a.class + (a.due ? " · " + D.until(a.due) : "")), h("div", { class: "bar", style: { marginTop: "6px", width: "140px" } }, h("i", { style: { width: CE.pct(a.submitted, a.n) + "%" } }))), h("span", { class: "badge" + (a.submitted - a.graded > 0 ? " cyan" : "") }, a.submitted + "/" + a.n + " in" + (a.submitted - a.graded > 0 ? " · " + (a.submitted - a.graded) + " to mark" : ""))))) : h("div", { class: "empty" }, "No assignments yet."), h("a", { class: "btn sm ghost", href: "#/assignments" }, "All")));
       g.append(card("Competitions & challenges", r.competitions.length ? h("div", { class: "list" }, ...r.competitions.slice(0, 6).map(c => h("a", { class: "item", href: "#/competition/" + c.id }, h("div", { class: "ico sm" }, CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t" }, c.title), h("div", { class: "s" }, c.kind + " · " + (new Date(c.closes) > Date.now() ? D.left(c.closes) : "closed " + D.short(c.closes)))), h("span", { class: "badge" + (c.entries ? " cyan" : "") }, c.entries + " entr" + (c.entries === 1 ? "y" : "ies"))))) : h("div", { class: "empty" }, "Nothing running."), h("a", { class: "btn sm ghost", href: "#/competitions" }, "All")));
       g.append(card("Your classes", (me.classes || []).length ? h("div", { class: "list" }, ...me.classes.map(c => h("a", { class: "item", href: "#/class/" + c.id }, h("div", { class: "ico sm" }, CE.icon("users")), h("div", { class: "grow" }, h("div", { class: "t" }, c.name), h("div", { class: "s" }, (c.n || 0) + " students" + (c.year ? " · Year " + c.year : ""))), c.subj != null ? h("span", { class: "badge" }, CE.subjName(c.subj)) : null))) : h("div", { class: "empty" }, "No classes yet. Create one under People & classes."), h("a", { class: "btn sm ghost", href: "#/classes" }, "Classes")));
+      api("ed_t_wellbeing", { p_days: 14 }).then(w => { if (!w.ok || (!w.on && !w.rows.length)) return; const open = w.rows.filter(x => !x.seen_at);   // wellbeing staff only
+        g.prepend(h("a", { class: "card" + (open.length ? " tint" : ""), href: "#/wellbeing", style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "hd" }, h("h3", {}, "Wellbeing check-ins"), open.length ? h("span", { class: "badge warn" }, open.length + " to follow up") : null),
+          h("p", { class: "sm mut", style: { margin: 0 } }, open.length ? "Students who said they are struggling or would like to talk, in the last 14 days." : "Nobody needs a follow-up from the last 14 days."))); }).catch(() => {});
       g.append(card("Coming up", r.events.length ? h("div", { class: "list" }, ...r.events.slice(0, 6).map(e => h("a", { class: "item", href: "#/calendar" }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t sm" }, e.title), h("div", { class: "s xs" }, D.dt(e.starts)))))) : h("div", { class: "empty" }, "Nothing in the next two weeks."), h("a", { class: "btn sm ghost", href: "#/calendar" }, "Calendar")));
     } catch (e) { CE.fail(page, e); }
+  }
+
+  /* ---------- v2.9: wellbeing check-ins (for the staff an admin chooses) and a student's year portfolio ---------- */
+  const MOOD = ["", "Struggling", "Not great", "Okay", "Good", "Great"];
+  async function wellbeing() {
+    CE.title("Wellbeing"); CE.loading(page);
+    try {
+      const r = await api("ed_t_wellbeing", { p_days: 14 }); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
+      page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Wellbeing check-ins"), h("div", { class: "sm mut" }, "Students who said they are struggling or not great, or asked to talk, in the last 14 days. Check-ins are kept for six months; only the staff chosen under Admin see them."))));
+      if (!r.on) page.append(h("div", { class: "card tint sm" }, "Check-ins are switched off, so students don't see them. An administrator can switch them on under Admin, Wellbeing."));
+      const total = r.counts.reduce((a, b) => a + b, 0);
+      page.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, "How students answered"), h("span", { class: "xs mut" }, total + " check-in" + (total === 1 ? "" : "s") + " from " + r.students + " student" + (r.students === 1 ? "" : "s"))),
+        total ? h("div", { class: "mood-bar", role: "img", "aria-label": [5, 4, 3, 2, 1].map(m => CE.t(MOOD[m]) + ": " + r.counts[m - 1]).join(", ") }, ...[5, 4, 3, 2, 1].map(m => r.counts[m - 1] ? h("i", { class: "m" + m, style: { flexGrow: r.counts[m - 1] }, title: CE.t(MOOD[m]) + ": " + r.counts[m - 1] }) : null)) : null,
+        h("div", { class: "row xs mut", style: { gap: "12px", marginTop: "8px" } }, ...[5, 4, 3, 2, 1].map(m => h("span", { class: "row", style: { gap: "6px" } }, h("i", { class: "mood-dot m" + m, "aria-hidden": "true" }, String(m)), MOOD[m] + " (" + r.counts[m - 1] + ")")))));
+      if (!r.rows.length) return page.append(CE.emptyArt("sprout", "Nobody to follow up", "No student has said they are struggling or asked to talk in the last 14 days."));
+      page.append(h("div", { class: "stack" }, ...r.rows.map(x => { const c = h("div", { class: "card" + (x.seen_at ? "" : " tint") });
+        const draw = () => c.replaceChildren(h("div", { class: "hd" }, h("div", {}, h("h3", { style: { margin: 0 } }, x.name), h("div", { class: "xs mut" }, [x.class, D.dt(x.at)].filter(Boolean).join(" · "))),
+            h("div", { class: "row", style: { gap: "6px" } }, h("span", { class: "badge " + (x.mood <= 2 ? "bad" : "") }, MOOD[x.mood]), x.talk ? h("span", { class: "badge warn" }, "Would like to talk") : null)),
+          x.note ? h("blockquote", { class: "refl sm" }, x.note) : null,
+          h("div", { class: "row between" }, h("span", { class: "row xs mut", style: { gap: "4px" } }, "Last 7 check-ins:", ...(x.recent || []).map(m => h("i", { class: "mood-dot m" + m, role: "img", "aria-label": MOOD[m], title: MOOD[m] }, String(m)))),
+            x.seen_at ? h("span", { class: "xs mut", tabindex: -1 }, "Followed up by " + (x.seen_by || "staff") + " · " + D.dt(x.seen_at))
+              : h("button", { class: "btn sm cyan", onclick: async e => { e.target.disabled = true; const y = await api("ed_t_wellbeing_seen", { p_id: x.id }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
+                  if (!y.ok) return CE.toast(CE.errText(y), "bad"); x.seen_at = new Date().toISOString(); x.seen_by = me.name; c.classList.remove("tint"); draw(); c.querySelector("span[tabindex]").focus(); } }, "Mark as followed up")));
+        draw(); return c; })));
+    } catch (e) { CE.fail(page, e); }
+  }
+  async function wellbeingTab() {
+    const r = await api("ed_a_wellbeing"); if (!r.ok) return CE.fail(page, r); page.innerHTML = "";
+    const on = h("input", { type: "checkbox", checked: r.on }), picks = new Map(), er = h("div", { class: "err" });
+    page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Wellbeing check-ins"), h("div", { class: "sm mut" }, "Optional. When on, students see a short question on their Home page: how they are feeling today, and whether they would like to talk to someone."))),
+      card("Check-ins", h("div", { class: "stack" }, h("label", { class: "chk" }, on, "Ask students how they are feeling"),
+        h("p", { class: "sm mut", style: { margin: 0 } }, "Students are told that only the school's wellbeing staff see their answers, and that they are kept for six months. When a student says they are struggling or not great, or asks to talk, the staff below get a notification. Check your school's safeguarding policy first: this does not replace it, and nobody watches it out of hours."))),
+      card("Who sees check-ins and gets the alerts", h("div", { class: "stack" }, h("p", { class: "sm mut", style: { margin: 0 } }, "Administrators always do. Choose the teachers who look after wellbeing, such as form tutors or the pastoral lead."),
+        h("div", { class: "list" }, ...r.staff.map(t => { const cb = h("input", { type: "checkbox", checked: t.pastoral, disabled: t.role === "admin" }); picks.set(t.id, cb);
+          return h("label", { class: "item chk" }, cb, h("span", { class: "grow" }, t.name), h("span", { class: "xs mut" }, t.role === "admin" ? "Administrator" : "Teacher")); })))),
+      er, h("div", { class: "row" }, h("button", { class: "btn cyan", onclick: async e => { e.target.disabled = true;
+        const x = await api("ed_a_wellbeing_set", { p_on: on.checked, p_staff: [...picks].filter(([, cb]) => cb.checked && !cb.disabled).map(([id]) => id) }).catch(z => ({ ok: false, error: z.message })); e.target.disabled = false;
+        if (!x.ok) return er.textContent = CE.errText(x); CE.toast("Saved", "ok"); } }, "Save"), h("a", { class: "btn ghost", href: "#/wellbeing" }, "Open check-ins")));
+  }
+  async function portfolioPage(p) {
+    CE.title("Year portfolio"); CE.loading(page);
+    try { const r = await api("ed_t_portfolio", { p_uid: +p.uid, p_ay: p.ay ? +p.ay : null }); if (!r.ok) return CE.fail(page, r);
+      page.innerHTML = ""; page.append(h("button", { class: "btn sm ghost noprint", onclick: () => history.length > 1 ? history.back() : CE.nav("/classes") }, "← Back"), CE.portfolio(r, y => "#/portfolio/" + p.uid + "/" + y)); } catch (e) { CE.fail(page, e); }
   }
 
   /* ---------- campus: activities ---------- */
@@ -275,7 +321,7 @@
       const box = h("div", { class: "stack" }); page.append(box);
       if ((tab || "students") === "students") {
         const tb = h("table", { class: "tb" }, h("thead", {}, h("tr", {}, h("th", {}, "Student"), h("th", {}, "House"), h("th", {}, "Points"), h("th", {}, "Last seen"), h("th", {}, "Lessons"), h("th", {}, "Activities"), h("th", {}, "Quiz avg"), h("th", {}, "Handed in"), h("th", {}, "Grade avg"), h("th", {}, ""))), h("tbody", {}));
-        r.students.forEach(s => tb.lastChild.append(h("tr", {}, h("td", {}, h("div", { class: "b" }, s.name), h("div", { class: "xs mut" }, s.username)), h("td", {}, h("select", { class: "in", style: { padding: "4px 8px", width: "auto" }, onchange: async e => { const x = await api("ed_t_house", { p_uid: s.id, p_house: e.target.value }); CE.toast(x.ok ? "House saved" : CE.errText(x), x.ok ? "ok" : "bad"); } }, ...[["", "–"], ["N", "North"], ["E", "East"], ["S", "South"], ["W", "West"]].map(([v, l]) => h("option", { value: v, selected: (s.house || "") === v }, l)))), h("td", { class: "b" }, s.pts), h("td", { class: "sm" }, D.ago(s.last_seen)), h("td", {}, s.lessons_done), h("td", {}, s.activities_done), h("td", {}, s.quiz_avg != null ? s.quiz_avg + "%" : "–"), h("td", {}, s.submitted), h("td", {}, s.grade_avg != null ? h("span", { class: "badge " + (s.grade_avg >= 70 ? "ok" : s.grade_avg >= 50 ? "warn" : "bad") }, s.grade_avg + "%") : "–"), h("td", {}, h("div", { class: "row", style: { flexWrap: "nowrap" } }, h("button", { class: "btn sm ghost", onclick: () => awardModal([s], id) }, "Points"), h("button", { class: "btn sm ghost", onclick: () => annEditor(null, id, { uids: [s.id], name: s.name }) }, "Message"))))));
+        r.students.forEach(s => tb.lastChild.append(h("tr", {}, h("td", {}, h("div", { class: "b" }, s.name), h("div", { class: "xs mut" }, s.username)), h("td", {}, h("select", { class: "in", style: { padding: "4px 8px", width: "auto" }, onchange: async e => { const x = await api("ed_t_house", { p_uid: s.id, p_house: e.target.value }); CE.toast(x.ok ? "House saved" : CE.errText(x), x.ok ? "ok" : "bad"); } }, ...[["", "–"], ["N", "North"], ["E", "East"], ["S", "South"], ["W", "West"]].map(([v, l]) => h("option", { value: v, selected: (s.house || "") === v }, l)))), h("td", { class: "b" }, s.pts), h("td", { class: "sm" }, D.ago(s.last_seen)), h("td", {}, s.lessons_done), h("td", {}, s.activities_done), h("td", {}, s.quiz_avg != null ? s.quiz_avg + "%" : "–"), h("td", {}, s.submitted), h("td", {}, s.grade_avg != null ? h("span", { class: "badge " + (s.grade_avg >= 70 ? "ok" : s.grade_avg >= 50 ? "warn" : "bad") }, s.grade_avg + "%") : "–"), h("td", {}, h("div", { class: "row", style: { flexWrap: "nowrap" } }, h("button", { class: "btn sm ghost", onclick: () => awardModal([s], id) }, "Points"), h("button", { class: "btn sm ghost", onclick: () => annEditor(null, id, { uids: [s.id], name: s.name }) }, "Message"), h("a", { class: "btn sm ghost", href: "#/portfolio/" + s.id }, "Portfolio"))))));
         box.append(h("div", { class: "card" }, r.students.length ? h("div", { class: "tbw" }, tb) : h("div", { class: "empty" }, "No students in this class yet. Add them under People & classes.")));
       } else if (tab === "heatmap") await heatmap(id, box);
       else if (tab === "register") registerTab(id, r, box);
@@ -751,10 +797,11 @@
     const tab = (p && p.tab) || "overview"; if (me.role !== "admin") return CE.nav("/people");
     CE.title("Admin"); CE.loading(page);
     try {
-      if (tab === "codes") return codesTab();
-      if (tab === "feeds") return feedsTab();
-      if (tab === "links") return linksTab();
-      if (tab === "feedback") return feedbackTab();
+      if (tab === "codes") return await codesTab();
+      if (tab === "feeds") return await feedsTab();
+      if (tab === "links") return await linksTab();
+      if (tab === "feedback") return await feedbackTab();
+      if (tab === "wellbeing") return await wellbeingTab();
       const r = await api("ed_a_dash"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
       page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Admin overview"), h("div", { class: "sm mut" }, r.school.name + " · accounts, codes, feeds and links in one place.")), h("div", { class: "row" }, h("a", { class: "btn", href: "#/admin/codes" }, "Login codes"), h("a", { class: "btn ghost", href: "#/people" }, "Accounts"))));
@@ -962,7 +1009,7 @@
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
     [["Announcements", "#/announcements"], ["Calendar", "#/calendar"], ["Permission slips", "#/slips", /^#\/slip/]],
     [["People & classes", "#/people", /^#\/people/], ["House points", "#/points"]],
-    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"]],
+    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"], ["Wellbeing", "#/admin/wellbeing"]],
     [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
   ];
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g && g.length > 1 ? g : []); };
@@ -975,7 +1022,7 @@
     { path: "/classes", handler: classes }, { path: "/class/:id", handler: p => classPage(p) }, { path: "/class/:id/:tab", handler: p => classPage(p, p.tab) },
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignmentPage },
-    { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/slips", handler: slipsPage }, { path: "/slip/:id", handler: slipPage }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }, { path: "/admin", handler: admin }, { path: "/admin/:tab", handler: admin }
+    { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/slips", handler: slipsPage }, { path: "/wellbeing", handler: wellbeing }, { path: "/portfolio/:uid", handler: portfolioPage }, { path: "/portfolio/:uid/:ay", handler: portfolioPage }, { path: "/slip/:id", handler: slipPage }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }, { path: "/admin", handler: admin }, { path: "/admin/:tab", handler: admin }
   ]);
   loadBell();
 })();

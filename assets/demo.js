@@ -188,6 +188,15 @@
       const W = [["Maths", "English", "Science", "PE", "French"], ["English", "Maths", "Geography", "Art", "Science"], ["Science", "History", "Maths", "Music", "English"], ["Maths", "Computing", "English", "French", "Geography"], ["PE", "Science", "Maths", "History", "Art"]];
       db.timetable = []; W.forEach((d, i) => d.forEach((t, j) => db.timetable.push({ id: nid(), class_id: 1, day: i + 1, starts: P[j][0], ends: P[j][1], title: t, room: R[t], teacher: t === "Maths" || t === "Science" ? "Ms Khan" : "" })));
     }
+    /* v2.9: goals, deadline reminders and wellbeing check-ins (switched off, as in a real school until an admin turns them on) */
+    if (!db.goals) {
+      const d = new Date(), y = d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1, t = d.getMonth() >= 8 ? 1 : d.getMonth() <= 2 ? 2 : 3, dd = n => day(n).slice(0, 10);
+      db.goals = [{ id: nid(), uid: 101, ay: y, term: t, subj: 0, title: "Know my times tables up to 12", plan: "Ten minutes of practice every school night.", status: "active", reflection: "", created: day(-10), updated: day(-10) },
+        { id: nid(), uid: 101, ay: y, term: t, subj: null, title: "Enter one competition", plan: "Look at the Competitions page every Monday.", status: "done", reflection: "I entered the photo competition and came second. Next time I'll take more photos before choosing one.", created: day(-12), updated: day(-2) }];
+      db.push = []; db.school.wellbeing = false;
+      db.moods = [[103, -5, 3], [103, -4, 3], [103, -2, 2], [103, -1, 2, true, "I'm worried about the maths test."], [102, 0, 4], [104, -3, 1, false, "", 2], [105, -1, 5]]
+        .map(([uid, n, mood, talk, note, seen]) => ({ id: nid(), uid, day: dd(n), mood, talk: !!talk, note: note || "", at: day(n), seen_by: seen || null, seen_at: seen ? day(n + 1) : null }));
+    }
     db.users.forEach(u => { if (u.consent == null) u.consent = u.username === "dev.p" ? {} : { terms: u.created, privacy: u.created, v: 1 }; if (u.must_pw == null) u.must_pw = false; if (u.cd_code === undefined) { u.cd_code = u.username === "alice.j" ? "7K3Q" : null; u.cd_user = u.username === "alice.j" ? "alice_j" : null; } });
   };
   const load = () => { try { db = JSON.parse(localStorage.getItem(KEY)); } catch (e) {} if (!db || !db.users) { db = seed(); } migrate(); save(); };
@@ -530,6 +539,63 @@
       if (!Array.isArray(rows)) return err("bad_text"); if (rows.length > 80) return err("too_many");
       if (rows.some(r => !/^[1-7]$/.test(String(r.day)) || !HHMM.test(r.starts || "") || !HHMM.test(r.ends || "") || r.ends <= r.starts || !String(r.title || "").trim() || String(r.title).trim().length > 60 || String(r.room || "").length > 30 || String(r.teacher || "").length > 40)) return err("bad_text");
       db.timetable = db.timetable.filter(r => r.class_id !== c).concat(rows.map(r => ({ id: nid(), class_id: c, day: +r.day, starts: r.starts, ends: r.ends, title: String(r.title).trim(), room: String(r.room || "").trim(), teacher: String(r.teacher || "").trim() }))); return { ok: true, n: rows.length }; }
+  });
+
+  /* v2.9: goals and the year portfolio, deadline reminders, wellbeing check-ins */
+  const ayOf = v => { const d = new Date(v); return d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1; }, termOf = v => { const m = new Date(v).getMonth(); return m >= 8 ? 1 : m <= 2 ? 2 : 3; };
+  const goalsOf = (uid, y) => db.goals.filter(g => g.uid === uid && (y == null || g.ay === y)).sort((p, q) => q.ay - p.ay || q.term - p.term || p.id - q.id)
+    .map(g => ({ id: g.id, ay: g.ay, term: g.term, subj: g.subj, title: g.title, plan: g.plan, status: g.status, reflection: g.reflection, updated: g.updated }));
+  const portfolioOf = (s, ay) => { const y = ay >= 2000 && ay <= 2100 ? +ay : ayOf(now()), inY = t => !!t && ayOf(t) === y;
+    return { ok: true, ay: y, first_ay: Math.min(ayOf(s.created), y), now_ay: ayOf(now()), school: db.school.name, goals: goalsOf(s.id, y),
+      student: { id: s.id, name: s.name, year: s.year, house: s.house || null, class: s.class_id ? cls(s.class_id).name : null },
+      lessons: db.lesson_done.filter(d => d.uid === s.id && inY(d.at)).length,
+      checkpoints: new Set(db.quiz_res.filter(r => { const q = db.quizzes.find(x => x.id === r.quiz_id); return r.uid === s.id && inY(r.at) && q && q.kind === "checkpoint" && 100 * r.score >= q.threshold * Math.max(r.out_of, 1); }).map(r => r.quiz_id)).size,
+      points: db.points.filter(p => p.uid === s.id && inY(p.at)).reduce((n, p) => n + p.pts, 0),
+      activities: db.activity_done.filter(d => d.uid === s.id && inY(d.at)).map(d => { const x = db.activities.find(v => v.id === d.activity_id) || {}; return { title: x.title, cat: x.cat, at: d.at }; }),
+      competitions: db.entries.filter(e => e.uid === s.id && inY(e.at)).map(e => { const c = db.competitions.find(v => v.id === e.comp_id) || {}; return { title: c.title, kind: c.kind, place: e.place, at: e.at }; }),
+      clubs: db.club_members.filter(m => m.uid === s.id && ayOf(m.at) <= y).map(m => { const c = db.clubs.find(v => v.id === m.club_id) || {}; return { title: c.title, day: c.day }; }).sort((p, q) => String(p.title).localeCompare(q.title)),
+      work: db.subs.filter(w => w.uid === s.id && w.status !== "draft" && inY(w.sub_at)).sort((p, q) => p.sub_at < q.sub_at ? -1 : 1)
+        .map(w => { const x = db.assigns.find(v => v.id === w.assign_id) || {}; return { title: x.title, subj: x.subj, kind: x.kind, status: w.status, score: w.score, at: w.sub_at }; }) }; };
+  const MOODN = ["", "Struggling", "Not great", "Okay", "Good", "Great"], flag = (m, t) => m <= 2 || !!t, pastoral = u => u.role === "admin" || (u.role === "teacher" && !!u.pastoral);
+  const tidyMoods = () => { const cut = new Date(Date.now() - 180 * 864e5); db.moods = db.moods.filter(m => m.day >= cut.toISOString().slice(0, 10));
+    db.notifs = db.notifs.filter(n => n.kind !== "wellbeing" || (new Date(n.created) >= cut && db.users.some(t => t.id === n.uid && pastoral(t)))); };
+  const PUSH_HOST = /^https:\/\/(fcm\.googleapis\.com|android\.googleapis\.com|updates\.push\.services\.mozilla\.com|[a-z0-9.-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)\/[!-~]+$/;
+  Object.assign(F, {
+    ed_s_goals(a) { const u = who(a); if (!u) return err("bad_key"); return { ok: true, ay: ayOf(now()), term: termOf(now()), rows: goalsOf(u.id, null) }; },
+    ed_s_goal_save(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); const t = String(a.p_title || "").trim(), st = a.p_status || "active";
+      if (!t || t.length > 120 || String(a.p_plan || "").length > 1000 || String(a.p_reflection || "").length > 2000 || !["active", "done", "dropped"].includes(st)) return err("bad_text");
+      const f = { subj: a.p_subj != null && db.subjects.some(x => x.id === +a.p_subj) ? +a.p_subj : null, title: t, plan: String(a.p_plan || "").trim(), status: st, reflection: String(a.p_reflection || "").trim(), updated: now() };
+      if (+a.p_id) { const g = db.goals.find(x => x.id === +a.p_id && x.uid === u.id); if (!g) return err("not_found"); Object.assign(g, f); return { ok: true, id: g.id }; }
+      const y = ayOf(now()), tm = termOf(now()); if (db.goals.filter(g => g.uid === u.id && g.ay === y && g.term === tm && g.status === "active").length >= 6) return err("too_many");
+      const g = Object.assign({ id: nid(), uid: u.id, ay: y, term: tm, created: now() }, f); db.goals.push(g); return { ok: true, id: g.id }; },
+    ed_s_goal_del(a) { const u = who(a); if (!u) return err("bad_key"); const n = db.goals.length; db.goals = db.goals.filter(g => !(g.id === +a.p_id && g.uid === u.id)); return { ok: db.goals.length < n }; },
+    ed_s_portfolio(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); return portfolioOf(u, a.p_ay); },
+    ed_t_portfolio(a) { const u = who(a); const e = mustStaff(u); if (e) return e; const s = db.users.find(x => x.id === +a.p_uid && x.role === "student"); if (!s) return err("not_found");
+      if (!(u.role === "admin" || (s.class_id && canClass(u, s.class_id)))) return err("forbidden"); return portfolioOf(s, a.p_ay); },
+    ed_s_push(a) { const u = who(a); if (!u) return err("bad_key"); return { ok: true, ready: false, on: db.push.some(p => p.uid === u.id && p.endpoint === a.p_endpoint) }; },   // the sample campus has no sender
+    ed_s_push_save(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); if (!PUSH_HOST.test(a.p_endpoint || "") || String(a.p_endpoint).length > 1000) return err("bad_text");
+      db.push = db.push.filter(p => p.endpoint !== a.p_endpoint).concat({ endpoint: a.p_endpoint, uid: u.id, lang: ["en", "fr", "ar"].includes(a.p_lang) ? a.p_lang : "en", tz: a.p_tz || "UTC", created: now() }); return { ok: true }; },
+    ed_s_push_del(a) { const u = who(a); if (!u) return err("bad_key"); db.push = db.push.filter(p => !(p.uid === u.id && p.endpoint === a.p_endpoint)); return { ok: true }; },
+    ed_s_checkin(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student" || !db.school.wellbeing) return { ok: true, on: false };
+      const m = db.moods.find(x => x.uid === u.id && x.day === today()); return { ok: true, on: true, today: m ? { mood: m.mood, talk: m.talk, note: m.note } : null }; },
+    ed_s_checkin_save(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "student") return err("forbidden"); if (!db.school.wellbeing) return err("off");
+      const mood = +a.p_mood, talk = !!a.p_talk; if (!(mood >= 1 && mood <= 5) || String(a.p_note || "").length > 500) return err("bad_text");
+      let m = db.moods.find(x => x.uid === u.id && x.day === today()); const old = m ? { mood: m.mood, talk: m.talk } : null;
+      if (!m) { m = { id: nid(), uid: u.id, day: today(), seen_by: null, seen_at: null }; db.moods.push(m); } Object.assign(m, { mood, talk, note: String(a.p_note || "").trim(), at: now() });
+      if (flag(mood, talk) && (!old || !flag(old.mood, old.talk) || (talk && !old.talk))) { m.seen_by = null; m.seen_at = null;
+        db.users.filter(t => pastoral(t) && !t.disabled).forEach(t => db.notifs.push({ id: nid(), uid: t.id, kind: "wellbeing", title: "Wellbeing check-in: " + u.name, body: "Checked in: " + MOODN[mood] + (talk ? " · would like to talk to someone" : ""), link: "#/wellbeing", created: now(), read_at: null })); }
+      tidyMoods(); return { ok: true }; },
+    ed_t_wellbeing(a) { const u = who(a); if (!u) return err("bad_key"); if (!pastoral(u)) return err("forbidden"); tidyMoods();
+      const n = Math.min(Math.max(+a.p_days || 14, 1), 60), from = new Date(Date.now() - n * 864e5).toISOString().slice(0, 10), win = db.moods.filter(m => m.day > from);
+      return { ok: true, on: !!db.school.wellbeing, days: n, counts: [1, 2, 3, 4, 5].map(k => win.filter(m => m.mood === k).length), students: new Set(win.map(m => m.uid)).size,
+        rows: win.filter(m => flag(m.mood, m.talk)).sort((p, q) => (!!p.seen_at - !!q.seen_at) || (p.day < q.day ? 1 : p.day > q.day ? -1 : p.at < q.at ? 1 : -1)).map(m => { const s = db.users.find(x => x.id === m.uid) || {}, by = db.users.find(x => x.id === m.seen_by);
+          return { id: m.id, uid: m.uid, name: s.name, class: s.class_id ? cls(s.class_id).name : null, day: m.day, at: m.at, mood: m.mood, talk: m.talk, note: m.note, seen_at: m.seen_at, seen_by: by ? by.name : null,
+            recent: db.moods.filter(x => x.uid === m.uid).sort((p, q) => p.day < q.day ? 1 : -1).slice(0, 7).reverse().map(x => x.mood) }; }) }; },
+    ed_t_wellbeing_seen(a) { const u = who(a); if (!u) return err("bad_key"); if (!pastoral(u)) return err("forbidden"); const m = db.moods.find(x => x.id === +a.p_id); if (!m) return { ok: false }; m.seen_by = u.id; m.seen_at = now(); return { ok: true }; },
+    ed_a_wellbeing(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden");
+      return { ok: true, on: !!db.school.wellbeing, staff: db.users.filter(t => (t.role === "teacher" || t.role === "admin") && !t.disabled).sort((p, q) => p.role.localeCompare(q.role) || p.name.localeCompare(q.name)).map(t => ({ id: t.id, name: t.name, role: t.role, pastoral: pastoral(t) })) }; },
+    ed_a_wellbeing_set(a) { const u = who(a); if (!u) return err("bad_key"); if (u.role !== "admin") return err("forbidden"); db.school.wellbeing = !!a.p_on;
+      const ids = (a.p_staff || []).map(Number); db.users.forEach(t => { if (t.role === "teacher") t.pastoral = ids.includes(t.id); }); tidyMoods(); return { ok: true }; }
   });
 
   window.CE_DEMO = {

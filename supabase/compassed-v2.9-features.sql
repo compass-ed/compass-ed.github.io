@@ -189,6 +189,282 @@ begin
   return json_build_object('ok', true, 'n', n);
 end $$;
 
+-- ---------- 4. Termly goals and the year portfolio ----------
+-- A school year starts on 1 September (2026 means 2026-27). Terms: 1 autumn (Sep-Dec), 2 spring (Jan-Mar), 3 summer (Apr-Aug).
+create table if not exists public.ed_goal (
+  id         serial primary key,
+  uid        int not null references public.ed_user(id) on delete cascade,
+  ay         int not null,
+  term       int not null check (term between 1 and 3),
+  subj       int references public.ed_subject(id) on delete set null,
+  title      text not null,
+  plan       text not null default '',                  -- how I'll do it
+  status     text not null default 'active' check (status in ('active','done','dropped')),
+  reflection text not null default '',                  -- how it went
+  created    timestamptz not null default now(),
+  updated    timestamptz not null default now()
+);
+create index if not exists ed_goal_uid on public.ed_goal (uid, ay, term);
+alter table public.ed_goal enable row level security;
+revoke all on public.ed_goal from anon, authenticated;
+
+create or replace function public.ed_ay(d date) returns int language sql immutable as $$
+  select extract(year from d)::int - case when extract(month from d) >= 9 then 0 else 1 end $$;
+create or replace function public.ed_term(d date) returns int language sql immutable as $$
+  select case when extract(month from d) >= 9 then 1 when extract(month from d) <= 3 then 2 else 3 end $$;
+create or replace function public.ed_goals_of(p_uid int, p_ay int) returns json language sql stable security definer set search_path = public as $$
+  select coalesce(json_agg(json_build_object('id', g.id, 'ay', g.ay, 'term', g.term, 'subj', g.subj, 'title', g.title, 'plan', g.plan, 'status', g.status,
+    'reflection', g.reflection, 'updated', g.updated) order by g.ay desc, g.term desc, g.id), '[]'::json)
+  from public.ed_goal g where g.uid = p_uid and (p_ay is null or g.ay = p_ay) $$;
+
+create or replace function public.ed_s_goals(p_key text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if;
+  return json_build_object('ok', true, 'ay', public.ed_ay(current_date), 'term', public.ed_term(current_date), 'rows', public.ed_goals_of(u.id, null));
+end $$;
+-- New goals go into the current term (at most 6 in progress at once); any of your own goals can be edited later, e.g. to write the reflection.
+create or replace function public.ed_s_goal_save(p_key text, p_id int, p_subj int, p_title text, p_plan text, p_status text, p_reflection text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key); g public.ed_goal; i int; sj int := p_subj; st text := coalesce(p_status, 'active');
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'student' then return public.ed_err('forbidden'); end if;
+  if length(btrim(coalesce(p_title, ''))) not between 1 and 120 or length(coalesce(p_plan, '')) > 1000 or length(coalesce(p_reflection, '')) > 2000
+     or st not in ('active','done','dropped') then return public.ed_err('bad_text'); end if;
+  if sj is not null and not exists (select 1 from public.ed_subject where id = sj) then sj := null; end if;
+  if p_id is not null and p_id > 0 then
+    select * into g from public.ed_goal where id = p_id and uid = u.id; if g.id is null then return public.ed_err('not_found'); end if;
+    update public.ed_goal set subj = sj, title = btrim(p_title), plan = btrim(coalesce(p_plan, '')), status = st, reflection = btrim(coalesce(p_reflection, '')), updated = now() where id = g.id;
+    return json_build_object('ok', true, 'id', g.id);
+  end if;
+  if (select count(*) from public.ed_goal where uid = u.id and ay = public.ed_ay(current_date) and term = public.ed_term(current_date) and status = 'active') >= 6 then return public.ed_err('too_many'); end if;
+  insert into public.ed_goal (uid, ay, term, subj, title, plan, status, reflection)
+    values (u.id, public.ed_ay(current_date), public.ed_term(current_date), sj, btrim(p_title), btrim(coalesce(p_plan, '')), st, btrim(coalesce(p_reflection, ''))) returning id into i;
+  return json_build_object('ok', true, 'id', i);
+end $$;
+create or replace function public.ed_s_goal_del(p_key text, p_id int) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if;
+  delete from public.ed_goal where id = p_id and uid = u.id;
+  return json_build_object('ok', found);
+end $$;
+
+-- One school year of a student's record, for the printable portfolio
+create or replace function public.ed_portfolio_of(s public.ed_user, p_ay int) returns json language plpgsql stable security definer set search_path = public, extensions as $$
+declare y int := case when p_ay between 2000 and 2100 then p_ay else public.ed_ay(current_date) end; a timestamptz; b timestamptz;
+begin
+  a := make_date(y, 9, 1)::timestamptz; b := make_date(y + 1, 9, 1)::timestamptz;
+  return json_build_object('ok', true, 'ay', y, 'first_ay', least(public.ed_ay(s.created::date), y), 'now_ay', public.ed_ay(current_date),
+    'student', json_build_object('id', s.id, 'name', s.name, 'year', s.year, 'house', s.house, 'class', (select name from public.ed_class where id = s.class_id)),
+    'school', (select name from public.ed_school where id = 1),
+    'goals', public.ed_goals_of(s.id, y),
+    'lessons', (select count(*) from public.ed_lesson_done d where d.uid = s.id and d.at >= a and d.at < b),
+    'checkpoints', (select count(distinct q.id) from public.ed_quiz q join public.ed_quiz_res r on r.quiz_id = q.id
+      where q.kind = 'checkpoint' and r.uid = s.id and r.at >= a and r.at < b and 100 * r.score >= q.threshold * greatest(r.out_of, 1)),
+    'points', (select coalesce(sum(pts), 0) from public.ed_points p where p.uid = s.id and p.at >= a and p.at < b),
+    'activities', (select coalesce(json_agg(json_build_object('title', x.title, 'cat', x.cat, 'at', d.at) order by d.at), '[]'::json)
+      from public.ed_activity_done d join public.ed_activity x on x.id = d.activity_id where d.uid = s.id and d.at >= a and d.at < b),
+    'competitions', (select coalesce(json_agg(json_build_object('title', c.title, 'kind', c.kind, 'place', e.place, 'at', e.at) order by e.at), '[]'::json)
+      from public.ed_entry e join public.ed_competition c on c.id = e.comp_id where e.uid = s.id and e.at >= a and e.at < b),
+    'clubs', (select coalesce(json_agg(json_build_object('title', c.title, 'day', c.day) order by c.title), '[]'::json)
+      from public.ed_club_member m join public.ed_club c on c.id = m.club_id where m.uid = s.id and m.at < b),
+    'work', (select coalesce(json_agg(json_build_object('title', x.title, 'subj', x.subj, 'kind', x.kind, 'status', w.status, 'score', w.score, 'at', w.sub_at) order by w.sub_at), '[]'::json)
+      from public.ed_sub w join public.ed_assign x on x.id = w.assign_id where w.uid = s.id and w.status <> 'draft' and w.sub_at >= a and w.sub_at < b));
+end $$;
+create or replace function public.ed_s_portfolio(p_key text, p_ay int) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'student' then return public.ed_err('forbidden'); end if;
+  return public.ed_portfolio_of(u, p_ay);
+end $$;
+-- Staff: a student in a class they can see (admins: anyone)
+create or replace function public.ed_t_portfolio(p_key text, p_uid int, p_ay int) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key); s public.ed_user;
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_staff(u) then return public.ed_err('forbidden'); end if;
+  select * into s from public.ed_user where id = p_uid and role = 'student'; if s.id is null then return public.ed_err('not_found'); end if;
+  if not (u.role = 'admin' or (s.class_id is not null and public.ed_can_class(u, s.class_id))) then return public.ed_err('forbidden'); end if;
+  return public.ed_portfolio_of(s, p_ay);
+end $$;
+
+-- ---------- 5. Deadline reminders (Web Push) ----------
+-- Students' devices that asked for reminders. The ed-remind Edge Function (supabase/functions/ed-remind) runs hourly:
+-- it calls ed_push_due() for the messages to send and ed_push_gone() for devices that no longer exist. Neither is callable from the browser.
+alter table public.ed_school add column if not exists push_run timestamptz;   -- last run of the sender: the Settings switch shows only once it runs
+create table if not exists public.ed_push (
+  endpoint text primary key,                    -- the browser's push address (Google, Mozilla, Apple or Microsoft)
+  uid      int not null references public.ed_user(id) on delete cascade,
+  p256dh   text not null,
+  auth     text not null,
+  lang     text not null default 'en',
+  tz       text not null default 'UTC',         -- the device's time zone: reminders go out between 07:00 and 20:59 there
+  created  timestamptz not null default now()
+);
+create index if not exists ed_push_uid on public.ed_push (uid);
+create table if not exists public.ed_push_sent (
+  uid       int not null references public.ed_user(id) on delete cascade,
+  assign_id int not null references public.ed_assign(id) on delete cascade,
+  at        timestamptz not null default now(),
+  primary key (uid, assign_id)
+);
+alter table public.ed_push enable row level security;
+alter table public.ed_push_sent enable row level security;
+revoke all on public.ed_push, public.ed_push_sent from anon, authenticated;
+
+create or replace function public.ed_push_host(p text) returns boolean language sql immutable as $$   -- only real push services, so the sender can't be pointed at any other address
+  select length(p) <= 1000 and p ~ '^https://(fcm\.googleapis\.com|android\.googleapis\.com|updates\.push\.services\.mozilla\.com|[a-z0-9.-]+\.push\.apple\.com|[a-z0-9.-]+\.notify\.windows\.com)/[!-~]+$' $$;
+create or replace function public.ed_s_push(p_key text, p_endpoint text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if;
+  return json_build_object('ok', true, 'ready', coalesce((select push_run > now() - interval '3 hours' from public.ed_school where id = 1), false),
+    'on', exists (select 1 from public.ed_push where uid = u.id and endpoint = p_endpoint));
+end $$;
+create or replace function public.ed_s_push_save(p_key text, p_endpoint text, p_p256dh text, p_auth text, p_lang text, p_tz text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key); tz text := 'UTC';
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'student' then return public.ed_err('forbidden'); end if;
+  if not public.ed_push_host(coalesce(p_endpoint, '')) or coalesce(p_p256dh, '') !~ '^[A-Za-z0-9_-]{80,100}={0,2}$' or coalesce(p_auth, '') !~ '^[A-Za-z0-9_-]{16,32}={0,2}$' then return public.ed_err('bad_text'); end if;
+  if exists (select 1 from pg_timezone_names where name = p_tz) then tz := p_tz; end if;
+  insert into public.ed_push (endpoint, uid, p256dh, auth, lang, tz) values (p_endpoint, u.id, p_p256dh, p_auth, case when p_lang in ('en','fr','ar') then p_lang else 'en' end, tz)
+    on conflict (endpoint) do update set uid = excluded.uid, p256dh = excluded.p256dh, auth = excluded.auth, lang = excluded.lang, tz = excluded.tz, created = now();
+  delete from public.ed_push where uid = u.id and endpoint not in (select endpoint from public.ed_push where uid = u.id order by created desc limit 5);   -- 5 devices each
+  return json_build_object('ok', true);
+end $$;
+create or replace function public.ed_s_push_del(p_key text, p_endpoint text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if;
+  delete from public.ed_push where uid = u.id and endpoint = p_endpoint;
+  return json_build_object('ok', true);
+end $$;
+-- For the sender only: one message per device for work due in the next 24 hours that the student hasn't handed in, once per piece of work
+create or replace function public.ed_push_due() returns json language plpgsql security definer set search_path = public, extensions as $$
+declare out json;
+begin
+  update public.ed_school set push_run = now() where id = 1;
+  delete from public.ed_push_sent where at < now() - interval '60 days';
+  with due as (
+    select s.id as uid, a.id as assign_id, a.title, a.due, p.endpoint, p.p256dh, p.auth, p.lang, to_char(a.due at time zone p.tz, 'HH24:MI') as hm,
+      (a.due at time zone p.tz)::date = (now() at time zone p.tz)::date as today
+    from public.ed_assign a
+    join public.ed_user s on s.class_id = a.class_id and s.role = 'student' and not s.disabled
+    join public.ed_push p on p.uid = s.id
+    where a.due > now() and a.due <= now() + interval '24 hours'
+      and extract(hour from now() at time zone p.tz) between 7 and 20
+      and public.ed_push_host(p.endpoint)
+      and not exists (select 1 from public.ed_sub w where w.assign_id = a.id and w.uid = s.id and w.status <> 'draft')
+      and not exists (select 1 from public.ed_push_sent x where x.uid = s.id and x.assign_id = a.id)
+  ), mark as (
+    insert into public.ed_push_sent (uid, assign_id) select distinct uid, assign_id from due on conflict do nothing
+  )
+  select coalesce(json_agg(json_build_object('endpoint', endpoint, 'p256dh', p256dh, 'auth', auth, 'title', title, 'tag', 'assign-' || assign_id,
+      'ttl', greatest(60, extract(epoch from due - now())::int),   -- the push service drops it once the work is due
+      'url', 'student/#/assignment/' || assign_id,
+      'body', case lang when 'fr' then case when today then 'À rendre aujourd''hui à ' else 'À rendre demain à ' end
+                        when 'ar' then case when today then 'التسليم اليوم الساعة ' else 'التسليم غدًا الساعة ' end
+                        else case when today then 'Due today at ' else 'Due tomorrow at ' end end || hm)), '[]'::json) into out from due;
+  return out;
+end $$;
+create or replace function public.ed_push_gone(p_endpoints text[]) returns json language sql security definer set search_path = public as $$
+  with d as (delete from public.ed_push where endpoint = any(p_endpoints) returning 1) select json_build_object('ok', true, 'n', (select count(*) from d)) $$;
+
+-- ---------- 6. Wellbeing check-ins (off until an admin turns them on) ----------
+alter table public.ed_school add column if not exists wellbeing boolean not null default false;
+alter table public.ed_user add column if not exists pastoral boolean not null default false;   -- staff who see check-ins and get the alerts (admins always do)
+create table if not exists public.ed_mood (
+  id      serial primary key,
+  uid     int not null references public.ed_user(id) on delete cascade,
+  day     date not null default current_date,      -- shortcut: the database's date (UTC); a check-in before 03:00 in UTC+3 counts for the day before
+  mood    int not null check (mood between 1 and 5),   -- 1 struggling, 2 not great, 3 okay, 4 good, 5 great
+  talk    boolean not null default false,          -- would like to talk to someone
+  note    text not null default '',
+  at      timestamptz not null default now(),
+  seen_by int references public.ed_user(id) on delete set null,   -- followed up by
+  seen_at timestamptz,
+  unique (uid, day)
+);
+create index if not exists ed_mood_day on public.ed_mood (day);
+alter table public.ed_mood enable row level security;
+revoke all on public.ed_mood from anon, authenticated;
+
+create or replace function public.ed_pastoral(u public.ed_user) returns boolean language sql immutable as $$ select u.role = 'admin' or (u.role = 'teacher' and u.pastoral) $$;
+create or replace function public.ed_mood_flag(p_mood int, p_talk boolean) returns boolean language sql immutable as $$ select p_mood <= 2 or p_talk $$;
+create or replace function public.ed_mood_tidy() returns void language sql security definer set search_path = public as $$
+  delete from public.ed_mood where day < current_date - 180;   -- kept for six months: the students are told this
+  -- and so are the alerts, which also go when their reader is no longer one of the wellbeing staff
+  delete from public.ed_notif n where n.kind = 'wellbeing' and (n.created < now() - interval '180 days' or not exists (select 1 from public.ed_user t where t.id = n.uid and public.ed_pastoral(t))) $$;
+
+create or replace function public.ed_s_checkin(p_key text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if;
+  if u.role <> 'student' or not coalesce((select wellbeing from public.ed_school where id = 1), false) then return json_build_object('ok', true, 'on', false); end if;
+  return json_build_object('ok', true, 'on', true, 'today', (select json_build_object('mood', mood, 'talk', talk, 'note', note) from public.ed_mood where uid = u.id and day = current_date));
+end $$;
+create or replace function public.ed_s_checkin_save(p_key text, p_mood int, p_talk boolean, p_note text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key); old public.ed_mood; tk boolean := coalesce(p_talk, false);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'student' then return public.ed_err('forbidden'); end if;
+  if not coalesce((select wellbeing from public.ed_school where id = 1), false) then return public.ed_err('off'); end if;
+  if p_mood is null or p_mood not between 1 and 5 or length(coalesce(p_note, '')) > 500 then return public.ed_err('bad_text'); end if;
+  select * into old from public.ed_mood where uid = u.id and day = current_date;
+  insert into public.ed_mood (uid, mood, talk, note) values (u.id, p_mood, tk, btrim(coalesce(p_note, '')))
+    on conflict (uid, day) do update set mood = excluded.mood, talk = excluded.talk, note = excluded.note, at = now();
+  -- newly worrying (or a new request to talk): alert the wellbeing staff, once, and put it back on their to-do list
+  if public.ed_mood_flag(p_mood, tk) and (old.id is null or not public.ed_mood_flag(old.mood, old.talk) or (tk and not old.talk)) then
+    update public.ed_mood set seen_by = null, seen_at = null where uid = u.id and day = current_date;
+    insert into public.ed_notif (uid, kind, title, body, link)
+      select t.id, 'wellbeing', 'Wellbeing check-in: ' || u.name,
+        'Checked in: ' || (array['Struggling','Not great','Okay','Good','Great'])[p_mood] || case when tk then ' · would like to talk to someone' else '' end, '#/wellbeing'
+      from public.ed_user t where public.ed_pastoral(t) and not t.disabled;
+  end if;
+  perform public.ed_mood_tidy();
+  return json_build_object('ok', true);
+end $$;
+-- Wellbeing staff: the worrying check-ins of the last n days (to follow up first), and how everyone answered
+create or replace function public.ed_t_wellbeing(p_key text, p_days int) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key); n int := least(greatest(coalesce(p_days, 14), 1), 60);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_pastoral(u) then return public.ed_err('forbidden'); end if;
+  perform public.ed_mood_tidy();
+  return json_build_object('ok', true, 'on', coalesce((select wellbeing from public.ed_school where id = 1), false), 'days', n,
+    'counts', (select json_build_array(count(*) filter (where mood = 1), count(*) filter (where mood = 2), count(*) filter (where mood = 3), count(*) filter (where mood = 4), count(*) filter (where mood = 5))
+      from public.ed_mood where day > current_date - n),
+    'students', (select count(distinct uid) from public.ed_mood where day > current_date - n),
+    'rows', (select coalesce(json_agg(json_build_object('id', m.id, 'uid', m.uid, 'name', s.name, 'class', c.name, 'day', m.day, 'at', m.at, 'mood', m.mood, 'talk', m.talk, 'note', m.note,
+        'seen_at', m.seen_at, 'seen_by', (select name from public.ed_user where id = m.seen_by),
+        'recent', (select json_agg(r.mood order by r.day) from (select x.mood, x.day from public.ed_mood x where x.uid = m.uid order by x.day desc limit 7) r))
+        order by (m.seen_at is null) desc, m.day desc, m.at desc), '[]'::json)
+      from public.ed_mood m join public.ed_user s on s.id = m.uid left join public.ed_class c on c.id = s.class_id
+      where m.day > current_date - n and public.ed_mood_flag(m.mood, m.talk)));
+end $$;
+create or replace function public.ed_t_wellbeing_seen(p_key text, p_id int) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if not public.ed_pastoral(u) then return public.ed_err('forbidden'); end if;
+  update public.ed_mood set seen_by = u.id, seen_at = now() where id = p_id;
+  return json_build_object('ok', found);
+end $$;
+-- Admin: switch check-ins on or off and choose the staff who see them
+create or replace function public.ed_a_wellbeing(p_key text) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'admin' then return public.ed_err('forbidden'); end if;
+  return json_build_object('ok', true, 'on', coalesce((select wellbeing from public.ed_school where id = 1), false),
+    'staff', (select coalesce(json_agg(json_build_object('id', t.id, 'name', t.name, 'role', t.role, 'pastoral', t.role = 'admin' or t.pastoral) order by t.role, t.name), '[]'::json)
+      from public.ed_user t where t.role in ('teacher','admin') and not t.disabled));
+end $$;
+create or replace function public.ed_a_wellbeing_set(p_key text, p_on boolean, p_staff int[]) returns json language plpgsql security definer set search_path = public, extensions as $$
+declare u public.ed_user := public.ed_who(p_key);
+begin
+  if u.id is null then return public.ed_err('bad_key'); end if; if u.role <> 'admin' then return public.ed_err('forbidden'); end if;
+  update public.ed_school set wellbeing = coalesce(p_on, false), updated = now() where id = 1;
+  update public.ed_user set pastoral = (id = any(coalesce(p_staff, '{}'::int[]))) where role = 'teacher';
+  perform public.ed_mood_tidy();
+  return json_build_object('ok', true);
+end $$;
+
 -- ---------- Permissions (same rule as before) ----------
 do $$ declare f record; begin
   for f in select p.oid::regprocedure as sig, p.proname as name from pg_proc p where p.pronamespace = 'public'::regnamespace and p.proname like 'ed\_%' loop
@@ -201,3 +477,5 @@ do $$ declare f record; begin
   end loop;
 end $$;
 grant usage on schema public to anon, authenticated;
+-- the reminder sender (the ed-remind Edge Function) signs in as service_role; the browser can't call these
+grant execute on function public.ed_push_due(), public.ed_push_gone(text[]) to service_role;
