@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<title>Lodestone</title>
+<rect width="512" height="512" fill="#ffffff"/>
+<path fill="#2fa9b5" stroke="#2fa9b5" stroke-width="6" stroke-linejoin="round" d="M256 14 L466 256 L256 498 L46 256 Z"/>
+<path fill="#000000" stroke="#000000" stroke-width="6" stroke-linejoin="round" d="M256 498 L46 256 L108 184 L168 262 L200 156 L256 262 Z M 256 498 L 466 256 L 404 184 L 344 262 L 312 156 L 256 262 Z"/>
+<path fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round" d="M40 318 C150 302 226 326 256 372 M 472 318 C 362 302 286 326 256 372"/>
+<path fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="butt" stroke-linejoin="round" d="M256 372 L256 510 M 256 372 L 256 510"/>
+</svg>

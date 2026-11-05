@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<title>Paper Crown</title>
+<rect width="512" height="512" fill="#ffffff"/>
+<path fill="#4cc4cf" d="M256 58 L204 226 L204 327.8 L256 340.0 Z M 256 58 L 308 226 L 308 327.8 L 256 340 Z"/>
+<path fill="#000000" d="M204 226 L146 104 L146 314.1 L204 327.8 Z M 308 226 L 366 104 L 366 314.1 L 308 327.8 Z"/>
+<path fill="#2fa9b5" d="M146 104 L100 232 L100 303.3 L146 314.1 Z M 366 104 L 412 232 L 412 303.3 L 366 314.1 Z"/>
+<path fill="#000000" d="M100 232 L24 120 L52 292.1 L100 303.3 Z M 412 232 L 488 120 L 460 292.1 L 412 303.3 Z"/>
+<path fill="#000000" stroke="#000000" stroke-width="6" stroke-linejoin="round" d="M249 356 L50 310 L60 366 L249 412 Z M 263 356 L 462 310 L 452 366 L 263 412 Z"/>
+</svg>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<title>Nib Crown</title>
+<rect width="512" height="512" fill="#ffffff"/>
+<path fill="#000000" stroke="#000000" stroke-width="6" stroke-linejoin="round" d="M248 418 C200 378 126 366 54 378 C52 300 50 216 36 146 C58 286 134 286 148 106 C152 200 176 272 226 306 L238 340 L248 346 Z M 264 418 C 312 378 386 366 458 378 C 460 300 462 216 476 146 C 454 286 378 286 364 106 C 360 200 336 272 286 306 L 274 340 L 264 346 Z"/>
+<path fill="none" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M60 340 C126 328 196 342 248 384 M 452 340 C 386 328 316 342 264 384"/>
+<path fill="#2fa9b5" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" paint-order="stroke" d="M256 30 C242 104 212 164 208 214 C206 250 232 272 236 306 L236 346 L276 346 L276 306 C280 272 306 250 304 214 C300 164 270 104 256 30 Z"/>
+<circle cx="256" cy="226" r="15" fill="#ffffff"/>
+<path stroke="#ffffff" stroke-width="7" d="M256 92 L256 424"/>
+<circle cx="36" cy="128" r="14" fill="#000000"/><circle cx="476" cy="128" r="14" fill="#000000"/><circle cx="148" cy="88" r="14" fill="#000000"/><circle cx="364" cy="88" r="14" fill="#000000"/>
+</svg>
