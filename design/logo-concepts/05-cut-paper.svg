@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<title>Cut Paper</title>
-<rect width="512" height="512" fill="#ffffff"/>
-<path fill="#4cc4cf" d="M256 40 C232 120 214 170 180 214 C160 170 142 130 116 76 C104 150 84 210 60 250 L60 330 L256 330 Z M 256 40 C 280 120 298 170 332 214 C 352 170 370 130 396 76 C 408 150 428 210 452 250 L 452 330 L 256 330 Z"/>
-<path fill="#2fa9b5" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" paint-order="stroke" d="M256 214 C228 196 204 174 186 132 C170 190 142 232 112 262 C92 230 62 196 26 170 C40 240 44 280 44 330 L256 370 Z M 256 214 C 284 196 308 174 326 132 C 342 190 370 232 400 262 C 420 230 450 196 486 170 C 472 240 468 280 468 330 L 256 370 Z"/>
-<path fill="#000000" stroke="#ffffff" stroke-width="10" stroke-linejoin="round" paint-order="stroke" d="M249 430 C200 390 126 378 40 392 C36 350 34 330 28 296 C120 282 196 298 249 366 Z M 263 430 C 312 390 386 378 472 392 C 476 350 478 330 484 296 C 392 282 316 298 263 366 Z"/>
-</svg>

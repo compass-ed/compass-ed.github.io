@@ -5,3 +5,5 @@
 supabase/local/
 .vercel
 .env*
+# logo concepts: local review files, not part of the site
+design/
