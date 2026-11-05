@@ -6,3 +6,5 @@ supabase/local
 .env.local
 .vercel
 .impeccable
+# Logo concepts: review files, not part of the site
+design
