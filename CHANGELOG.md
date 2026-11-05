@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v2.9.1 — 5 November 2026
+- **Qatar History & Citizenship in Compass Dash.** A new subject (the 12th, after Arabic) with the first two lessons of the Ministry's Grade 8 book, written in our own words: *Economy and Society, 1913–1949* (the pearl slump, the search for oil, Quranic schools, the majlis and the courts) and *Qatar's Economic Resources* (farming and food security, livestock and fish, oil and gas). Each has a lesson, 15 questions from easy to hard, 8 flashcards and 2 activities, and works in every Compass Dash game and test. Set for Year 8. Its name and description are translated into French and Arabic; the lessons stay in English like the rest of Compass Dash.
+- Database: `supabase/compassed-v2.9.1-qatar-history.sql` (run once, after Compass Dash's teacher accounts) gives the new subject its two Teacher Panel seats and lets an admin set a class to it.
+
 ## v2.9 — 4 November 2026
 - **Listen.** Lessons, activities, assignment instructions, news and announcements have a Listen button that reads them aloud with the device's own voices, in English, French or Arabic (the voice follows the language of the text, not the menu). Settings has a slower speed. Nothing is sent anywhere.
 - **Mark book export.** A class page's "Export mark book" downloads an Excel file with two sheets: every piece of work set to the class (marks, or handed in / missing) and each unit's best checkpoint score.
