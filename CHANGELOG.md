@@ -2,6 +2,11 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.1 — 6 November 2026
+- **Compass Dash in the Campus Hub style (Dash v2.8.2).** The same fonts, colours, cards and dark page headers as the portals. On its own it has the black sidebar; inside a portal it uses tabs, so there is only ever one sidebar. The Teacher Panel has the same sidebar and headers, and subjects use the drawn pictures from the Campus Hub. Logos and gameplay are unchanged. A colour theme bought in the Shop still recolours the buttons.
+- **Calmer backgrounds.** Normal pages have a still background with soft colour and a dot pattern. The game scene only appears while playing or trying something on, so an idle page no longer redraws the screen. Shop backgrounds keep their colours as soft gradients with a subtle pattern. The full scenes are still available: set Visual detail to Recreational in Settings.
+- **Tidied.** Six files that no page uses are gone: `hero-loop.mp4`, `signin-loop.mp4`, `signin-bg.jpg`, `band.jpg`, `id-card.jpg` and `compass.svg`, along with the CSS nothing used. They remain in the git history.
+
 ## v3.0 — 6 November 2026
 - **A new home page.** The hero is now the logo at full size: a large open book with every subject rising around it as a crown and the cyan nib at the centre. Pick a subject and the compass wheel turns it under the nib, the page turns, and the aurora and nib take on its colour. Eleven subjects, the same list the portals use. Swipe, click or use the arrow keys; in Arabic the book reads and turns from the right.
 - **Try it before you sign in.** Each subject's page holds a working preview of a real feature: a mastery checkpoint, the review queue, a lesson playlist, the calendar, What to do next, draft and hand in, competitions, clubs, the three languages, house points and announcements with receipts. "Schoolwork, too" is now six features to try in place, including the teacher's class overview. All of it is sample data: nothing is saved.

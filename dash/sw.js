@@ -5,8 +5,9 @@
      pages are then told a new version is ready so they can offer a refresh.
    - Icons, pictures, the app manifest, scripts and fonts: the saved copy straight away, refreshed in the background.
    - The trailer video and student account data (Supabase) always come from the network and are never saved here. */
-const V = "v4", SHELL = "cd-shell-" + V, RT = "cd-rt-" + V, MAX_RT = 80, SLOW = 3500;
-const CORE = ["./", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "compass-dash-trailer.jpg", "404.html"];
+const V = "v5", SHELL = "cd-shell-" + V, RT = "cd-rt-" + V, MAX_RT = 80, SLOW = 3500;
+const CORE = ["./", "manifest.webmanifest", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "compass-dash-trailer.jpg", "404.html",
+  "../assets/art/subj/maths.svg", "../assets/art/subj/english.svg", "../assets/art/subj/science.svg", "../assets/art/subj/geography.svg", "../assets/art/subj/languages.svg", "../assets/art/subj/computing.svg", "../assets/art/subj/art.svg", "../assets/art/subj/music.svg", "../assets/art/subj/history.svg"];
 
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(SHELL)
