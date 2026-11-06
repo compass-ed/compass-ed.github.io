@@ -45,8 +45,12 @@
 
   <section class="sec" style="padding-top:0" id="trailer">
     <div class="wrap">
-      <div class="sec-head"><div><div class="kicker">Trailer</div><h2 style="margin:0">Compass Ed in 30 seconds</h2></div><a class="btn ghost sm" href="assets/trailer/compass-ed-trailer.mp4" download>Download the video</a></div>
-      <div class="trailer vwrap"><video src="assets/trailer/compass-ed-trailer.mp4" controls playsinline preload="metadata" poster="assets/art/sting.svg" aria-label="Compass Ed trailer: a 30-second tour of the campus"></video></div>
+      <div class="sec-head"><div><div class="kicker">Trailer</div><h2 style="margin:0">Compass Ed in 30 seconds</h2></div><button class="btn ghost sm hide" id="trlSave" type="button">Save as video</button></div>
+      <div class="trl" id="trl">
+        <canvas width="1600" height="900" role="img" aria-label="Compass Ed trailer: a 30-second tour of the campus"></canvas>
+        <button class="trl-big" id="trlBig" type="button" aria-label="Play"><span data-icon="play"></span></button>
+        <div class="trl-bar"><button class="ib" id="trlPlay" type="button" aria-label="Play"><span data-icon="play"></span></button><div class="trl-prog" id="trlProg" role="slider" aria-label="Position" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0" tabindex="0"><i></i></div><span class="trl-time" id="trlTime">0:00 / 0:30</span><button class="ib" id="trlFs" type="button" aria-label="Full screen"><span data-icon="expand"></span></button></div>
+      </div>
     </div>
   </section>
 
@@ -129,5 +133,6 @@
 <script src="assets/core.js"></script>
 <script src="assets/icons.js"></script>
 <script src="assets/public.js"></script>
+<script src="assets/trailer.js"></script>
 </body>
 </html>

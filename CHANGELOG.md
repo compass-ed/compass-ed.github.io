@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.4 — 6 November 2026
+- **A new trailer, as motion graphics.** `assets/trailer.js` draws the 30-second trailer live on a canvas on the About page: the logo sting, the open book with subjects rising around it, the eight categories, competition tickets with a countdown, a quiz being answered and a checkpoint ring filling, a run in Compass Dash, and the close. It has its own player (play, pause, scrub, full screen), starts when it scrolls into view unless the device asks for reduced motion, and reads in English, French or Arabic through `CE.t`.
+- **Save as video.** Records the canvas as the trailer plays once and hands over an MP4 (Safari) or WebM (Chrome, Edge, Firefox) with no watermark. The 22 MB Moda export `assets/trailer/compass-ed-trailer.mp4` is gone with it.
+
 ## v3.3.1 — 6 November 2026
 - **Compass Dash (v2.8.5): a clearer Neutral.** Neutral shows every background and subject room in full, with no overlay on the rooms and no particles apart from shop effects a student equipped. Recreational and Super Focus are unchanged.
 
