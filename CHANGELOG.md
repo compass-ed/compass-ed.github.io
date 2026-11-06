@@ -5,6 +5,7 @@ Each new version from v2.2 onwards ships with an animated preview in `assets/ver
 ## v3.4.1 — 6 November 2026
 - **Compass Dash is back to its classic look (v2.8.6).** `dash/index.html` is the file from before the Campus Hub restyle, with the blue accent, its own sidebar and the full subject rooms, runner and shop backgrounds as they were. Only the Doha scene for Qatar History is carried over.
 - **Neutral is a touch calmer.** Backgrounds and the shop effects a student chose stay; the automatic landing dust, streak sparks and streak rings now appear at Recreational only.
+- **Trailer fixes.** Updates could leave a page with the new HTML and the old styles if the tab had already updated once that session, which broke the trailer's layout; a new version now reloads the page every time, at most once every 10 seconds. The trailer draws in full HD, its artwork loads in Firefox, and the play button sits in the corner instead of over the logo.
 
 ## v3.4 — 6 November 2026
 - **A new trailer, as motion graphics.** `assets/trailer.js` draws the 30-second trailer live on a canvas on the About page: the logo sting, the open book with subjects rising around it, the eight categories, competition tickets with a countdown, a quiz being answered and a checkpoint ring filling, a run in Compass Dash, and the close. It has its own player (play, pause, scrub, full screen), starts when it scrolls into view unless the device asks for reduced motion, and reads in English, French or Arabic through `CE.t`.

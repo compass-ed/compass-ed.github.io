@@ -4,6 +4,7 @@
 (function () {
   const box = document.getElementById("trl"); if (!box) return;
   const cv = box.querySelector("canvas"), c = cv.getContext("2d"), W = 1600, H = 900, T = 30;
+  cv.width = 1920; cv.height = 1080; c.setTransform(1.2, 0, 0, 1.2, 0, 0);   // drawn in a 1600×900 space, kept at full HD so it stays sharp on screen and in the saved video
   const tr = s => window.CE && CE.t ? CE.t(s) : s, rtl = document.documentElement.dir === "rtl";
   const HEAD = '"Manrope","Plus Jakarta Sans","IBM Plex Sans Arabic",system-ui,sans-serif', BODY = '"Plus Jakarta Sans","IBM Plex Sans Arabic",system-ui,sans-serif';
   const CY = "#4cc4cf", INK = "#000", SOFT = "#c9d2d4";
@@ -131,7 +132,7 @@
   const fmt = s => Math.floor(s / 60) + ":" + String(Math.floor(s % 60)).padStart(2, "0");
   function ui() {
     prog.firstElementChild.style.width = time / T * 100 + "%"; prog.setAttribute("aria-valuenow", Math.round(time)); tm.textContent = fmt(time) + " / " + fmt(T);
-    playB.replaceChildren(CE.icon(playing ? "pause" : "play")); playB.setAttribute("aria-label", tr(playing ? "Pause" : "Play")); big.setAttribute("aria-label", tr(time >= T ? "Replay" : "Play"));
+    playB.replaceChildren(CE.icon(playing ? "pause" : "play")); playB.setAttribute("aria-label", tr(playing ? "Pause" : "Play")); big.replaceChildren(CE.icon("play"), tr(time >= T ? "Replay" : "Play trailer"));
     if (rec) save.textContent = tr("Recording…") + " " + Math.round(time) + " s";
   }
   function frame(ts) { if (!playing) return; time = Math.min(T, time + Math.min(.05, (ts - last) / 1000)); last = ts; draw(time); ui(); if (time >= T) { stop(); if (rec) rec.stop(); } else raf = requestAnimationFrame(frame); }

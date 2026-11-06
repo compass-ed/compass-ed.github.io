@@ -433,7 +433,8 @@
   if ("serviceWorker" in navigator && !local) {
     /* when a new version of the site takes over, reload once so the page runs the new scripts straight away */
     let had = !!navigator.serviceWorker.controller;
-    navigator.serviceWorker.addEventListener("controllerchange", () => { if (had && !sessionStorage.getItem("ce_reloaded")) { try { sessionStorage.setItem("ce_reloaded", "1"); } catch (e) {} location.reload(); } had = true; });
+    /* a new version took over: reload once so the page is not left with the old styles and scripts (at most once every 10 s, so an update can never loop) */
+    navigator.serviceWorker.addEventListener("controllerchange", () => { let t = 0; try { t = +sessionStorage.getItem("ce_reloaded") || 0; } catch (e) {} if (had && Date.now() - t > 10000) { try { sessionStorage.setItem("ce_reloaded", String(Date.now())); } catch (e) {} location.reload(); } had = true; });
     navigator.serviceWorker.register(ROOT + "sw.js").then(r => { r.update().catch(() => {}); }).catch(() => {});
     setTimeout(() => sessionStorage.removeItem("ce_reloaded"), 15000);
   }
