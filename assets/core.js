@@ -548,7 +548,28 @@
     CE.modal(h("div", { class: "stack" }, h("h3", {}, "Send feedback"), h("p", { class: "sm mut", style: { margin: 0 } }, "Tell the administrator what is working and what is not. Only they can read it."), h("label", { class: "f" }, "Rating", stars), h("label", { class: "f" }, "Category", cat), h("label", { class: "f" }, "Message", msg), hp, h("div", { class: "xs mut" }, "Sent from: " + page), er, h("div", { class: "row" }, send, h("button", { class: "btn ghost", type: "button", onclick: CE.closeModal }, "Cancel"))));
     setTimeout(() => msg.focus(), 50);
   };
-  CE.markNav = () => { const h = (location.hash || "#/").split("?")[0].split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); };
+  CE.markNav = () => { const h = (location.hash || "#/").split("?")[0].split("/").slice(0, 2).join("/"); CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href").split("/").slice(0, 2).join("/") === h)); CE.shellUp(); };
+  /* portal shell: the active pill slides between menu items, the menu folds to an icon rail (remembered on this device), Ctrl/Cmd+K opens Search */
+  CE.shellUp = () => {
+    const side = CE.$("#side"); if (!side) return;
+    if (!side.dataset.up) {
+      side.dataset.up = "1"; side.classList.add("has-pill"); side.prepend(CE.h("i", { class: "nl-pill", "aria-hidden": "true" }));
+      CE.$$("a.nl", side).forEach(a => { a.title = a.textContent.trim(); });
+      const shell = side.closest(".shell"), bar = CE.$(".topbar"), mini = v => { shell.classList.toggle("mini", v); LS.set("ce_side", v ? 1 : 0); tg.setAttribute("aria-pressed", String(v)); setTimeout(CE.shellUp, 260); };
+      const tg = CE.h("button", { class: "ib mini-t", "aria-label": "Collapse menu", title: "Collapse menu", onclick: () => mini(!shell.classList.contains("mini")) }, CE.icon("menu"));
+      bar.prepend(tg); if (LS.get("ce_side")) mini(true);
+      const sr = CE.$("a[href='#/search']", bar); if (sr) sr.dataset.k = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K";
+      addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); location.hash = "#/search"; } });
+      /* a soft light follows the pointer across the key numbers */
+      const pg = CE.$("#page"); if (pg) pg.addEventListener("pointermove", e => { const k = e.target.closest && e.target.closest(".kpi"); if (k) { const b = k.getBoundingClientRect(); k.style.setProperty("--gx", e.clientX - b.left + "px"); k.style.setProperty("--gy", e.clientY - b.top + "px"); } }, { passive: true });
+    }
+    const a = CE.$("a.nl.on", side), p = CE.$(".nl-pill", side); if (!p) return;
+    p.style.opacity = a ? 1 : 0; if (a) { p.style.height = a.offsetHeight + "px"; p.style.transform = "translateY(" + a.offsetTop + "px)"; }
+  };
+  /* numbers count up once, and arrive at once for anyone who prefers less motion */
+  CE.countUp = root => { const still = matchMedia("(prefers-reduced-motion: reduce)").matches; CE.$$("[data-n]", root).forEach(el => { const to = +el.dataset.n; if (still || !to) { el.textContent = to; return; } const t0 = performance.now(), dur = Math.min(900, 420 + to * 8); const f = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }); };
+  /* the dashboard header both portals share */
+  CE.dashHero = (title, sub, ring, ringLabel, extra) => CE.h("section", { class: "dash-hero" }, CE.aurora(CE.h("div", { class: "aurora" })), CE.h("div", { class: "dh-t" }, CE.h("span", { class: "dh-date" }, CE.date.long(new Date())), CE.h("h2", {}, title), CE.h("p", {}, sub), extra || null), ring == null ? null : CE.h("div", { class: "dh-r" }, CE.h("div", { class: "ring", style: { "--p": ring } }, CE.h("span", {}, ring + "%")), CE.h("span", { class: "dh-l" }, ringLabel)));
   /* sub-tabs under the top bar: a page group calls CE.subnav([[label, hash], ...]) */
   CE.subnav = tabs => { let el = CE.$("#subnav"); if (!el) return; el.innerHTML = ""; if (!tabs || !tabs.length) { el.classList.add("hide"); return; } el.classList.remove("hide"); const cur = (location.hash || "#/").split("?")[0]; tabs.forEach(([l, hsh, m]) => el.append(CE.h("a", { class: "tab" + ((m ? m.test(cur) : cur === hsh) ? " on" : ""), href: hsh }, l))); };
   CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · Compass Ed"; };

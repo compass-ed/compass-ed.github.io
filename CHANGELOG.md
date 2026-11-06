@@ -2,6 +2,13 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.2 — 6 November 2026
+- **New portal dashboards.** Student and teacher home pages share one layout (`CE.dashHero` in `core.js`): a greeting with a hand-in ring, four key numbers that count up and link to their pages, the main work on the left and what's coming up on the right.
+- **New portal navigation.** A pill slides to the current page, the menu folds down to icons and remembers that choice (`ce_side`), and Ctrl K or ⌘ K opens search. Teachers and students now use the same top bar.
+- **Subject backgrounds are back (Dash v2.8.3).** Each subject has its own room again at the default Visual detail, with fewer props and a lighter veil. It stays still on subject pages and the runner only appears in a game. Super Focus keeps the plain background and Recreational keeps the moving one.
+- **Qatar History has its own background.** A new Doha waterfront scene with a fort and wind tower, a dhow, the West Bay towers and palms, drawn in code.
+- **Fixes.** On a phone the teacher top bar no longer pushes search and notifications off screen, and the Feedback button shows its icon again. The Preview mode banner can be read in dark mode.
+
 ## v3.1 — 6 November 2026
 - **Compass Dash in the Campus Hub style (Dash v2.8.2).** The same fonts, colours, cards and dark page headers as the portals. On its own it has the black sidebar; inside a portal it uses tabs, so there is only ever one sidebar. The Teacher Panel has the same sidebar and headers, and subjects use the drawn pictures from the Campus Hub. Logos and gameplay are unchanged. A colour theme bought in the Shop still recolours the buttons.
 - **Calmer backgrounds.** Normal pages have a still background with soft colour and a dot pattern. The game scene only appears while playing or trying something on, so an idle page no longer redraws the screen. Shop backgrounds keep their colours as soft gradients with a subtle pattern. The full scenes are still available: set Visual detail to Recreational in Settings.
