@@ -8,6 +8,7 @@
   if (me.role === "admin") { const na = $("#navAdmin"); if (na) na.classList.remove("hide"); }
   $("#signout").onclick = CE.signOut;
   CE.shell();
+  Object.assign(CE.heads, { home: ["book"], campus: ["geography", "The public home page, right here. You stay signed in."], activities: ["art"], competitions: ["pe"], clubs: ["music"], news: ["languages", "Publish school news for students, parents and the public home page."], classes: ["history"], content: ["english", "Units, lessons, quizzes and mastery checkpoints for your subjects."], playlists: ["music", "Ordered runs of lessons and quizzes for a class to work through."], rubrics: ["maths", "Marking criteria you can reuse across assignments."], bank: ["science", "Questions you can reuse in any quiz or checkpoint."], assignments: ["maths"], announcements: ["languages", "Messages to a class, a year group or named students, with read receipts."], calendar: ["history", "School events, exams, trips and deadlines."], slips: ["history"], people: ["drama", "Students, staff, classes and login codes."], points: ["pe"], admin: ["computing", "School settings, codes, feedback and links."], voice: ["languages"], insights: ["science"], wellbeing: ["drama"], settings: ["computing", "Your account, your look and how Compass Ed reaches you."], search: ["geography"] });
   const S = { home: null, content: null };
   const KIND = { homework: "Homework", assignment: "Assignment", quiz: "Quiz" };
   const card = (title, body, extra) => h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, title), extra || null), body);
@@ -57,6 +58,7 @@
     return h("div", { class: "stack" }, list, h("div", { class: "row" }, add, h("button", { class: "btn sm ghost", onclick: () => { blocks.push({ t: add.value }); render(); } }, "+ Add block")));
   }
 
+  const classTiles = cls => h("div", { class: "tiles" + (cls ? " " + cls : "") }, ...me.classes.map(c => CE.tile({ href: "#/class/" + c.id, art: c.subj != null ? CE.subjArt(c.subj) : "book", title: c.name, sub: (c.n || 0) + " students" + (c.year ? " · Year " + c.year : "") + (c.subj != null ? " · " + CE.subjName(c.subj) : "") })));
   /* ---------- dashboard ---------- */
   async function dashboard() {
     CE.title("Dashboard"); CE.loading(page);
@@ -64,14 +66,14 @@
       S.home = null; const r = await api("ed_t_home"); if (!r.ok) return CE.fail(page, r); S.home = r; loadBell();
       page.innerHTML = "";
       const main = h("div", { class: "dash-main" }), rail = h("aside", { class: "dash-rail" }), sent = r.assigns.reduce((n, a) => n + (a.n || 0), 0), back = r.assigns.reduce((n, a) => n + (a.submitted || 0), 0);
-      page.append(CE.dashHero("Hello, " + me.name + ".", r.students + " students on campus · " + r.active + " active this week", sent ? CE.pct(back, sent) : null, "Handed in", h("div", { class: "row dh-acts" }, h("button", { class: "btn", onclick: () => assignEditor(null) }, "+ Set work"), h("button", { class: "btn ghost", onclick: () => compEditor(null) }, "+ Competition"), h("button", { class: "btn ghost", onclick: () => annEditor(null) }, "+ Announce"), h("button", { class: "btn ghost", onclick: () => awardModal() }, "+ Points"))));
+      CE.head({ kicker: D.long(new Date()), title: "Hello, " + me.name + ".", sub: r.students + " students on campus · " + r.active + " active this week", ring: sent ? CE.pct(back, sent) : null, ringLabel: "Handed in", acts: [h("button", { class: "btn", onclick: () => assignEditor(null) }, "+ Set work"), h("button", { class: "btn ghost", onclick: () => compEditor(null) }, "+ Competition"), h("button", { class: "btn ghost", onclick: () => annEditor(null) }, "+ Announce"), h("button", { class: "btn ghost", onclick: () => awardModal() }, "+ Points")] });
       const kpi = (href, icon, n, label) => h("a", { class: "card stat kpi", href, style: { textDecoration: "none", color: "inherit" } }, h("span", { class: "ico" }, CE.icon(icon)), h("span", { class: "n", "data-n": n }, n), h("span", { class: "l" }, label));
       page.append(h("div", { class: "kpis" }, kpi("#/assignments", "pencil", r.to_grade, "To mark"), kpi("#/competitions", "trophy", r.competitions.filter(c => new Date(c.closes) > Date.now()).length, "Open competitions"), kpi("#/assignments", "calendar", r.assigns.filter(a => a.due && new Date(a.due) > Date.now()).length, "Open assignments"), kpi("#/classes", "users", (me.classes || []).reduce((n, c) => n + (c.n || 0), 0), "Students in your classes")));
       page.append(h("div", { class: "dash" }, main, rail)); CE.countUp(page);
       const g = main;
       g.append(card("Assignments", r.assigns.length ? h("div", { class: "list" }, ...r.assigns.slice(0, 8).map(a => h("a", { class: "item", href: "#/assignment/" + a.id }, h("div", { class: "ico sm" }, CE.icon(a.kind === "quiz" ? "question" : "pencil")), h("div", { class: "grow" }, h("div", { class: "t" }, a.title), h("div", { class: "s" }, a.class + (a.due ? " · " + D.until(a.due) : "")), h("div", { class: "bar", style: { marginTop: "6px", width: "140px" } }, h("i", { style: { width: CE.pct(a.submitted, a.n) + "%" } }))), h("span", { class: "badge" + (a.submitted - a.graded > 0 ? " cyan" : "") }, a.submitted + "/" + a.n + " in" + (a.submitted - a.graded > 0 ? " · " + (a.submitted - a.graded) + " to mark" : ""))))) : h("div", { class: "empty" }, "No assignments yet."), h("a", { class: "btn sm ghost", href: "#/assignments" }, "All")));
       rail.append(card("Competitions & challenges", r.competitions.length ? h("div", { class: "list" }, ...r.competitions.slice(0, 3).map(c => h("a", { class: "item", href: "#/competition/" + c.id }, h("div", { class: "ico sm" }, CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t" }, c.title), h("div", { class: "s" }, c.kind + " · " + (new Date(c.closes) > Date.now() ? D.left(c.closes) : "closed " + D.short(c.closes)))), h("span", { class: "badge" + (c.entries ? " cyan" : "") }, c.entries + " entr" + (c.entries === 1 ? "y" : "ies"))))) : h("div", { class: "empty" }, "Nothing running."), h("a", { class: "btn sm ghost", href: "#/competitions" }, "All")));
-      g.append(card("Your classes", (me.classes || []).length ? h("div", { class: "list" }, ...me.classes.map(c => h("a", { class: "item", href: "#/class/" + c.id }, h("div", { class: "ico sm" }, CE.icon("users")), h("div", { class: "grow" }, h("div", { class: "t" }, c.name), h("div", { class: "s" }, (c.n || 0) + " students" + (c.year ? " · Year " + c.year : ""))), c.subj != null ? h("span", { class: "badge" }, CE.subjName(c.subj)) : null))) : h("div", { class: "empty" }, "No classes yet. Create one under People & classes."), h("a", { class: "btn sm ghost", href: "#/classes" }, "Classes")));
+      g.append(card("Your classes", (me.classes || []).length ? classTiles("sm") : h("div", { class: "empty" }, "No classes yet. Create one under People & classes."), h("a", { class: "btn sm ghost", href: "#/classes" }, "Classes")));
       api("ed_t_wellbeing", { p_days: 14 }).then(w => { if (!w.ok || (!w.on && !w.rows.length)) return; const open = w.rows.filter(x => !x.seen_at);   // wellbeing staff only
         g.prepend(h("a", { class: "card" + (open.length ? " tint" : ""), href: "#/wellbeing", style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "hd" }, h("h3", {}, "Wellbeing check-ins"), open.length ? h("span", { class: "badge warn" }, open.length + " to follow up") : null),
           h("p", { class: "sm mut", style: { margin: 0 } }, open.length ? "Students who said they are struggling or would like to talk, in the last 14 days." : "Nobody needs a follow-up from the last 14 days."))); }).catch(() => {});
@@ -151,7 +153,8 @@
       page.innerHTML = "";
       page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Competitions, challenges & tournaments"), h("div", { class: "sm mut" }, "Students enter from their portal; you judge the entries and award places.")), h("button", { class: "btn", onclick: () => compEditor(null) }, "+ New")));
       const open = r.competitions.filter(c => new Date(c.closes) > Date.now()), closed = r.competitions.filter(c => new Date(c.closes) <= Date.now());
-      [["Open", open], ["Closed", closed]].forEach(([t, rows]) => { if (!rows.length) return; page.append(card(t + " (" + rows.length + ")", h("div", { class: "list" }, ...rows.map(c => h("a", { class: "item", href: "#/competition/" + c.id }, h("div", { class: "ico sm" }, c.cat ? CE.catIcon(c.cat) : CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t" }, c.title), h("div", { class: "s" }, c.kind + (c.cat ? " · " + CE.catName(c.cat) : "") + " · " + (new Date(c.closes) > Date.now() ? "closes " + D.dt(c.closes) : "closed " + D.short(c.closes)))), h("span", { class: "badge" + (c.entries ? " cyan" : "") }, c.entries + " entr" + (c.entries === 1 ? "y" : "ies"))))))); });
+      CE.head({ stats: [[open.length, "Open"], [closed.length, "Closed"], [r.competitions.reduce((n, c) => n + (c.entries || 0), 0), "Entries"]] });
+      [["Open", open], ["Closed", closed]].forEach(([t, rows]) => { if (!rows.length) return; page.append(card(t + " (" + rows.length + ")", h("div", { class: "tickets" }, ...rows.map(c => CE.ticket(c, [h("span", { class: "badge" }, c.kind), c.cat ? h("span", { class: "badge" }, CE.catName(c.cat)) : null, h("span", { class: "badge" + (c.entries ? " cyan" : "") }, c.entries + " entr" + (c.entries === 1 ? "y" : "ies"))], new Date(c.closes) > Date.now() ? "closes " + D.dt(c.closes) : "closed " + D.short(c.closes)))))); });
       if (!r.competitions.length) page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("trophy")), h("div", { class: "b" }, "No competitions yet")));
     } catch (e) { CE.fail(page, e); }
   }
@@ -203,7 +206,7 @@
     CE.title("Classes"); page.innerHTML = "";
     page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Classes"), h("div", { class: "sm mut" }, "Your classes: students, register and seating, the overview heatmap, topics and progress.")), h("a", { class: "btn ghost", href: "#/people/classes" }, "Manage classes")));
     if (!(me.classes || []).length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("users")), h("div", { class: "b" }, "No classes yet"), h("div", { class: "sm" }, "Create classes and add students under People & classes."), h("a", { class: "btn", href: "#/people", style: { marginTop: "10px" } }, "People & classes")));
-    page.append(h("div", { class: "grid g3" }, ...me.classes.map(c => h("a", { class: "subj", href: "#/class/" + c.id }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon("users")), c.subj != null ? h("span", { class: "badge" }, CE.subjName(c.subj)) : null), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, (c.n || 0) + " students" + (c.year ? " · Year " + c.year : ""))))));
+    page.append(classTiles());
   }
   /* ---------- permission slips: a parent or carer signs through the private parent link the student shares ---------- */
   const ymd = D.ymd, dueD = d => D.short(d + "T12:00:00");   // sign-by dates are plain dates: read them as local noon so no time zone moves the day
@@ -471,7 +474,10 @@
       page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "Assignments"), h("div", { class: "sm mut" }, "Homework, longer assignments and auto-marked quizzes.")), h("button", { class: "btn", onclick: () => assignEditor(null) }, "+ Set work")));
       if (!r.rows.length) page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("pencil")), h("div", { class: "b" }, "Nothing set yet")));
       const open = r.rows.filter(a => !a.due || new Date(a.due) > Date.now()), past = r.rows.filter(a => a.due && new Date(a.due) <= Date.now());
-      [["Open", open], ["Past due", past]].forEach(([t, rows]) => { if (!rows.length) return; page.append(card(t + " (" + rows.length + ")", h("div", { class: "list" }, ...rows.map(a => h("a", { class: "item", href: "#/assignment/" + a.id }, h("div", { class: "ico" }, CE.icon(a.kind === "quiz" ? "question" : "pencil")), h("div", { class: "grow" }, h("div", { class: "t" }, a.title), h("div", { class: "s" }, a.class + " · " + KIND[a.kind] + " · " + a.points + " pts" + (a.due ? " · due " + D.dt(a.due) : ""))), h("div", { style: { textAlign: "right" } }, h("span", { class: "badge" + (a.submitted - a.graded > 0 ? " cyan" : a.submitted === a.n && a.n ? " ok" : "") }, a.submitted + "/" + a.n + " handed in"), h("div", { class: "xs mut", style: { marginTop: "4px" } }, a.graded + " marked"))))))); });
+      if (r.rows.length) { const mark = a => a.submitted - a.graded > 0;
+        CE.head({ stats: [[r.rows.filter(mark).length, "To mark"], [open.length, "Open"], [past.length, "Past due"]] });
+        const bcard = a => h("a", { class: "bcard glow" + (mark(a) ? " draft" : a.submitted === a.n && a.n ? " done" : ""), href: "#/assignment/" + a.id }, h("div", { class: "row between" }, h("span", { class: "bc-s" }, h("span", { class: "ico sm" }, CE.icon(a.kind === "quiz" ? "question" : "pencil")), a.class), h("span", { class: "badge" + (mark(a) ? " cyan" : a.submitted === a.n && a.n ? " ok" : "") }, a.submitted + "/" + a.n + " handed in")), h("div", { class: "bc-t" }, a.title), h("div", { class: "bar" }, h("i", { style: { width: CE.pct(a.submitted, a.n) + "%" } })), h("div", { class: "xs mut" }, KIND[a.kind] + " · " + a.points + " pts" + (a.due ? " · due " + D.dt(a.due) : "") + " · " + a.graded + " marked"));
+        page.append(h("div", { class: "board c3" }, ...[["To mark", r.rows.filter(mark)], ["Open", open.filter(a => !mark(a))], ["Past due", past.filter(a => !mark(a))]].map(([t, rows]) => h("div", { class: "bcol" }, h("h4", {}, t, h("span", { class: "badge" }, rows.length)), ...(rows.length ? rows.map(bcard) : [h("div", { class: "none" }, "Nothing here")]))))); }
     } catch (e) { CE.fail(page, e); }
   }
   function assignEditor(a, classId) {
@@ -653,9 +659,9 @@
     CE.title("House points"); CE.loading(page);
     try {
       const [r, cd] = await Promise.all([api("ed_board"), api("ed_t_cd").catch(() => null)]); if (!r.ok) return CE.fail(page, r);
-      page.innerHTML = ""; const top = Math.max(1, ...r.house.map(x => x.pts));
+      page.innerHTML = "";
       page.append(h("div", { class: "row between" }, h("div", {}, h("h2", { style: { margin: 0 } }, "House points"), h("div", { class: "sm mut" }, "Awarded by staff, and automatically for activities, entries, places, mastery and peer reviews.")), h("button", { class: "btn", onclick: () => awardModal() }, "+ Award points")));
-      page.append(card("Houses", h("div", { class: "stack" }, ...r.house.map((x, i) => h("div", { class: "house-" + x.house }, h("div", { class: "row between sm" }, h("b", {}, (i + 1) + ". " + (r.houses[x.house] || x.house)), h("span", {}, x.pts.toLocaleString() + " pts · " + x.week + " this week")), h("div", { class: "hbar" }, h("i", { style: { width: CE.pct(x.pts, top) + "%" } })))))));
+      page.append(card("Houses", CE.podium(r)));
       const g = h("div", { class: "grid g2" }); page.append(g);
       g.append(card("Top students", h("div", { class: "list" }, ...r.students.slice(0, 20).map((x, i) => h("div", { class: "item" }, h("span", { class: "badge" + (i < 3 ? " cyan" : "") }, i + 1), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.name), h("div", { class: "s xs" }, [x.class, x.house ? r.houses[x.house] : null].filter(Boolean).join(" · ") + " · " + x.week + " this week")), h("span", { class: "b" }, x.pts))))));
       const cdc = cdHousesCard(cd && cd.ok ? cd : null); if (cdc) g.append(cdc);
@@ -781,7 +787,7 @@
       data.b.rows.forEach(b => { if (hit(b.q) || hit(b.topic)) rows.push(["grid", b.q, "Question bank · " + (b.topic || "untagged"), "#/bank"]); });
       if (!rows.length) return res.append(h("div", { class: "empty" }, "Nothing matches."));
       res.append(h("div", { class: "list" }, ...rows.slice(0, 50).map(([ic, t, s2, href]) => h("a", { class: "item", href }, h("div", { class: "ico sm" }, CE.icon(ic)), h("div", { class: "grow" }, h("div", { class: "t sm" }, t), h("div", { class: "s xs" }, s2)))))); };
-    const box = CE.searchBox("Search lessons, quizzes, activities, competitions, news, assignments, people and the question bank", run); page.append(h("div", { class: "card stack" }, box, res)); box.querySelector("input").focus();
+    const box = CE.searchBox("Search lessons, quizzes, activities, competitions, news, assignments, people and the question bank", run); page.append(h("div", { class: "card stack" }, box, res)); box.querySelector("input").value = CE.q("q") || ""; box.querySelector("input").focus();
     const [c, a, p2, b] = await Promise.all([loadContent(), api("ed_t_assigns"), api("ed_a_users"), api("ed_t_bank")]);
     data = { c: c.ok ? c : { units: [], quizzes: [], activities: [], competitions: [], news: [] }, a: a.ok ? a : { rows: [] }, p: p2.ok ? p2 : { users: [], classes: [] }, b: b.ok ? b : { rows: [] } }; run(box.querySelector("input").value.trim().toLowerCase());
   }
@@ -938,7 +944,7 @@
   /* ---------- the campus home page, inside the portal ---------- */
   async function campusPage() {
     CE.title("Campus"); page.innerHTML = "";
-    page.append(h("div", { class: "campus-head" }, CE.aurora(h("div", { class: "aurora" })), h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
+    CE.head({ title: "The campus", acts: [h("a", { class: "btn ghost sm", href: CE.root + "index.html" }, "Open the public site")] });
     const root = h("div", { id: "campus" }); page.append(root);
     await CE.campus(root, { portal: "teacher", inPortal: true });
   }
@@ -1010,6 +1016,7 @@
     [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"], ["Wellbeing", "#/admin/wellbeing"]],
     [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
   ];
+  CE.jump = GROUPS.flat();
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g && g.length > 1 ? g : []); };
   addEventListener("hashchange", setSub); setSub();
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); CE.shellUp(); };

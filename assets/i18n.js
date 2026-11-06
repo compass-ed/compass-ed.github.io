@@ -19,7 +19,7 @@
   root.lang = lang; root.dir = LANGS[lang].rtl ? "rtl" : "ltr";
   const CE = window.CE = window.CE || {};
   CE.lang = lang; CE.locale = LANGS[lang].locale; CE.langs = LANGS;
-  CE.setLang = l => { try { localStorage.setItem("ce_lang", l); } catch (e) {} const u = new URL(location.href); u.searchParams.delete("lang"); location.replace(u.href); };
+  CE.setLang = l => { try { localStorage.setItem("ce_lang", l); } catch (e) {} const u = new URL(location.href); if (u.searchParams.has("lang")) { u.searchParams.delete("lang"); location.replace(u.href); } else location.reload(); };
   CE.t = s => s;
   CE.langSwitch = cls => {
     const sel = document.createElement("select"); sel.className = "lang-sw" + (cls ? " " + cls : ""); sel.setAttribute("aria-label", "Language"); sel.setAttribute("data-no-i18n", "");

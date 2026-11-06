@@ -7,13 +7,18 @@
   $("#meClass").textContent = (me.class ? me.class.name : "No class yet") + (me.year ? " · Year " + me.year : "");
   $("#signout").onclick = CE.signOut;
   CE.shell();
+  Object.assign(CE.heads, { home: ["book"], campus: ["geography", "The public home page, right here. You stay signed in."], explore: ["geography", "Things to try in your own time. Every activity you finish earns points for your house."], competitions: ["pe", "Competitions, challenges and tournaments across the campus. Enter before they close; winners get a notification."], clubs: ["music"], subjects: ["english", "Subjects with lessons and quizzes set for your class appear first."], subject: ["english"], assignments: ["maths", "Everything your teachers have set, from to do to returned."], review: ["languages"], progress: ["science", "Your lessons, checkpoints, badges and places in one view."], goals: ["pe"], house: ["pe", "How your house, your class and you are doing this year."], news: ["languages", "What's happening across the campus."], announcements: ["languages", "Messages from your teachers and the school."], calendar: ["history", "Lessons, deadlines, trips and events for you and your class."], day: ["history"], voice: ["languages"], showcase: ["art"], community: ["drama"], id: ["computing"], settings: ["computing", "Your account, your look and how Compass Ed reaches you."], search: ["geography"] });
 
   const S = { home: null };
   const KIND = { homework: "Homework", assignment: "Assignment", quiz: "Quiz" };
   const card = (title, body, extra) => h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, title), extra || null), body);
   const statusBadge = a => a.status === "returned" ? h("span", { class: "badge ok" }, "Returned" + (a.score != null ? " · " + a.score + "%" : "")) : a.status === "submitted" ? h("span", { class: "badge cyan" }, "Handed in") : a.status === "draft" ? h("span", { class: "badge warn" }, "Draft saved") : a.due && new Date(a.due) < Date.now() ? h("span", { class: "badge bad" }, "Overdue") : h("span", { class: "badge" }, D.until(a.due) || "No due date");
+  const dBlock = d => h("div", { class: "dblock" }, h("b", {}, new Date(d).getDate()), h("small", {}, new Date(d).toLocaleDateString(CE.locale || "en-GB", { weekday: "short" })));
   const kindIcon = k => CE.icon({ exam: "exam", trip: "bus", deadline: "alarm", competition: "trophy", due: "alarm" }[k] || "calendar");
   const compBadge = c => h("span", { class: "badge " + (c.kind === "tournament" ? "ink" : c.kind === "challenge" ? "" : "cyan") }, c.kind);
+  const compTicket = c => CE.ticket(c, [compBadge(c), c.cat ? h("span", { class: "badge" }, CE.catName(c.cat)) : null, c.entered ? h("span", { class: "badge ok" }, "Entered") : null], c.blurb);
+  const subjStat = (r, s) => { const us = r.units.filter(u => u.subj === s.id), ls = us.flatMap(u => u.lessons), cps = us.flatMap(u => u.quizzes).filter(q => q.kind === "checkpoint"); return { s, us, ls, done: ls.filter(l => l.done).length, cps, passed: cps.filter(q => q.best != null && q.best >= q.threshold).length }; };
+  const subjTile = x => CE.tile({ href: "#/subject/" + x.s.id, art: CE.subjArt(x.s.id), title: x.s.name, sub: x.ls.length ? x.done + "/" + x.ls.length + " lessons · " + x.passed + "/" + x.cps.length + " checkpoints" : "Nothing set for your class yet", ring: x.ls.length ? CE.pct(x.done, x.ls.length) : null });
 
   /* ---------- notifications and counters ---------- */
   async function loadBell() {
@@ -195,19 +200,20 @@
       const hour = new Date().getHours(), greet = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
       const todo = hm.assigns.filter(a => a.status === "todo" || a.status === "draft"), week = todo.filter(a => a.due && new Date(a.due) - Date.now() < 7 * 864e5);
       page.innerHTML = "";
-      const main = h("div", { class: "dash-main" }), rail = h("aside", { class: "dash-rail" });
-      page.append(CE.dashHero(greet + ", " + me.name.split(" ")[0] + ".", todo.length ? todo.length + " thing" + (todo.length > 1 ? "s" : "") + " on your list" + (week.length ? ", " + week.length + " due this week" : "") + "." : "Your list is clear. Time to explore.", CE.pct(hm.assigns.length - todo.length, hm.assigns.length), "Handed in"));
-      main.append(h("a", { class: "card tint next", href: nx.href, style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "big" }, CE.icon(nx.icon)), h("div", {}, h("div", { class: "xs cy b", style: { letterSpacing: ".08em", textTransform: "uppercase" } }, "What to do next · " + nx.kicker), h("div", { class: "b", style: { fontSize: "18px" } }, nx.title), h("div", { class: "sm mut" }, nx.sub)), h("span", { class: "btn" }, nx.cta)));
+      CE.head({ kicker: D.long(new Date()), title: greet + ", " + me.name.split(" ")[0] + ".", sub: todo.length ? todo.length + " thing" + (todo.length > 1 ? "s" : "") + " on your list" + (week.length ? ", " + week.length + " due this week" : "") + "." : "Your list is clear. Time to explore.", ring: CE.pct(hm.assigns.length - todo.length, hm.assigns.length), ringLabel: "Handed in" });
+      const kpi = (href, icon, n, label) => h("a", { class: "card stat kpi", href, style: { textDecoration: "none", color: "inherit" } }, h("span", { class: "ico" }, CE.icon(icon)), h("span", { class: "n", "data-n": typeof n === "number" ? n : null }, n), h("span", { class: "l" }, label));
+      page.append(h("div", { class: "kpis" }, kpi("#/assignments", "calendar", week.length, "Due this week"), kpi("#/review", "repeat", hm.review_due, "Cards to review"), kpi("#/explore", "explore", hm.activities_done, "Activities done"), kpi("#/house", "trophy", hm.pts != null ? hm.pts : "–", "House points")));
+      const main = h("div", { class: "dash-main" }), rail = h("aside", { class: "dash-rail" }), g = main;
+      page.append(h("div", { class: "dash" }, main, rail)); CE.countUp(page);
+      main.append(h("a", { class: "nextc glow", href: nx.href }, h("div", { class: "grow" }, h("div", { class: "nk" }, "What to do next · " + nx.kicker), h("div", { class: "nt" }, nx.title), h("div", { class: "ns" }, nx.sub)), h("span", { class: "btn" }, nx.cta)));
       const slot = h("div", { class: "stack", style: { gap: "inherit" } }); main.append(slot); myDayCards(slot); checkinCard(slot);   /* timetable, permission slips and the check-in, when the school uses them */
       if (hm.news.length) { const f = hm.news[0]; rail.append(h("a", { class: "card ink", href: "#/news", style: { textDecoration: "none" } }, h("div", { class: "kicker", style: { color: "var(--cyan)" } }, "Campus news"), h("h3", { style: { color: "#fff" } }, f.title), h("p", { class: "mut", style: { margin: 0 } }, f.body.replace(/\*\*/g, "")))); }
-      const kpi = (href, icon, n, label) => h("a", { class: "card stat kpi", href, style: { textDecoration: "none", color: "inherit" } }, h("span", { class: "ico" }, CE.icon(icon)), h("span", { class: "n", "data-n": typeof n === "number" ? n : null }, n), h("span", { class: "l" }, label));
-      page.append(h("div", { class: "kpis" }, kpi("#/subjects", "calendar", week.length, "Due this week"), kpi("#/review", "repeat", hm.review_due, "Cards to review"), kpi("#/explore", "explore", hm.activities_done, "Activities done"), kpi("#/house", "trophy", hm.pts != null ? hm.pts : "–", "House points")));
-      page.append(h("div", { class: "dash" }, main, rail)); CE.countUp(page);
-      const g = main;
       g.append(card("Up next", hm.assigns.filter(a => a.status !== "returned").length ? h("div", { class: "list" }, ...hm.assigns.filter(a => a.status !== "returned").slice(0, 6).map(a => h("a", { class: "item", href: "#/assignment/" + a.id }, h("div", { class: "ico" }, CE.subjIcon(a.subj)), h("div", { class: "grow" }, h("div", { class: "t" }, a.title), h("div", { class: "s" }, CE.subjName(a.subj) + " · " + KIND[a.kind] + (a.due ? " · " + D.short(a.due) : ""))), statusBadge(a)))) : h("div", { class: "empty" }, "No work set yet."), h("a", { class: "btn sm ghost", href: "#/assignments" }, "All")));
+      const mine = subj.ok ? CE.subjects.map(s => subjStat(subj, s)).filter(x => x.us.length) : [];
+      if (mine.length) g.append(card("My subjects", h("div", { class: "tiles sm" }, ...mine.map(subjTile)), h("a", { class: "btn sm ghost", href: "#/subjects" }, "All")));
       rail.append(card("Competitions & challenges", hm.competitions.length ? h("div", { class: "list" }, ...hm.competitions.slice(0, 3).map(c => h("a", { class: "item", href: "#/competition/" + c.id }, h("div", { class: "ico" }, CE.catIcon(c.cat)), h("div", { class: "grow" }, h("div", { class: "t" }, c.title), h("div", { class: "s" }, c.kind + " · " + D.left(c.closes))), c.entered ? h("span", { class: "badge ok" }, "Entered") : null))) : h("div", { class: "empty" }, "Nothing open right now."), h("a", { class: "btn sm ghost", href: "#/competitions" }, "All")));
       g.append(card("Playlists", hm.playlists.length ? h("div", { class: "list" }, ...hm.playlists.map(p => h("a", { class: "item", href: "#/subject/" + p.subj + "?playlist=" + p.id }, h("div", { class: "ico" }, CE.subjIcon(p.subj)), h("div", { class: "grow" }, h("div", { class: "t" }, p.title), h("div", { class: "bar", style: { marginTop: "6px" } }, h("i", { style: { width: CE.pct(p.done, p.n) + "%" } }))), h("span", { class: "badge" + (p.done === p.n ? " ok" : "") }, p.done + "/" + p.n)))) : h("div", { class: "empty" }, "Your teacher hasn't set a playlist yet."), h("a", { class: "btn sm ghost", href: "#/subjects" }, "Subjects")));
-      rail.append(card("Coming up", hm.events.length ? h("div", { class: "list" }, ...hm.events.slice(0, 4).map(e => h("a", { class: "item", href: "#/calendar" }, h("div", { class: "ico" }, kindIcon(e.kind)), h("div", { class: "grow" }, h("div", { class: "t" }, e.title), h("div", { class: "s" }, D.dt(e.starts) + (e.place ? " · " + e.place : "")))))) : h("div", { class: "empty" }, "Nothing in the next two weeks."), h("a", { class: "btn sm ghost", href: "#/calendar" }, "Calendar")));
+      rail.append(card("Coming up", hm.events.length ? h("div", { class: "list" }, ...hm.events.slice(0, 4).map(e => h("a", { class: "item", href: "#/calendar" }, dBlock(e.starts), h("div", { class: "grow" }, h("div", { class: "t" }, e.title), h("div", { class: "s" }, D.time(e.starts) + (e.place ? " · " + e.place : "")))))) : h("div", { class: "empty" }, "Nothing in the next two weeks."), h("a", { class: "btn sm ghost", href: "#/calendar" }, "Calendar")));
       CE.capi("ed_s_cd").then(cd => { if (!cd.ok || !cd.on) return; const my = cd.my && cd.my.ok !== false ? cd.my : null;
         g.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, "Compass Dash"), CE.srcTag("compassdash", "Compass Dash")), cd.linked && my ? h("div", { class: "stack" }, h("div", { class: "grid g3" }, h("div", {}, h("div", { class: "cd-xp" }, (my.xp || 0).toLocaleString()), h("div", { class: "xs mut" }, "XP")), h("div", {}, h("div", { class: "cd-xp" }, (my.wk || 0).toLocaleString()), h("div", { class: "xs mut" }, "This week")), h("div", {}, h("div", { class: "cd-xp" }, my.mast || 0), h("div", { class: "xs mut" }, "Topics mastered"))),
           (my.assigns || []).length ? h("div", { class: "list" }, ...my.assigns.slice(0, 4).map(a => h("a", { class: "item", href: "#/dash" }, h("div", { class: "ico sm" }, CE.icon("game")), h("div", { class: "grow" }, h("div", { class: "t sm" }, a.title), h("div", { class: "s xs" }, (a.due ? D.until(a.due) : "no due date") + (a.tasks ? " · " + ((a.done || []).length) + " of " + a.tasks + " tasks done" : "")))))) : h("div", { class: "sm mut" }, "No Compass Dash assignments right now."),
@@ -222,13 +228,15 @@
     try {
       const r = await CE.capi("ed_s_explore", { p_cat: cat }); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
+      const acts = r.activities, open = r.competitions.filter(c => c.open);
+      if (cat) CE.head({ art: CE.CAT_ART[cat], sub: CE.cat(cat).blurb });
+      CE.head({ stats: [[acts.length, "Activities"], [acts.filter(a => a.done).length, "Done"], [open.length, "Open competitions"]] });
       page.append(h("div", { class: "pill-row" }, h("a", { class: "pill" + (!cat ? " on" : ""), href: "#/explore" }, "All"), ...CE.categories.map(c => h("a", { class: "pill" + (c.id === cat ? " on" : ""), href: "#/explore/" + c.id }, c.name))));
-      if (cat) { const c = CE.cat(cat); page.append(h("div", { class: "row" }, h("div", { class: "ico lg" }, CE.icon(c.icon)), h("div", {}, h("h2", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, c.blurb)))); }
-      else page.append(h("div", { class: "grid g4" }, ...CE.categories.map(c => h("a", { class: "subj pat", style: { "--pat": "url(" + CE.root + "assets/art/pat-" + (CE.PAT[c.id] || "hub") + ".svg)" }, href: "#/explore/" + c.id }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon(c.icon)), h("span", { class: "badge" }, r.activities.filter(a => a.cat === c.id).length)), h("h4", { style: { margin: 0 } }, c.name), h("div", { class: "xs mut" }, c.blurb)))));
-      const open = r.competitions.filter(c => c.open);
-      if (open.length) page.append(card("Open competitions & challenges", h("div", { class: "grid g3" }, ...open.map(c => h("a", { class: "card flat feat", href: "#/competition/" + c.id, style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "row between" }, compBadge(c), h("span", { class: "xs mut" }, D.left(c.closes))), h("h4", {}, c.title), h("p", { class: "sm mut", style: { margin: 0 } }, c.blurb), c.entered ? h("span", { class: "badge ok", style: { marginTop: "8px" } }, "Entered") : null)))));
-      const acts = r.activities;
-      page.append(card((cat ? "" : "All ") + "activities (" + acts.length + ")", acts.length ? h("div", { class: "grid g3" }, ...acts.map(a => h("a", { class: "card flat feat", href: "#/activity/" + a.id, style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "row between" }, h("div", { class: "ico sm" }, CE.catIcon(a.cat)), a.done ? h("span", { class: "badge ok" }, "Done") : h("span", { class: "badge" }, a.minutes + " min")), h("h4", {}, a.title), h("p", { class: "sm mut", style: { margin: 0 } }, a.blurb), h("div", { class: "xs mut", style: { marginTop: "6px" } }, CE.catName(a.cat) + (a.ages !== "all" ? " · " + (a.ages === "11plus" ? "11+" : "under 11") : ""))))) : h("div", { class: "empty" }, "No activities here yet.")));
+      if (!cat) page.append(h("div", { class: "tiles" }, ...CE.categories.map(c => CE.tile({ href: "#/explore/" + c.id, art: CE.CAT_ART[c.id], title: c.name, sub: c.blurb, badge: h("span", { class: "badge" }, acts.filter(a => a.cat === c.id).length) }))));
+      if (open.length) page.append(card("Open competitions & challenges", h("div", { class: "tickets" }, ...open.map(compTicket))));
+      const list = h("div", { class: "acts" });
+      const draw = q => { const rows = acts.filter(a => !q || (a.title + " " + a.blurb).toLowerCase().includes(q)); list.replaceChildren(...(rows.length ? rows.map(a => h("a", { class: "acard glow", href: "#/activity/" + a.id }, CE.art(CE.CAT_ART[a.cat] || "geography"), h("div", { class: "grow" }, h("h4", {}, a.title), h("p", { class: "sm mut" }, a.blurb), h("div", { class: "row", style: { gap: "6px" } }, a.done ? h("span", { class: "badge ok" }, "Done") : h("span", { class: "badge" }, a.minutes + " min"), h("span", { class: "badge" }, CE.catName(a.cat)), a.ages !== "all" ? h("span", { class: "badge" }, a.ages === "11plus" ? "11+" : "under 11") : null)))) : [h("div", { class: "empty" }, "Nothing matches.")])); };
+      page.append(card((cat ? "" : "All ") + "activities (" + acts.length + ")", acts.length ? h("div", { class: "stack" }, CE.searchBox("Filter activities", draw), list) : h("div", { class: "empty" }, "No activities here yet."))); draw("");
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -250,8 +258,8 @@
       const r = await CE.capi("ed_s_explore", { p_cat: 0 }); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
       const open = r.competitions.filter(c => c.open), closed = r.competitions.filter(c => !c.open);
-      page.append(h("p", { class: "mut", style: { margin: 0 } }, "Competitions, challenges and tournaments across the campus. Enter before they close; winners get a notification."));
-      page.append(card("Open now (" + open.length + ")", open.length ? h("div", { class: "grid g3" }, ...open.map(c => h("a", { class: "card flat feat", href: "#/competition/" + c.id, style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "row between" }, compBadge(c), h("span", { class: "xs mut" }, D.left(c.closes))), h("h4", {}, c.title), h("p", { class: "sm mut", style: { margin: 0 } }, c.blurb), h("div", { class: "row", style: { marginTop: "8px" } }, c.cat ? h("span", { class: "badge" }, CE.catName(c.cat)) : null, c.entered ? h("span", { class: "badge ok" }, "Entered") : null)))) : CE.emptyArt("trophy", "Nothing open right now", "New competitions are announced in Notices.")));
+      CE.head({ stats: [[open.length, "Open now"], [r.competitions.filter(c => c.entered).length, "Entered"]] });
+      page.append(open.length ? h("div", { class: "tickets" }, ...open.map(compTicket)) : CE.emptyArt("trophy", "Nothing open right now", "New competitions are announced in Notices."));
       if (closed.length) page.append(card("Recently closed", h("div", { class: "list" }, ...closed.map(c => h("a", { class: "item", href: "#/competition/" + c.id }, h("div", { class: "ico sm" }, CE.icon("trophy")), h("div", { class: "grow" }, h("div", { class: "t" }, c.title), h("div", { class: "s" }, "Closed " + D.short(c.closes))), c.entered ? h("span", { class: "badge" }, "You entered") : null)))));
     } catch (e) { CE.fail(page, e); }
   }
@@ -279,10 +287,12 @@
     try {
       const [r, pub] = await Promise.all([CE.capi("ed_s_news"), CE.api("ed_public").catch(() => ({}))]); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
+      if (!r.rows.length) page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("news")), h("div", { class: "b" }, "No news yet")));
+      const story = (n, lead) => h("article", { class: "card story" + (lead ? " lead" : "") }, n.cover && /^https:\/\//.test(n.cover) ? h("img", { src: n.cover, alt: "", style: { borderRadius: "12px", marginBottom: "12px", width: "100%" }, loading: "lazy" }) : null, n.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("div", { class: "row between", style: { marginTop: "6px", marginBottom: "6px" } }, h("h3", { style: { margin: 0 } }, n.title), CE.readAloud(() => n.title + "\n" + CE.plain(CE.rich(n.body)))), h("div", { html: CE.rich(n.body) }), h("div", { class: "xs mut" }, (n.from ? n.from + " · " : "") + D.long(n.created)));
+      const top = r.rows.find(n => n.featured) || r.rows[0], rest = r.rows.filter(n => n !== top);
+      if (top) page.append(story(top, true)); if (rest.length) page.append(h("div", { class: "mag" }, ...rest.map(n => story(n))));
       const gal = (pub.gallery || []).slice(0, 4);
       if (gal.length) page.append(h("div", {}, h("div", { class: "kicker" }, "Highlights"), h("div", { class: "gallery" }, ...gal.map(CE.galleryTile))));
-      if (!r.rows.length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("news")), h("div", { class: "b" }, "No news yet")));
-      r.rows.forEach(n => page.append(h("article", { class: "card" + (n.featured ? " tint" : ""), style: { maxWidth: "820px" } }, n.cover && /^https:\/\//.test(n.cover) ? h("img", { src: n.cover, alt: "", style: { borderRadius: "12px", marginBottom: "12px", width: "100%" }, loading: "lazy" }) : null, n.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("div", { class: "row between", style: { marginTop: "6px", marginBottom: "6px" } }, h("h3", { style: { margin: 0 } }, n.title), CE.readAloud(() => n.title + "\n" + CE.plain(CE.rich(n.body)))), h("div", { html: CE.rich(n.body) }), h("div", { class: "xs mut" }, (n.from ? n.from + " · " : "") + D.long(n.created)))));
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -292,24 +302,20 @@
     try {
       const r = await CE.capi("ed_s_subjects"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
-      page.append(h("p", { class: "mut", style: { margin: 0 } }, "Subjects with lessons and quizzes set for your class appear first."));
-      const grid = h("div", { class: "grid g3" }); page.append(grid);
-      const order = CE.subjects.slice().sort((a, b) => (r.units.some(u => u.subj === b.id) - r.units.some(u => u.subj === a.id)) || a.id - b.id);
-      order.forEach(s => {
-        const us = r.units.filter(u => u.subj === s.id), ls = us.flatMap(u => u.lessons), done = ls.filter(l => l.done).length, cps = us.flatMap(u => u.quizzes).filter(q => q.kind === "checkpoint"), passed = cps.filter(q => q.best != null && q.best >= q.threshold).length;
-        grid.append(h("a", { class: "subj" + (us.length ? "" : " off"), href: "#/subject/" + s.id }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon(s.icon)), us.length ? h("span", { class: "badge cyan" }, us.length + " unit" + (us.length > 1 ? "s" : "")) : h("span", { class: "badge" }, "No units yet")),
-          h("h3", { style: { margin: 0 } }, s.name), ls.length ? h("div", {}, h("div", { class: "row between sm" }, h("span", {}, done + "/" + ls.length + " lessons"), h("span", { class: "mut" }, passed + "/" + cps.length + " checkpoints")), h("div", { class: "bar", style: { marginTop: "6px" } }, h("i", { style: { width: CE.pct(done, ls.length) + "%" } }))) : h("div", { class: "xs mut" }, "Nothing set for your class yet")));
-      });
+      const all = CE.subjects.map(s => subjStat(r, s)), live = all.filter(x => x.us.length), rest = all.filter(x => !x.us.length);
+      CE.head({ stats: [[live.length, "Active subjects"], [all.reduce((n, x) => n + x.done, 0), "Lessons done"], [all.reduce((n, x) => n + x.passed, 0), "Checkpoints passed"]] });
+      if (live.length) page.append(h("div", { class: "tiles" }, ...live.map(subjTile)));
+      if (rest.length) page.append(card("Nothing set yet", h("div", { class: "tiles sm" }, ...rest.map(x => CE.tile({ href: "#/subject/" + x.s.id, art: CE.subjArt(x.s.id), title: x.s.name, cls: "off" })))));
     } catch (e) { CE.fail(page, e); }
   }
 
   async function subject(p) {
-    const id = +p.id, s = CE.subj(id); CE.title(s.name); CE.loading(page);
+    const id = +p.id, s = CE.subj(id); CE.title(s.name); CE.head({ art: CE.subjArt(id) }); CE.loading(page);
     try {
       const r = await CE.capi("ed_s_subjects"); if (!r.ok) return CE.fail(page, r);
       const units = r.units.filter(u => u.subj === id), pls = r.playlists.filter(x => x.subj === id), want = +(CE.q("playlist") || 0);
       page.innerHTML = "";
-      page.append(h("div", { class: "row" }, h("div", { class: "ico lg" }, CE.icon(s.icon)), h("div", {}, h("h2", { style: { margin: 0 } }, s.name), h("div", { class: "sm mut" }, units.length + " unit" + (units.length !== 1 ? "s" : "") + " · " + units.flatMap(u => u.lessons).length + " lessons"))));
+      const st = subjStat(r, s); CE.head({ sub: units.length + " unit" + (units.length !== 1 ? "s" : "") + " · " + st.ls.length + " lessons", stats: [[st.done, "Lessons done"], [st.passed, "Checkpoints passed"]] });
       if (pls.length) {
         const c = card("Lesson playlists", h("div", { class: "stack" })); page.append(c);
         pls.forEach(pl => {
@@ -384,9 +390,15 @@
     CE.title("Assignments"); CE.loading(page);
     try {
       const r = await CE.capi("ed_s_assigns"); if (!r.ok) return CE.fail(page, r);
-      page.innerHTML = ""; let any = false;
-      [["To do", a => !a.sub || a.sub.status === "draft"], ["Handed in", a => a.sub && a.sub.status === "submitted"], ["Returned", a => a.sub && a.sub.status === "returned"]].forEach(([t, f]) => { const rows = r.rows.filter(f); if (!rows.length) return; any = true; page.append(card(t + " (" + rows.length + ")", h("div", { class: "list" }, ...rows.map(a => h("a", { class: "item", href: "#/assignment/" + a.id }, h("div", { class: "ico" }, CE.subjIcon(a.subj)), h("div", { class: "grow" }, h("div", { class: "t" }, a.title), h("div", { class: "s" }, CE.subjName(a.subj) + " · " + KIND[a.kind] + " · " + a.points + " pts" + (a.due ? " · due " + D.dt(a.due) : ""))), statusBadge(Object.assign({ status: a.sub ? a.sub.status : "todo", score: a.sub && a.sub.score }, a))))))); });
-      if (!any) page.append(CE.emptyArt("inbox", "No assignments yet", me.class ? "When your teacher sets work it will appear here." : "You're not in a class yet. Ask a teacher to add you to one."));
+      page.innerHTML = "";
+      if (!r.rows.length) return page.append(CE.emptyArt("inbox", "No assignments yet", me.class ? "When your teacher sets work it will appear here." : "You're not in a class yet. Ask a teacher to add you to one."));
+      const st = a => a.sub ? a.sub.status : "todo", late = a => (st(a) === "todo" || st(a) === "draft") && a.due && new Date(a.due) < Date.now();
+      CE.head({ stats: [[r.rows.filter(a => st(a) === "todo" || st(a) === "draft").length, "To do"], [r.rows.filter(late).length, "Overdue"], [r.rows.filter(a => st(a) === "returned").length, "Returned"]] });
+      const subs = [...new Set(r.rows.map(a => a.subj))], bd = h("div", { class: "board" }); let f = null;
+      const bcard = a => h("a", { class: "bcard glow" + (late(a) ? " late" : st(a) === "draft" ? " draft" : st(a) === "returned" ? " done" : ""), href: "#/assignment/" + a.id }, h("div", { class: "row between" }, h("span", { class: "bc-s" }, CE.art(CE.subjArt(a.subj), "art sm"), CE.subjName(a.subj)), statusBadge(Object.assign({ status: st(a), score: a.sub && a.sub.score }, a))), h("div", { class: "bc-t" }, a.title), h("div", { class: "xs mut" }, KIND[a.kind] + " · " + a.points + " pts" + (a.due ? " · due " + D.dt(a.due) : "")));
+      const draw = () => { const rows = r.rows.filter(a => f == null || a.subj === f); bd.replaceChildren(...[["To do", "todo"], ["In draft", "draft"], ["Handed in", "submitted"], ["Returned", "returned"]].map(([t, k]) => { const c = rows.filter(a => st(a) === k); return h("div", { class: "bcol" }, h("h4", {}, t, h("span", { class: "badge" }, c.length)), ...(c.length ? c.map(bcard) : [h("div", { class: "none" }, "Nothing here")])); })); };
+      if (subs.length > 1) { const pills = h("div", { class: "pill-row" }, ...[null, ...subs].map(x => h("button", { class: "pill" + (x == null ? " on" : ""), onclick: e => { f = x; CE.$$(".pill", pills).forEach(b => b.classList.toggle("on", b === e.currentTarget)); draw(); } }, x == null ? "All subjects" : CE.subjName(x)))); page.append(pills); }
+      page.append(bd); draw();
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -443,19 +455,15 @@
     try {
       const r = await CE.capi("ed_s_progress"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
-      const actsDone = r.activities.reduce((n, a) => n + a.done, 0);
-      page.append(h("div", { class: "grid g4" },
-        h("div", { class: "card stat" }, h("span", { class: "n" }, r.subjects.reduce((n, s) => n + s.lessons_done, 0)), h("span", { class: "l" }, "Lessons completed")),
-        h("div", { class: "card stat" }, h("span", { class: "n" }, r.subjects.reduce((n, s) => n + s.checkpoints_passed, 0)), h("span", { class: "l" }, "Checkpoints passed")),
-        h("div", { class: "card stat" }, h("span", { class: "n" }, actsDone), h("span", { class: "l" }, "Activities done")),
-        h("div", { class: "card stat" }, h("span", { class: "n" }, r.places.length + "/" + r.entries), h("span", { class: "l" }, "Placed / entered"))));
-      const tb = h("table", { class: "tb" }, h("thead", {}, h("tr", {}, h("th", {}, "Subject"), h("th", {}, "Lessons"), h("th", {}, "Checkpoints"), h("th", {}, "Quiz avg"), h("th", {}, "Work handed in"), h("th", {}, "Grade avg"))), h("tbody", {}));
-      r.subjects.filter(s => s.lessons || s.assigns || s.quiz_avg != null).forEach(s => tb.lastChild.append(h("tr", {}, h("td", { class: "b" }, h("span", { class: "row", style: { gap: "8px", flexWrap: "nowrap" } }, CE.icon(s.icon), s.name)), h("td", {}, s.lessons ? h("div", {}, h("div", { class: "sm" }, s.lessons_done + "/" + s.lessons), h("div", { class: "bar", style: { width: "90px" } }, h("i", { style: { width: CE.pct(s.lessons_done, s.lessons) + "%" } }))) : h("span", { class: "mut" }, "–")), h("td", {}, s.checkpoints ? s.checkpoints_passed + "/" + s.checkpoints : h("span", { class: "mut" }, "–")), h("td", {}, s.quiz_avg != null ? s.quiz_avg + "%" : h("span", { class: "mut" }, "–")), h("td", {}, s.assigns ? s.assigns_done + "/" + s.assigns : h("span", { class: "mut" }, "–")), h("td", {}, s.grade_avg != null ? s.grade_avg + "%" : h("span", { class: "mut" }, "–")))));
-      page.append(card("By subject", tb.lastChild.children.length ? h("div", { class: "tbw" }, tb) : h("div", { class: "empty" }, "No schoolwork set for your class yet.")));
-      try { const b = await CE.capi("ed_s_badges"); if (b.ok) { const list = CE.badges(b); page.append(card("Badges · " + list.filter(x => x.on).length + "/" + list.length, h("div", { class: "grid", style: { gridTemplateColumns: "repeat(auto-fill,minmax(110px,1fr))", gap: "8px" } }, ...list.map(x => h("div", { class: "badge-tile" + (x.on ? " on" : ""), title: x.desc }, CE.icon(x.icon), h("div", { class: "t" }, x.name), h("div", { class: "s" }, x.desc)))))); } } catch (e) {}
-      const g = h("div", { class: "grid g2" }); page.append(g);
-      g.append(card("Campus activities", h("div", { class: "list" }, ...r.activities.map(a => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(a.icon)), h("div", { class: "grow" }, h("div", { class: "t sm" }, a.name), h("div", { class: "bar", style: { marginTop: "6px" } }, h("i", { style: { width: CE.pct(a.done, a.n) + "%" } }))), h("span", { class: "badge" + (a.n && a.done === a.n ? " ok" : "") }, a.done + "/" + a.n))))));
-      g.append(card("Competitions", h("div", { class: "stack" }, r.places.length ? h("div", { class: "list" }, ...r.places.map(x => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("medal")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, ["", "1st place", "2nd place", "3rd place"][x.place] || x.place + "th"))))) : h("div", { class: "empty" }, r.entries ? "You've entered " + r.entries + " · no places yet" : "You haven't entered a competition yet."), r.recent.length ? h("div", {}, h("h4", {}, "Recent quizzes"), h("div", { class: "list" }, ...r.recent.slice(0, 6).map(x => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(x.kind === "checkpoint" ? "flag" : "question")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, CE.subjName(x.subj) + " · " + D.ago(x.at))), h("span", { class: "badge " + (CE.pct(x.score, x.out_of) >= 80 ? "ok" : CE.pct(x.score, x.out_of) >= 50 ? "warn" : "bad") }, x.score + "/" + x.out_of))))) : null)));
+      const actsDone = r.activities.reduce((n, a) => n + a.done, 0), subs = r.subjects.filter(s => s.lessons || s.assigns || s.quiz_avg != null), main = h("div", { class: "dash-main" }), rail = h("aside", { class: "dash-rail" });
+      CE.head({ stats: [[r.subjects.reduce((n, s) => n + s.lessons_done, 0), "Lessons completed"], [r.subjects.reduce((n, s) => n + s.checkpoints_passed, 0), "Checkpoints passed"], [actsDone, "Activities done"], [r.places.length + "/" + r.entries, "Placed / entered"]] });
+      page.append(h("div", { class: "dash" }, main, rail));
+      const pm = (v, l) => h("div", { class: "pm" }, h("b", {}, v), h("small", {}, l));
+      main.append(card("By subject", subs.length ? h("div", { class: "list" }, ...subs.map(s => h("div", { class: "prow" }, CE.art(CE.iconArt(s.icon)), h("div", { class: "pr-t" }, h("b", {}, s.name), h("div", { class: "bar" }, h("i", { style: { width: CE.pct(s.lessons_done, s.lessons) + "%" } })), h("small", {}, s.lessons_done + "/" + s.lessons + " lessons")), pm(s.checkpoints ? s.checkpoints_passed + "/" + s.checkpoints : "–", "Checkpoints"), pm(s.quiz_avg != null ? s.quiz_avg + "%" : "–", "Quiz avg"), pm(s.assigns ? s.assigns_done + "/" + s.assigns : "–", "Work handed in"), pm(s.grade_avg != null ? s.grade_avg + "%" : "–", "Grade avg")))) : h("div", { class: "empty" }, "No schoolwork set for your class yet.")));
+      try { const b = await CE.capi("ed_s_badges"); if (b.ok) { const list = CE.badges(b).sort((x, y) => y.on - x.on), on = list.filter(x => x.on).length; main.append(card("Badges", h("div", { class: "stack" }, h("div", { class: "bar" }, h("i", { style: { width: CE.pct(on, list.length) + "%" } })), h("div", { class: "badges" }, ...list.map(x => h("div", { class: "badge-tile" + (x.on ? " on" : ""), title: x.desc }, CE.icon(x.icon), h("div", { class: "t" }, x.name), h("div", { class: "s" }, x.desc))))), h("span", { class: "badge cyan" }, on + "/" + list.length))); } } catch (e) {}
+      main.append(card("Campus activities", h("div", { class: "list" }, ...r.activities.map(a => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(a.icon)), h("div", { class: "grow" }, h("div", { class: "t sm" }, a.name), h("div", { class: "bar", style: { marginTop: "6px" } }, h("i", { style: { width: CE.pct(a.done, a.n) + "%" } }))), h("span", { class: "badge" + (a.n && a.done === a.n ? " ok" : "") }, a.done + "/" + a.n))))));
+      rail.append(card("Competitions", r.places.length ? h("div", { class: "list" }, ...r.places.map(x => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("medal")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, ["", "1st place", "2nd place", "3rd place"][x.place] || x.place + "th"))))) : h("div", { class: "empty" }, r.entries ? "You've entered " + r.entries + " · no places yet" : "You haven't entered a competition yet.")));
+      if (r.recent.length) rail.append(card("Recent quizzes", h("div", { class: "list" }, ...r.recent.slice(0, 6).map(x => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon(x.kind === "checkpoint" ? "flag" : "question")), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.title), h("div", { class: "s xs" }, CE.subjName(x.subj) + " · " + D.ago(x.at))), h("span", { class: "badge " + (CE.pct(x.score, x.out_of) >= 80 ? "ok" : CE.pct(x.score, x.out_of) >= 50 ? "warn" : "bad") }, x.score + "/" + x.out_of))))));
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -463,7 +471,7 @@
     CE.title("Calendar"); page.innerHTML = "";
     let d = new Date(); d.setDate(1);
     const head = h("div", { class: "row between" }), grid = h("div", { class: "cal" }), list = h("div", { class: "list" });
-    page.append(h("div", { class: "card" }, head, grid), card("This month", list));
+    page.append(h("div", { class: "calwrap" }, h("div", { class: "card" }, h("div", { class: "stack" }, head, grid), h("div", { class: "legend" }, ...[["", "Events"], ["due", "Deadlines"], ["exam", "Exams"], ["trip", "Trips"]].map(([k, l]) => h("span", {}, h("i", { class: k }), l)))), card("This month", list)));
     const render = async () => {
       head.innerHTML = ""; head.append(h("div", { class: "row" }, h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() - 1); render(); } }, "‹"), h("h3", { style: { margin: 0 } }, d.toLocaleDateString((CE.locale || "en-GB"), { month: "long", year: "numeric" })), h("button", { class: "ib", onclick: () => { d.setMonth(d.getMonth() + 1); render(); } }, "›"), h("button", { class: "btn sm ghost", onclick: () => { d = new Date(); d.setDate(1); render(); } }, "Today")), h("button", { class: "btn sm", id: "ics" }, CE.icon("phone"), "Add to my phone"));
       const from = new Date(d.getFullYear(), d.getMonth(), -7), to = new Date(d.getFullYear(), d.getMonth() + 1, 7);
@@ -471,7 +479,7 @@
       const open = e => { if (e.assign_id) CE.nav("/assignment/" + e.assign_id); else if (e.comp_id) CE.nav("/competition/" + e.comp_id); else CE.modal(h("div", { class: "stack" }, h("span", { class: "badge " + (e.kind === "exam" ? "bad" : e.kind === "trip" ? "warn" : "cyan") }, e.kind), h("h3", {}, e.title), h("div", { class: "row", style: { gap: "6px" } }, CE.icon("calendar"), D.long(e.starts) + (D.time(e.starts) !== "00:00" ? ", " + D.time(e.starts) + (e.ends ? " to " + D.time(e.ends) : "") : "")), e.place ? h("div", { class: "row", style: { gap: "6px" } }, CE.icon("place"), e.place) : null, h("div", { class: "mut sm" }, e.class || "Whole school"), h("button", { class: "btn sm", onclick: () => CE.ics([e], e.title) }, CE.icon("phone"), "Add this to my calendar"))); };
       CE.calendar(grid, d.getFullYear(), d.getMonth(), r.rows, open);
       const month = r.rows.filter(e => new Date(e.starts).getMonth() === d.getMonth()); list.innerHTML = ""; if (!month.length) list.append(h("div", { class: "empty" }, "Nothing this month."));
-      month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, h("div", { class: "ico sm" }, kindIcon(e.kind)), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + (e.place ? " · " + e.place : ""))), CE.srcTag(e.src, e.src_name))));
+      month.forEach(e => list.append(h("div", { class: "item click", onclick: () => open(e) }, dBlock(e.starts), h("div", { class: "grow" }, h("div", { class: "t sm" }, (e.kind === "due" ? "Due: " : "") + e.title), h("div", { class: "s xs" }, D.dt(e.starts) + (e.place ? " · " + e.place : ""))), CE.srcTag(e.src, e.src_name))));
       const icsBtn = $("#ics"); if (icsBtn) icsBtn.onclick = () => CE.ics(r.rows, "Compass Ed " + d.toLocaleDateString((CE.locale || "en-GB"), { month: "long" }));
     };
     render();
@@ -483,8 +491,12 @@
       const r = await CE.capi("ed_s_anns"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
       CE.capi("ed_s_cd").then(cd => { const rows = cd.ok && cd.anns && cd.anns.rows ? cd.anns.rows : []; if (!rows.length) return; page.append(h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, "From your teacher on Compass Dash"), CE.srcTag("compassdash", "Compass Dash")), h("div", { class: "list" }, ...rows.slice(0, 6).map(a => h("div", { class: "item" }, h("div", { class: "ico sm" }, CE.icon("bell")), h("div", { class: "grow" }, h("div", { class: "t sm" }, a.body), h("div", { class: "s xs" }, (a.class ? a.class : "Whole school") + (a.created ? " · " + D.ago(a.created) : "")))))))); }).catch(() => {});
-      if (!r.rows.length) page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("megaphone")), h("div", { class: "b" }, "No announcements")));
-      r.rows.forEach(a => { const c = h("div", { class: "card" + (a.read ? "" : " tint") }, h("div", { class: "hd" }, h("div", { class: "row" }, a.pinned ? h("span", { class: "badge ink" }, CE.icon("pin"), "Pinned") : null, h("span", { class: "badge" }, a.class || "Whole school")), a.read ? h("span", { class: "xs mut" }, "Read") : h("button", { class: "btn sm cyan", onclick: async e => { await CE.capi("ed_s_ann_read", { p_id: a.id }); c.classList.remove("tint"); e.target.replaceWith(h("span", { class: "xs mut" }, "Read")); S.home = null; loadBell(); } }, "Mark as read")), h("div", { class: "row between", style: { marginBottom: "6px" } }, h("h3", { style: { margin: 0 } }, a.title), CE.readAloud(() => a.title + "\n" + CE.plain(CE.rich(a.body)))), h("div", { html: CE.rich(a.body) }), h("div", { class: "xs mut" }, (a.from ? a.from + " · " : "") + D.ago(a.created))); page.append(c); });
+      if (!r.rows.length) return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("megaphone")), h("div", { class: "b" }, "No announcements")));
+      const feed = h("div", { class: "feed" }); let only = false;
+      const stats = () => CE.head({ stats: [[r.rows.filter(a => !a.read).length, "Unread"], [r.rows.length, "All"]] });
+      const draw = () => feed.replaceChildren(...(only && !r.rows.some(a => !a.read) ? [h("div", { class: "empty" }, "All caught up.")] : r.rows.filter(a => !only || !a.read).map(a => h("div", { class: "fd" + (a.read ? "" : " un") }, h("div", { class: "card" + (a.read ? "" : " tint") }, h("div", { class: "hd" }, h("div", { class: "row" }, a.pinned ? h("span", { class: "badge ink" }, CE.icon("pin"), "Pinned") : null, h("span", { class: "badge" }, a.class || "Whole school")), a.read ? h("span", { class: "xs mut" }, "Read") : h("button", { class: "btn sm cyan", onclick: async () => { await CE.capi("ed_s_ann_read", { p_id: a.id }); a.read = true; draw(); stats(); S.home = null; loadBell(); } }, "Mark as read")), h("div", { class: "row between", style: { marginBottom: "6px" } }, h("h3", { style: { margin: 0 } }, a.title), CE.readAloud(() => a.title + "\n" + CE.plain(CE.rich(a.body)))), h("div", { html: CE.rich(a.body) }), h("div", { class: "xs mut" }, (a.from ? a.from + " · " : "") + D.ago(a.created)))))));
+      const seg = h("div", { class: "seg" }, ...[["All", false], ["Unread", true]].map(([l, v]) => h("button", { class: v ? "" : "on", onclick: e => { only = v; CE.$$("button", seg).forEach(b => b.classList.toggle("on", b === e.currentTarget)); draw(); } }, l)));
+      stats(); page.prepend(seg); page.append(feed); draw();
     } catch (e) { CE.fail(page, e); }
   }
 
@@ -534,9 +546,8 @@
       const r = await CE.capi("ed_board"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = "";
       if (!r.my_house) { page.append(h("div", { class: "card tint" }, h("h3", {}, "Choose your house"), h("p", { class: "sm mut" }, "You choose once. After that only a teacher can change it."), h("div", { class: "grid g4" }, ...Object.entries(r.houses).map(([k, v]) => h("button", { class: "btn ghost house-" + k, style: { borderColor: "var(--hc)", color: "var(--hc)" }, onclick: async () => { const x = await CE.capi("ed_s_house", { p_house: k }); if (!x.ok) return CE.toast(CE.errText(x), "bad"); CE.toast("Welcome to " + v + "!", "ok"); house(); } }, v))))); }
-      const top = Math.max(1, ...r.house.map(x => x.pts));
-      page.append(h("div", { class: "grid g4" }, h("div", { class: "card stat" }, h("span", { class: "n" }, r.my_pts), h("span", { class: "l" }, "My points")), h("div", { class: "card stat" }, h("span", { class: "n" }, r.my_week), h("span", { class: "l" }, "This week")), h("div", { class: "card stat" }, h("span", { class: "n" }, r.my_house ? r.houses[r.my_house] : "–"), h("span", { class: "l" }, "My house")), h("div", { class: "card stat" }, h("span", { class: "n" }, r.students.findIndex(x => x.pts === r.my_pts) + 1 || "–"), h("span", { class: "l" }, "My rank"))));
-      page.append(card("Houses", h("div", { class: "stack" }, ...r.house.map((x, i) => h("div", { class: "house-" + x.house }, h("div", { class: "row between sm" }, h("b", {}, (i + 1) + ". " + (r.houses[x.house] || x.house) + (x.house === r.my_house ? " (mine)" : "")), h("span", {}, x.pts.toLocaleString() + " pts · " + x.week + " this week")), h("div", { class: "hbar" }, h("i", { style: { width: CE.pct(x.pts, top) + "%" } })))))));
+      CE.head({ stats: [[r.my_pts, "My points"], [r.my_week, "This week"], [r.my_house ? r.houses[r.my_house] : "–", "My house"], [r.students.findIndex(x => x.pts === r.my_pts) + 1 || "–", "My rank"]] });
+      page.append(card("Houses", CE.podium(r, r.my_house)));
       CE.capi("ed_s_cd").then(cd => { const c = CE.cdHousesCard(cd.ok ? cd : null, r.my_house); if (c) page.append(c); }).catch(() => {});
       const g = h("div", { class: "grid g2" }); page.append(g);
       g.append(card("Top students", h("div", { class: "list" }, ...r.students.slice(0, 15).map((x, i) => h("div", { class: "item" }, h("span", { class: "badge" + (i < 3 ? " cyan" : "") }, i + 1), h("div", { class: "grow" }, h("div", { class: "t sm" }, x.name), h("div", { class: "s xs" }, [x.class, x.house ? r.houses[x.house] : null].filter(Boolean).join(" · "))), h("span", { class: "b" }, x.pts))))));
@@ -553,9 +564,10 @@
       page.innerHTML = "";
       page.append(h("div", { class: "page-lead" }, h("div", {}, h("h2", {}, "Clubs"), h("div", { class: "sm mut" }, "ECA and after-school clubs. Sign up here; places are limited."))));
       const mine = r.rows.filter(c => c.joined);
-      page.append(h("p", { class: "mut", style: { margin: 0 } }, mine.length ? "You're in " + mine.map(c => c.title).join(", ") + "." : "Sign up to a club: places are first come, first served."));
+      CE.head({ stats: [[r.rows.length, "Clubs"], [mine.length, "Joined"]] });
       if (!r.rows.length) return page.append(h("div", { class: "empty" }, "No clubs yet."));
-      page.append(h("div", { class: "grid g3" }, ...r.rows.map(c => h("div", { class: "card feat" + (c.joined ? " tint" : "") }, h("div", { class: "row between" }, h("div", { class: "ico" }, c.cat ? CE.catIcon(c.cat) : CE.icon("users")), h("span", { class: "badge" + (c.n >= c.capacity ? " bad" : "") }, c.n + "/" + c.capacity)), h("h4", {}, c.title), h("p", { class: "sm mut", style: { margin: 0 } }, c.blurb), h("div", { class: "sm" }, c.day + " · " + c.time + (c.place ? " · " + c.place : "") + (c.lead ? " · " + c.lead : "")), c.ages !== "all" ? h("span", { class: "badge" }, c.ages === "11plus" ? "11 and over" : "Under 11") : null,
+      page.append(h("p", { class: "mut", style: { margin: 0 } }, mine.length ? "You're in " + mine.map(c => c.title).join(", ") + "." : "Sign up to a club: places are first come, first served."));
+      page.append(h("div", { class: "clubs" }, ...r.rows.map(c => h("div", { class: "club glow" + (c.joined ? " in" : "") }, h("div", { class: "row between" }, c.cat ? CE.art(CE.CAT_ART[c.cat]) : h("div", { class: "ico" }, CE.icon("users")), h("span", { class: "badge" + (c.n >= c.capacity ? " bad" : "") }, c.n + "/" + c.capacity)), h("h4", {}, c.title), h("p", { class: "sm mut" }, c.blurb), h("div", { class: "bar" + (c.n >= c.capacity ? " warn" : "") }, h("i", { style: { width: CE.pct(c.n, c.capacity) + "%" } })), h("div", { class: "sm" }, c.day + " · " + c.time + (c.place ? " · " + c.place : "") + (c.lead ? " · " + c.lead : "")), c.ages !== "all" ? h("span", { class: "badge" }, c.ages === "11plus" ? "11 and over" : "Under 11") : null,
         h("div", { class: "row" }, c.joined ? h("button", { class: "btn sm ghost", onclick: async () => { if (!(await CE.confirm("Leave " + c.title + "?", "Leave"))) return; const x = await CE.capi("ed_s_club_join", { p_id: c.id, p_join: false }); if (x.ok) clubs(); } }, "Leave") : h("button", { class: "btn sm cyan", disabled: c.n >= c.capacity, onclick: async () => { const x = await CE.capi("ed_s_club_join", { p_id: c.id, p_join: true }); if (!x.ok) return CE.toast(x.error === "full" ? "That club is full." : CE.errText(x), "bad"); CE.toast("You're in ✓", "ok"); clubs(); } }, c.n >= c.capacity ? "Full" : "Sign up"))))));
     } catch (e) { CE.fail(page, e); }
   }
@@ -574,7 +586,7 @@
       data.asg.rows.forEach(a => { if (hit(a.title) || hit(a.instr)) rows.push(["pencil", a.title, CE.subjName(a.subj) + " · " + a.kind, "#/assignment/" + a.id]); });
       if (!rows.length) return res.append(h("div", { class: "empty" }, "Nothing matches."));
       res.append(h("div", { class: "list" }, ...rows.slice(0, 40).map(([ic, t, s2, href]) => h("a", { class: "item", href }, h("div", { class: "ico sm" }, CE.icon(ic)), h("div", { class: "grow" }, h("div", { class: "t sm" }, t), h("div", { class: "s xs" }, s2)))))); };
-    const box = CE.searchBox("Search activities, competitions, lessons, news, clubs and assignments", run); page.append(h("div", { class: "card stack" }, box, res)); box.querySelector("input").focus();
+    const box = CE.searchBox("Search activities, competitions, lessons, news, clubs and assignments", run); page.append(h("div", { class: "card stack" }, box, res)); box.querySelector("input").value = CE.q("q") || ""; box.querySelector("input").focus();
     const [ex, sub, news, clubs, asg] = await Promise.all([CE.capi("ed_s_explore", { p_cat: 0 }), CE.capi("ed_s_subjects"), CE.capi("ed_s_news"), CE.capi("ed_s_clubs"), CE.capi("ed_s_assigns")]);
     data = { ex: ex.ok ? ex : { activities: [], competitions: [] }, sub: sub.ok ? sub : { units: [] }, news: news.ok ? news : { rows: [] }, clubs: clubs.ok ? clubs : { rows: [] }, asg: asg.ok ? asg : { rows: [] } }; run(box.querySelector("input").value.trim().toLowerCase());
   }
@@ -582,7 +594,7 @@
   /* ---------- the campus home page, inside the portal ---------- */
   async function campusPage() {
     CE.title("Campus"); page.innerHTML = "";
-    page.append(h("div", { class: "campus-head" }, CE.aurora(h("div", { class: "aurora" })), h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
+    CE.head({ title: "The campus", acts: [h("a", { class: "btn ghost sm", href: CE.root + "index.html" }, "Open the public site")] });
     const root = h("div", { id: "campus" }); page.append(root);
     await CE.campus(root, { portal: "student", inPortal: true });
   }
@@ -654,6 +666,7 @@
     [["News", "#/news"], ["Announcements", "#/announcements"]],
     [["Calendar", "#/calendar"], ["My day", "#/day"]]
   ];
+  CE.jump = GROUPS.flat();
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g || []); };
   addEventListener("hashchange", setSub); setSub();
   // reminders follow the language and time zone this device uses now

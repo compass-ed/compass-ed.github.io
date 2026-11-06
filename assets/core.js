@@ -269,6 +269,7 @@
         if (ok) { fn = () => r.handler(params); break; }
       }
       if (!fn) fn = () => (notFound || routes[0].handler)({});
+      const sheet = CE.$(".main"); if (sheet) sheet.scrollTop = 0; if (!first) scrollTo({ top: 0, behavior: "instant" });
       if (first) { first = false; fn(); } else CE.txRoute(fn);   /* the boot route paints plainly; later routes swap with a short transition */
     };
     addEventListener("hashchange", go); go();
@@ -558,21 +559,64 @@
       const shell = side.closest(".shell"), bar = CE.$(".topbar"), mini = v => { shell.classList.toggle("mini", v); LS.set("ce_side", v ? 1 : 0); tg.setAttribute("aria-pressed", String(v)); setTimeout(CE.shellUp, 260); };
       const tg = CE.h("button", { class: "ib mini-t", "aria-label": "Collapse menu", title: "Collapse menu", onclick: () => mini(!shell.classList.contains("mini")) }, CE.icon("menu"));
       bar.prepend(tg); if (LS.get("ce_side")) mini(true);
-      const sr = CE.$("a[href='#/search']", bar); if (sr) sr.dataset.k = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K";
-      addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); location.hash = "#/search"; } });
+      const sr = CE.$("a[href='#/search']", bar); if (sr) { sr.dataset.k = /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘ K" : "Ctrl K"; sr.addEventListener("click", e => { e.preventDefault(); CE.palette(); }); }
+      addEventListener("keydown", e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") { e.preventDefault(); CE.palette(); } });
       /* a soft light follows the pointer across the key numbers */
-      const pg = CE.$("#page"); if (pg) pg.addEventListener("pointermove", e => { const k = e.target.closest && e.target.closest(".kpi"); if (k) { const b = k.getBoundingClientRect(); k.style.setProperty("--gx", e.clientX - b.left + "px"); k.style.setProperty("--gy", e.clientY - b.top + "px"); } }, { passive: true });
+      const pg = CE.$("#page"); if (pg) pg.addEventListener("pointermove", e => { const k = e.target.closest && e.target.closest(".kpi,.glow"); if (k) { const b = k.getBoundingClientRect(); k.style.setProperty("--gx", e.clientX - b.left + "px"); k.style.setProperty("--gy", e.clientY - b.top + "px"); } }, { passive: true });
     }
+    if (!side.dataset.lift) { side.dataset.lift = "1"; const pg = CE.$("#page"), hd = CE.$("#phead"), mn = CE.$(".main");
+      /* a page's own title line moves up into the header band, buttons and all, whichever page drew it */
+      if (hd && pg) new MutationObserver(() => { if (hd.classList.contains("hide")) return; const l = pg.firstElementChild; if (!l || !(l.matches(".page-lead") || (l.matches(".row.between") && CE.$(":scope>div>h2", l)))) return; const t = CE.$("h2", l), sb = CE.$(".sm", l); CE.head({ title: t && t.textContent, sub: sb ? sb.textContent : "", acts: [...l.children].slice(1) }); l.remove(); }).observe(pg, { childList: true });
+      if (hd && mn) new IntersectionObserver(([e]) => mn.classList.toggle("past", !e.isIntersecting || hd.classList.contains("hide"))).observe(hd); }
     const a = CE.$("a.nl.on", side), p = CE.$(".nl-pill", side); if (!p) return;
     p.style.opacity = a ? 1 : 0; if (a) { p.style.height = a.offsetHeight + "px"; p.style.transform = "translateY(" + a.offsetTop + "px)"; }
   };
   /* numbers count up once, and arrive at once for anyone who prefers less motion */
   CE.countUp = root => { const still = matchMedia("(prefers-reduced-motion: reduce)").matches; CE.$$("[data-n]", root).forEach(el => { const to = +el.dataset.n; if (still || !to) { el.textContent = to; return; } const t0 = performance.now(), dur = Math.min(900, 420 + to * 8); const f = t => { const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(to * e); if (k < 1) requestAnimationFrame(f); }; requestAnimationFrame(f); }); };
-  /* the dashboard header both portals share */
-  CE.dashHero = (title, sub, ring, ringLabel, extra) => CE.h("section", { class: "dash-hero" }, CE.aurora(CE.h("div", { class: "aurora" })), CE.h("div", { class: "dh-t" }, CE.h("span", { class: "dh-date" }, CE.date.long(new Date())), CE.h("h2", {}, title), CE.h("p", {}, sub), extra || null), ring == null ? null : CE.h("div", { class: "dh-r" }, CE.h("div", { class: "ring", style: { "--p": ring } }, CE.h("span", {}, ring + "%")), CE.h("span", { class: "dh-l" }, ringLabel)));
+  /* drawn subject art, used for headers and tiles */
+  CE.artSrc = n => ROOT + "assets/art/" + (n === "book" ? n : "subj/" + n) + ".svg";
+  CE.art = (n, cls) => CE.h("img", { class: cls || "art", src: CE.artSrc(n), alt: "", onerror: e => { e.target.style.visibility = "hidden"; } });
+  CE.iconArt = ic => ({ sport: "pe", french: "languages", spanish: "languages", arabic: "languages" })[ic] || ic;
+  CE.subjArt = id => CE.iconArt(CE.subj(id).icon);
+  CE.CAT_ART = { 1: "computing", 2: "art", 3: "geography", 4: "drama", 5: "english", 6: "languages", 7: "science", 8: "pe" };
+  /* one header for every section: an aurora band with the section's drawing, its title, a line about it and its live numbers.
+     A portal lists its sections in CE.heads { route: [art, line] }. Detail pages are left out and keep the plain top bar. */
+  CE.heads = {};
+  const headEl = () => { const el = CE.$("#phead"), h = CE.h; if (el && !el.firstChild) el.append(CE.aurora(h("div", { class: "aurora" })), h("div", { class: "ph-t" }, h("span", { class: "ph-k", id: "phK" }), h("h1", { id: "phT" }), h("p", { id: "phS" }), h("div", { class: "row ph-a", id: "phA" })), h("div", { class: "ph-r", id: "phR" }), h("img", { class: "ph-art", id: "phI", alt: "" })); return el; };
+  CE.head = o => {
+    const el = headEl(), h = CE.h; if (!el) return; const $ = id => CE.$("#" + id, el);
+    if (o.title) $("phT").textContent = o.title;
+    if (o.sub != null) $("phS").textContent = o.sub;
+    if (o.kicker != null) $("phK").textContent = o.kicker;
+    if (o.art) $("phI").src = CE.artSrc(o.art);
+    if (o.acts) $("phA").replaceChildren(...o.acts);
+    if (o.ring != null) $("phR").replaceChildren(h("div", { class: "ph-ring" }, CE.ring(o.ring), h("span", {}, o.ringLabel)));
+    if (o.stats) { $("phR").replaceChildren(...o.stats.map(([n, l, href]) => h(href ? "a" : "span", { class: "ph-st", href }, h("b", { "data-n": typeof n === "number" ? n : null }, n), h("small", {}, l)))); CE.countUp(el); }
+  };
+  CE.ring = p => CE.h("div", { class: "ring", style: { "--p": p } }, CE.h("span", {}, p + "%"));
+  CE.tile = o => CE.h(o.href ? "a" : "div", { class: "tile glow" + (o.cls ? " " + o.cls : ""), href: o.href, "data-art": o.art }, o.ring != null ? CE.ring(o.ring) : o.badge || null, CE.h("div", { class: "tl-t" }, CE.h("h3", {}, o.title), o.sub ? CE.h("p", {}, o.sub) : null), CE.art(o.art));
+  CE.ticket = (c, tags, sub) => { const left = Math.ceil((new Date(c.closes) - Date.now()) / 864e5), open = left > 0; return CE.h("a", { class: "ticket glow" + (open ? "" : " off"), href: "#/competition/" + c.id }, CE.h("div", { class: "tk-d" }, CE.h("b", {}, open ? left : CE.date.short(c.closes)), CE.h("small", {}, open ? (left === 1 ? "day left" : "days left") : "Closed")), CE.h("div", { class: "tk-b" }, CE.h("div", { class: "row tk-tags" }, tags), CE.h("h4", {}, c.title), CE.h("p", { class: "sm mut" }, sub))); };
+  CE.podium = (r, mine) => { const top = Math.max(1, ...r.house.map(x => x.pts)); return CE.h("div", { class: "podium" }, ...r.house.map((x, i) => CE.h("div", { class: "pod house-" + x.house + (x.house === mine ? " me" : "") }, CE.h("div", { class: "pod-w" }, CE.h("div", { class: "pod-b", style: { height: Math.max(12, CE.pct(x.pts, top)) + "%" } }, CE.h("b", {}, x.pts.toLocaleString()))), CE.h("div", { class: "pod-n" }, (i + 1) + ". " + (r.houses[x.house] || x.house)), CE.h("small", {}, (x.house === mine ? "Your house · " : "") + x.week + " this week")))); };
+  /* Ctrl K: jump to any page by name, or carry the words over to the full search page */
+  CE.palette = () => {
+    if (CE.$("#pal")) return;
+    const h = CE.h, seen = new Set(), all = [], add = (label, href, ico) => { if (!seen.has(href)) { seen.add(href); all.push({ label, href, ico }); } };
+    CE.$$("#side a.nl:not(.hide)").forEach(a => add(a.title, a.getAttribute("href"), CE.$("svg", a) ? a.querySelector(".i").cloneNode(true) : null));
+    (CE.jump || []).forEach(([l, href]) => add(CE.t(l), href));
+    const ph = CE.t("Search or jump to…"), inp = h("input", { class: "pal-in", type: "search", placeholder: ph, "aria-label": ph }), list = h("div", { class: "pal-l" }), d = h("dialog", { id: "pal", class: "pal" }, h("div", { class: "pal-h" }, CE.icon("explore"), inp, h("kbd", { class: "kbd" }, "esc")), list);
+    let sel = 0, rows = [];
+    const go = r => { d.close(); location.hash = r.href; };
+    const draw = () => { const raw = inp.value.trim(), q = raw.toLowerCase(); rows = all.filter(r => !q || r.label.toLowerCase().includes(q)); if (q.length > 1) rows.push({ label: CE.t("Search everything for") + " “" + raw + "”", href: "#/search?q=" + encodeURIComponent(raw) }); sel = Math.min(sel, Math.max(0, rows.length - 1)); list.replaceChildren(...rows.map((r, i) => h("a", { class: "item" + (i === sel ? " on" : ""), href: r.href, onclick: e => { e.preventDefault(); go(r); } }, h("div", { class: "ico sm" }, r.ico ? r.ico.cloneNode(true) : CE.icon("compass")), h("div", { class: "t sm" }, r.label)))); };
+    inp.addEventListener("input", () => { sel = 0; draw(); });
+    d.addEventListener("keydown", e => { if ((e.key === "ArrowDown" || e.key === "ArrowUp") && rows.length) { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length; draw(); list.children[sel].scrollIntoView({ block: "nearest" }); } else if (e.key === "Enter" && rows[sel]) { e.preventDefault(); go(rows[sel]); } });
+    d.addEventListener("click", e => { if (e.target === d) d.close(); }); d.addEventListener("close", () => d.remove());
+    document.body.append(d); d.showModal(); draw(); inp.focus();
+  };
   /* sub-tabs under the top bar: a page group calls CE.subnav([[label, hash], ...]) */
   CE.subnav = tabs => { let el = CE.$("#subnav"); if (!el) return; el.innerHTML = ""; if (!tabs || !tabs.length) { el.classList.add("hide"); return; } el.classList.remove("hide"); const cur = (location.hash || "#/").split("?")[0]; tabs.forEach(([l, hsh, m]) => el.append(CE.h("a", { class: "tab" + ((m ? m.test(cur) : cur === hsh) ? " on" : ""), href: hsh }, l))); };
-  CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · Compass Ed"; };
+  CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · Compass Ed";
+    const head = headEl(); if (!head) return; const m = CE.heads[location.hash.replace(/^#\/?/, "").split(/[/?]/)[0] || "home"]; head.classList.toggle("hide", !m); CE.$(".main").classList.toggle("past", !m);
+    if (m) { CE.head({ title: t, sub: m[1] || "", art: m[0], kicker: "" }); CE.$("#phR").replaceChildren(); CE.$("#phA").replaceChildren(); } };
   CE.loading = el => { el.innerHTML = ""; for (let i = 0; i < 3; i++) el.append(CE.h("div", { class: "card stack" }, CE.h("div", { class: "skel", style: { width: "40%" } }), CE.h("div", { class: "skel" }), CE.h("div", { class: "skel", style: { width: "70%" } }))); };
   CE.fail = (el, e) => { el.innerHTML = ""; el.append(CE.h("div", { class: "empty" }, CE.h("div", { class: "big" }, CE.icon("warn")), CE.h("div", { class: "b" }, CE.errText(e)), CE.h("div", { class: "sm", style: { marginTop: "8px" } }, CE.h("button", { class: "btn sm", onclick: () => location.reload() }, "Try again")))); };
   CE.demoBanner = () => {

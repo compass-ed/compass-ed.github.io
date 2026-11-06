@@ -4,7 +4,7 @@
    opts.slots = { explore: el, ... } places a section into a given container instead of root, so a host page can
    interleave its own sections between them. */
 (function () {
-  const h = CE.h, D = CE.date, CAT_ART = { 1: "computing", 2: "art", 3: "geography", 4: "drama", 5: "english", 6: "languages", 7: "science", 8: "pe" };
+  const h = CE.h, D = CE.date, CAT_ART = CE.CAT_ART;
 
   /* one gallery tile (a winning entry); used by the campus page, the Showcase and the news Highlights */
   CE.galleryTile = g => { const img = (g.links || []).find(l => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(l) || /\/uploads\//.test(l)); return h("div", { class: "g lift" }, img ? h("img", { src: img, alt: "", loading: "lazy" }) : h("div", { class: "ph" }, CE.icon("medal")), h("div", { class: "b" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, ["", "1st", "2nd", "3rd"][g.place] || g.place + "th"), h("span", { class: "xs mut" }, g.comp)), h("div", { class: "b sm", style: { marginTop: "6px" } }, g.name), h("div", { class: "xs mut" }, g.body))); };

@@ -2,6 +2,15 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.3 — 6 November 2026
+- **A new portal frame.** Both portals sit on a dark aurora frame with one rounded sheet of content that scrolls on its own. The sidebar sits straight on the frame.
+- **A header for every section.** `CE.title` now fills an aurora band with the section's drawing, title, one line about it and its live numbers (`CE.head`, listed in `CE.heads` in each portal). A page's own title line moves up into the band, buttons included. Detail pages such as a lesson keep the plain top bar.
+- **Student pages rebuilt.** Home has a bold "What to do next" card and subject tiles. Assignments is a board with a subject filter, Subjects and Explore use drawn tiles, activities can be filtered as you type, competitions are tickets with a countdown, Progress shows each subject with its numbers, the Calendar has an agenda beside it, News has a lead story, Announcements is a feed with an Unread view, and House points is a podium.
+- **Teacher pages rebuilt.** The same dashboard and header, class tiles, an assignment board (To mark, Open, Past due), competition tickets and the house podium.
+- **Quick jump.** Ctrl K or ⌘ K opens a box that jumps to any page, or carries your words to the full search.
+- **Compass Dash (v2.8.4).** The original backgrounds are back: full subject rooms, the runner on every page and the shop backgrounds as designed. Qatar History keeps its Doha scene. Scrolling past the top or bottom of a page no longer shows a white gap, and Dash now fills the portal with no second scrollbar.
+- **Fixes.** Changing language now works on every portal page; before, it only worked on Home.
+
 ## v3.2 — 6 November 2026
 - **New portal dashboards.** Student and teacher home pages share one layout (`CE.dashHero` in `core.js`): a greeting with a hand-in ring, four key numbers that count up and link to their pages, the main work on the left and what's coming up on the right.
 - **New portal navigation.** A pill slides to the current page, the menu folds down to icons and remembers that choice (`ce_side`), and Ctrl K or ⌘ K opens search. Teachers and students now use the same top bar.
