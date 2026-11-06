@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>Computing</title>
+<defs><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#e8f1f3"/><stop offset="1" stop-color="#9fb4ba"/></linearGradient>
+<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#12343a"/><stop offset="1" stop-color="#050b0c"/></linearGradient></defs>
+<ellipse cx="100" cy="176" rx="82" ry="8" fill="#0b3a40" opacity=".18"/>
+<rect x="30" y="36" width="140" height="102" rx="12" fill="url(#a)"/><rect x="37" y="43" width="126" height="88" rx="6" fill="url(#b)"/>
+<g stroke-width="6" stroke-linecap="round"><path stroke="#4cc4cf" d="M50 60h34"/><path stroke="#f5c518" d="M92 60h18"/><path stroke="#30a46c" d="M60 76h48"/><path stroke="#e5484d" d="M116 76h22"/><path stroke="#7a95ff" d="M60 92h26"/><path stroke="#4cc4cf" d="M94 92h34"/><path stroke="#f5c518" d="M50 108h20"/><path stroke="#9aa6a9" d="M78 108h40"/></g>
+<path fill="url(#a)" d="M30 138h140l22 30c2 4-1 8-5 8H13c-4 0-7-4-5-8Z"/><path fill="#7d9198" d="M84 164h32c3 0 4 2 3 4l-1 2H82l-1-2c-1-2 0-4 3-4Z"/>
+<path fill="#6c8187" opacity=".55" d="m34 146-6 8h144l-6-8Z"/>
+<g transform="translate(148 40)"><circle r="24" fill="#4cc4cf"/><path stroke="#04282c" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" d="m-7-8-9 8 9 8M7-8l9 8-9 8"/></g></svg>

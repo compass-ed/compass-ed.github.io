@@ -366,6 +366,37 @@
   /* Vercel Web Analytics (cookieless page counts) and Speed Insights (load-time measurements), only where Vercel serves the
      scripts: the GitHub Pages copy has no such files. Vercel's script counts the portal's hash routes by itself, one view per change. */
   if (/\.vercel\.app$/.test(location.hostname)) ["/_vercel/insights/script.js", "/_vercel/speed-insights/script.js"].forEach(src => { const s = document.createElement("script"); s.defer = true; s.src = src; document.head.append(s); });
+  /* ---------- the aurora: the landing page's moving background, drawn live instead of played from a video ----------
+     One small WebGL canvas per .aurora element, rendered at low resolution and stretched (the CSS gradient underneath is the fallback).
+     It sleeps off screen and in hidden tabs; reduced-motion users get one still frame. CE.aurora.tint("#hex") eases it towards a colour. */
+  const AU_FS = "precision mediump float;uniform vec2 r;uniform float t;uniform vec3 c;uniform vec2 m;float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}float b(vec2 p){float v=0.,a=.5;for(int i=0;i<4;i++){v+=a*n(p);p=p*2.+9.;a*=.5;}return v;}void main(){vec2 u=gl_FragCoord.xy/r,p=u*vec2(r.x/r.y,1.)*2.1;float s=t*.045,w=b(p+vec2(s,-s*.7)),x=b(p+2.7*w+vec2(-s*.8,s)+m*.45),y=b(p*.7-1.9*w+vec2(s*.6,s*.3));vec3 k=mix(vec3(.03,.27,.33),c,smoothstep(.42,.68,y));k=mix(k,vec3(.19,.64,.42),smoothstep(.5,.74,w)*.5);k=mix(k,vec3(.24,.39,.87),smoothstep(.5,.72,y*(1.-u.x)+w*u.x)*.5);k*=smoothstep(.38,.76,x)*1.3;float v=smoothstep(1.3,.2,length((u-vec2(.5,.58))*vec2(1.05,1.35)));gl_FragColor=vec4(k*v,1.);}";
+  const auTint = [.3, .77, .81], auTo = [.3, .77, .81], auPt = [0, 0], auWake = [];
+  CE.aurora = el => {
+    const c = CE.h("canvas", { "aria-hidden": "true" }), gl = c.getContext("webgl", { antialias: false, alpha: false, powerPreference: "low-power" }); if (!gl) return el;
+    const sh = (type, src) => { const x = gl.createShader(type); gl.shaderSource(x, src); gl.compileShader(x); return x; }, pr = gl.createProgram();
+    gl.attachShader(pr, sh(gl.VERTEX_SHADER, "attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}")); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, AU_FS)); gl.linkProgram(pr);
+    if (!gl.getProgramParameter(pr, gl.LINK_STATUS)) return el;
+    gl.useProgram(pr); gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.bindAttribLocation(pr, 0, "a"); gl.vertexAttribPointer(gl.getAttribLocation(pr, "a"), 2, gl.FLOAT, false, 0, 0);
+    const U = n => gl.getUniformLocation(pr, n), uR = U("r"), uT = U("t"), uC = U("c"), uM = U("m"), still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const fit = () => { const w = el.clientWidth || 2, h = el.clientHeight || 2, k = Math.min(1, 440 / Math.max(w, h)); c.width = Math.max(2, w * k | 0); c.height = Math.max(2, h * k | 0); gl.viewport(0, 0, c.width, c.height); };
+    let raf = 0, last = 0, seen = false;
+    const draw = now => {
+      const moved = Math.abs(auTo[0] - auTint[0]) + Math.abs(auTo[1] - auTint[1]) + Math.abs(auTo[2] - auTint[2]) > .004;
+      raf = seen && (!still || moved) && !document.hidden ? requestAnimationFrame(draw) : 0;
+      if (now - last < 33 && last) return; last = now;
+      auTint.forEach((v, i) => { auTint[i] = v + (auTo[i] - v) * .06; });
+      gl.uniform2f(uR, c.width, c.height); gl.uniform1f(uT, still ? 40 : 40 + now / 1000); gl.uniform3fv(uC, auTint); gl.uniform2fv(uM, auPt); gl.drawArrays(gl.TRIANGLES, 0, 3);
+      if (!c.parentNode) el.append(c);   /* only once there is a picture: an opaque empty canvas would hide the CSS gradient underneath */
+    };
+    const wake = () => { if (!raf && !document.hidden && seen) raf = requestAnimationFrame(draw); };
+    new IntersectionObserver(es => { seen = es[0].isIntersecting; if (seen) { fit(); wake(); } }).observe(el);
+    document.addEventListener("visibilitychange", wake); addEventListener("resize", () => { fit(); wake(); }); auWake.push(wake);
+    return el;
+  };
+  CE.aurora.tint = hex => { [1, 3, 5].forEach((p, i) => { auTo[i] = parseInt(hex.substr(p, 2), 16) / 255; }); auWake.forEach(f => f()); };
+  CE.aurora.point = (x, y) => { auPt[0] = x; auPt[1] = y; };
+  CE.$$(".aurora").forEach(CE.aurora);
+
   /* ---------- page transitions: the compass ----------
      Leaving a page: a black veil blurs it away while the compass needle spins up and settles on north, then we navigate.
      The arriving page (assets/tx.js, run before its first paint) opens the veil from the compass and flies through it.

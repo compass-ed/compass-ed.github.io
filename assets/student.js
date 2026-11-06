@@ -583,8 +583,7 @@
   /* ---------- the campus home page, inside the portal ---------- */
   async function campusPage() {
     CE.title("Campus"); page.innerHTML = "";
-    const vid = h("video", { class: "loop-bg", src: CE.root + "assets/art/hero-loop.mp4", poster: CE.root + "assets/art/signin-bg.jpg", loop: true, playsinline: true, "aria-hidden": "true" }); vid.muted = true; vid.autoplay = true; if (matchMedia("(prefers-reduced-motion: reduce)").matches) vid.remove(); else setTimeout(() => vid.play().catch(() => {}), 50);
-    page.append(h("div", { class: "campus-head" }, vid, h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
+    page.append(h("div", { class: "campus-head" }, CE.aurora(h("div", { class: "aurora" })), h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
     const root = h("div", { id: "campus" }); page.append(root);
     await CE.campus(root, { portal: "student", inPortal: true });
   }

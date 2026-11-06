@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none"><title>Stage geometry</title>
+<path stroke="#4cc4cf" stroke-opacity=".6" stroke-width="2" d="m1402 96 50 29v58l-50 29-50-29v-58Z"/><path stroke="#4cc4cf" stroke-opacity=".25" stroke-width="2" d="m196 610 36 21v42l-36 21-36-21v-42Z"/>
+<path stroke="#fff" stroke-opacity=".16" stroke-width="1.5" d="M0 742 1600 318"/><path stroke="#4cc4cf" stroke-opacity=".18" stroke-width="1.5" d="M0 790 1600 366"/>
+<circle cx="150" cy="176" r="11" fill="#30a46c"/><circle cx="1262" cy="74" r="7" fill="#3e63dd"/><circle cx="1500" cy="470" r="9" fill="#e5484d"/><circle cx="96" cy="430" r="14" fill="#f5c518"/></svg>

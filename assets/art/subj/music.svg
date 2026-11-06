@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>Music</title>
+<defs><linearGradient id="a" x1="30" y1="30" x2="170" y2="170" gradientUnits="userSpaceOnUse"><stop stop-color="#7a6bf0"/><stop offset=".55" stop-color="#3e3ab8"/><stop offset="1" stop-color="#1b1a5e"/></linearGradient></defs>
+<ellipse cx="96" cy="180" rx="66" ry="7" fill="#0b3a40" opacity=".16"/>
+<g stroke="#4cc4cf" stroke-width="3" stroke-opacity=".55"><path d="M8 72c40-14 70 10 96 4s60-22 88-10M8 92c40-14 70 10 96 4s60-22 88-10M8 112c40-14 70 10 96 4s60-22 88-10"/></g>
+<path fill="url(#a)" d="M64 44 152 24c6-1 12 3 12 10v104c0 18-16 30-32 30s-24-10-24-20 12-24 30-24c5 0 9 1 12 2V74l-68 16v68c0 18-16 30-32 30s-24-10-24-20 12-24 30-24c5 0 9 1 12 2V54c0-5 3-9 8-10Z"/>
+<path fill="#fff" opacity=".25" d="M70 52 152 33c3-1 5 1 5 4v8l-90 21V57c0-3 1-5 3-5Z"/><ellipse cx="44" cy="164" rx="12" ry="7" fill="#fff" opacity=".25" transform="rotate(-20 44 164)"/><ellipse cx="124" cy="146" rx="12" ry="7" fill="#fff" opacity=".25" transform="rotate(-20 124 146)"/></svg>

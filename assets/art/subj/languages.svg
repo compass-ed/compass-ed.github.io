@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>Languages</title>
+<defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7fe3ec"/><stop offset="1" stop-color="#1b8e99"/></linearGradient>
+<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ff9a8f"/><stop offset="1" stop-color="#d13c3c"/></linearGradient>
+<linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffe27a"/><stop offset="1" stop-color="#e0a30c"/></linearGradient></defs>
+<ellipse cx="100" cy="182" rx="66" ry="7" fill="#0b3a40" opacity=".16"/>
+<path fill="url(#b)" d="M84 76h78c11 0 20 9 20 20v44c0 11-9 20-20 20h-12l2 18c0 4-4 6-7 3l-24-21H84c-11 0-20-9-20-20V96c0-11 9-20 20-20Z"/>
+<path fill="url(#a)" d="M38 22h86c12 0 22 10 22 22v50c0 12-10 22-22 22H66l-26 22c-3 3-8 1-8-4l2-18c-11-1-18-10-18-22V44c0-12 10-22 22-22Z"/>
+<path fill="#fff" d="M80 40h12l24 58h-13l-5-13H74l-5 13H56Zm-2 34h16l-8-21Z" transform="translate(-6)"/>
+<text x="124" y="140" fill="#fff" font-family="Geeza Pro,Noto Naskh Arabic,Tahoma,sans-serif" font-size="56" font-weight="700" text-anchor="middle">ع</text>
+<circle cx="168" cy="50" r="17" fill="url(#c)"/><path fill="#7a5600" d="M161 43h5l2 15-2 0Zm8 0h5l-2 15h-1Z" opacity="0"/><text x="168" y="58" fill="#5c4300" font-family="Georgia,serif" font-size="24" font-weight="700" text-anchor="middle">é</text></svg>

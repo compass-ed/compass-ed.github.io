@@ -4,7 +4,7 @@
    opts.slots = { explore: el, ... } places a section into a given container instead of root, so a host page can
    interleave its own sections between them. */
 (function () {
-  const h = CE.h, D = CE.date;
+  const h = CE.h, D = CE.date, CAT_ART = { 1: "computing", 2: "art", 3: "geography", 4: "drama", 5: "english", 6: "languages", 7: "science", 8: "pe" };
 
   /* one gallery tile (a winning entry); used by the campus page, the Showcase and the news Highlights */
   CE.galleryTile = g => { const img = (g.links || []).find(l => /\.(png|jpe?g|gif|webp)(\?|$)/i.test(l) || /\/uploads\//.test(l)); return h("div", { class: "g lift" }, img ? h("img", { src: img, alt: "", loading: "lazy" }) : h("div", { class: "ph" }, CE.icon("medal")), h("div", { class: "b" }, h("div", { class: "row between" }, h("span", { class: "badge cyan" }, ["", "1st", "2nd", "3rd"][g.place] || g.place + "th"), h("span", { class: "xs mut" }, g.comp)), h("div", { class: "b sm", style: { marginTop: "6px" } }, g.name), h("div", { class: "xs mut" }, g.body))); };
@@ -30,7 +30,7 @@
     const clubGrid = h("div", { class: "grid g4", id: "clubGrid" }); const clubSec = sec("clubs", "Clubs", "ECA and after school", "Extra-curricular activities, with sign-up in the student portal."); clubSec.append(clubGrid);
     const drawAge = () => {
       catGrid.innerHTML = "";
-      r.categories.forEach(c => { const n = age === "under11" ? (c.n_u11 ?? c.n) : age === "11plus" ? (c.n_11 ?? c.n) : c.n; catGrid.append(h("a", { class: "subj pat lift", style: { "--pat": "url(" + pre + "assets/art/pat-" + (CE.PAT[c.id] || "hub") + ".svg)" }, href: link("#/explore/" + c.id, "#/activities") }, h("div", { class: "row between" }, h("div", { class: "ico" }, CE.icon(c.icon)), h("span", { class: "badge" }, n + (n === 1 ? " activity" : " activities"))), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, c.blurb))); });
+      r.categories.forEach(c => { const n = age === "under11" ? (c.n_u11 ?? c.n) : age === "11plus" ? (c.n_11 ?? c.n) : c.n; catGrid.append(h("a", { class: "subj pat lift", style: { "--pat": "url(" + pre + "assets/art/pat-" + (CE.PAT[c.id] || "hub") + ".svg)" }, href: link("#/explore/" + c.id, "#/activities") }, h("div", { class: "row between" }, CAT_ART[c.id] ? h("div", { class: "ico art" }, h("img", { src: pre + "assets/art/subj/" + CAT_ART[c.id] + ".svg", alt: "" })) : h("div", { class: "ico" }, CE.icon(c.icon)), h("span", { class: "badge" }, n + (n === 1 ? " activity" : " activities"))), h("h3", { style: { margin: 0 } }, c.name), h("div", { class: "sm mut" }, c.blurb))); });
       compGrid.innerHTML = "";
       const comps = r.competitions.filter(c => age === "all" || !c.ages || c.ages === "all" || c.ages === age);
       if (!comps.length) compGrid.append(CE.emptyArt("trophy", "Nothing open right now", "Check back soon."));
@@ -71,12 +71,12 @@
 
   /* scroll reveal: elements with .reveal fade up when they enter the viewport (no-op when motion is reduced) */
   CE.reveal = root => {
-    const els = CE.$$(".reveal:not(.in)", root || document); if (!els.length) return;
-    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) { els.forEach(e => e.classList.add("in")); return; }
-    const io = new IntersectionObserver(es => es.forEach(x => { if (x.isIntersecting) { x.target.classList.add("in"); io.unobserve(x.target); } }), { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    const els = CE.$$(".reveal:not(.seen)", root || document); if (!els.length) return;
+    if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches || document.hidden) { els.forEach(e => e.classList.add("seen")); return; }
+    const io = new IntersectionObserver(es => es.forEach(x => { if (x.isIntersecting) { x.target.classList.add("seen"); io.unobserve(x.target); } }), { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
     els.forEach(e => io.observe(e));
     /* safety net: nothing stays hidden for long (background tabs, odd scroll containers) */
-    setTimeout(() => els.forEach(e => e.classList.add("in")), 2500);
-    document.addEventListener("visibilitychange", () => { if (document.hidden) els.forEach(e => e.classList.add("in")); }, { once: true });
+    setTimeout(() => els.forEach(e => e.classList.add("seen")), 2500);
+    document.addEventListener("visibilitychange", () => { if (document.hidden) els.forEach(e => e.classList.add("seen")); }, { once: true });
   };
 })();

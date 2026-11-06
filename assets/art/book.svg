@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 640" fill="none"><title>Open book</title>
+<defs><linearGradient id="c" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#14707b"/><stop offset=".5" stop-color="#0a3d44"/><stop offset="1" stop-color="#04181b"/></linearGradient>
+<linearGradient id="l" x1="34" x2="500" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#e6f1f3"/><stop offset=".12" stop-color="#fbfefe"/><stop offset=".78" stop-color="#fff"/><stop offset=".93" stop-color="#dfecef"/><stop offset="1" stop-color="#a9c2c8"/></linearGradient>
+<linearGradient id="r" x1="966" x2="500" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#e6f1f3"/><stop offset=".12" stop-color="#fbfefe"/><stop offset=".78" stop-color="#fff"/><stop offset=".93" stop-color="#dfecef"/><stop offset="1" stop-color="#a9c2c8"/></linearGradient>
+<linearGradient id="e" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#4cc4cf"/><stop offset="1" stop-color="#4cc4cf" stop-opacity="0"/></linearGradient>
+<filter id="s" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="20"/></filter></defs>
+<ellipse cx="500" cy="618" rx="480" ry="18" fill="#000" opacity=".7" filter="url(#s)"/>
+<path fill="url(#c)" d="M20 56C196 28 404 40 500 94 596 40 804 28 980 56L992 588C804 566 596 574 500 628 404 574 196 566 8 588Z"/>
+<path stroke="url(#e)" stroke-width="2.5" d="M20 56C196 28 404 40 500 94 596 40 804 28 980 56"/>
+<path fill="#f4fafb" transform="translate(0 30)" d="M34 536C206 512 404 524 500 576 596 524 794 512 966 536L968 560C794 536 596 548 500 600 404 548 206 536 32 560Z"/><path fill="#d3e3e6" transform="translate(0 25)" d="M34 536C206 512 404 524 500 576 596 524 794 512 966 536L968 560C794 536 596 548 500 600 404 548 206 536 32 560Z"/><path fill="#f4fafb" transform="translate(0 20)" d="M34 536C206 512 404 524 500 576 596 524 794 512 966 536L968 560C794 536 596 548 500 600 404 548 206 536 32 560Z"/><path fill="#d3e3e6" transform="translate(0 15)" d="M34 536C206 512 404 524 500 576 596 524 794 512 966 536L968 560C794 536 596 548 500 600 404 548 206 536 32 560Z"/><path fill="#f4fafb" transform="translate(0 10)" d="M34 536C206 512 404 524 500 576 596 524 794 512 966 536L968 560C794 536 596 548 500 600 404 548 206 536 32 560Z"/><path fill="#d3e3e6" transform="translate(0 5)" d="M34 536C206 512 404 524 500 576 596 524 794 512 966 536L968 560C794 536 596 548 500 600 404 548 206 536 32 560Z"/>
+<path fill="url(#l)" d="M500 84C404 34 206 22 46 48L34 536C206 512 404 524 500 576Z"/><path fill="url(#r)" d="M500 84C596 34 794 22 954 48L966 536C794 512 596 524 500 576Z"/>
+<path stroke="#7f9aa0" stroke-opacity=".55" stroke-width="2" d="M500 84v492"/>
+</svg>

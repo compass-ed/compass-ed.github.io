@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>PE and Wellbeing</title>
+<defs><radialGradient id="a" cx=".36" cy=".3" r=".85"><stop stop-color="#fff"/><stop offset=".65" stop-color="#e4eff1"/><stop offset="1" stop-color="#9db6bc"/></radialGradient>
+<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#2b3335"/><stop offset="1" stop-color="#0a1012"/></linearGradient>
+<clipPath id="c"><circle cx="100" cy="92" r="66"/></clipPath></defs>
+<ellipse cx="100" cy="176" rx="60" ry="8" fill="#0b3a40" opacity=".2"/>
+<circle cx="100" cy="92" r="66" fill="url(#a)"/>
+<g clip-path="url(#c)"><path fill="url(#b)" d="m100 66 24 18-9 28H85l-9-28Z"/><g fill="url(#b)"><path d="m100 26-20-4 2-20h36l2 20Z"/><path d="m158 62 14-16 18 10-12 34-19 4Z"/><path d="m136 142 19 6-2 22-34 6-9-18Z"/><path d="m64 142 26 16-9 18-34-6-2-22Z"/><path d="m42 62-1 32-19-4-12-34 18-10Z"/></g>
+<g stroke="#1a2326" stroke-width="3.5"><path d="M100 66V26m24 58 34-22m-43 50 21 30m-51-30-21 30m-1-58-34-22"/></g></g>
+<ellipse cx="78" cy="62" rx="17" ry="10" fill="#fff" opacity=".7" transform="rotate(-30 78 62)"/>
+<path fill="#30a46c" d="M150 158c0-14 10-24 26-24 2 16-8 28-26 24Z"/><path fill="#5ff0bb" d="M150 164c-2-10-10-16-20-16 0 12 8 18 20 16Z"/><path stroke="#1f8a56" stroke-width="3" stroke-linecap="round" d="M150 182v-24"/></svg>

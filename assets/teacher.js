@@ -939,8 +939,7 @@
   /* ---------- the campus home page, inside the portal ---------- */
   async function campusPage() {
     CE.title("Campus"); page.innerHTML = "";
-    const vid = h("video", { class: "loop-bg", src: CE.root + "assets/art/hero-loop.mp4", poster: CE.root + "assets/art/signin-bg.jpg", loop: true, playsinline: true, "aria-hidden": "true" }); vid.muted = true; vid.autoplay = true; if (matchMedia("(prefers-reduced-motion: reduce)").matches) vid.remove(); else setTimeout(() => vid.play().catch(() => {}), 50);
-    page.append(h("div", { class: "campus-head" }, vid, h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
+    page.append(h("div", { class: "campus-head" }, CE.aurora(h("div", { class: "aurora" })), h("div", {}, h("h2", {}, "The campus"), h("p", { class: "sm" }, "The public home page, right here. You stay signed in.")), h("a", { class: "btn ghost sm", style: { color: "#fff", borderColor: "#fff" }, href: CE.root + "index.html" }, "Open the public site")));
     const root = h("div", { id: "campus" }); page.append(root);
     await CE.campus(root, { portal: "teacher", inPortal: true });
   }
@@ -979,11 +978,11 @@
   }
   async function display() {
     CE.title("Display mode"); page.innerHTML = ""; document.body.classList.add("display");
-    const stage = h("div", { class: "stage" }, h("video", { class: "loop-bg", src: CE.root + "assets/art/hero-loop.mp4", poster: CE.root + "assets/art/signin-bg.jpg", muted: "", autoplay: "", loop: "", playsinline: "" }));
+    const stage = h("div", { class: "stage" }, CE.aurora(h("div", { class: "aurora" })));
     const clock = h("div", { class: "clock" }), body = h("div", { class: "stage-body" }), dots = h("div", { class: "dots" });
     stage.append(h("div", { class: "stage-head" }, h("div", { class: "row" }, h("img", { src: CE.root + "assets/logo-white.svg", alt: "" }), h("b", {}, me.school || "Compass Ed")), clock), body, dots,
       h("div", { class: "stage-tools" }, h("button", { class: "btn sm ghost", onclick: () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}) }, "Full screen"), h("a", { class: "btn sm ghost", href: "#/" }, "Exit")));
-    page.append(stage); const vid = stage.querySelector("video"); vid.muted = true; vid.play().catch(() => {});
+    page.append(stage);
     const time = () => { clock.textContent = new Date().toLocaleTimeString((CE.locale || "en-GB"), { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }); }; time();
     let panels = [], i = 0;
     const show = () => { if (!panels.length) return; i %= panels.length; body.classList.remove("on"); body.innerHTML = ""; body.append(h("h2", {}, panels[i][0]), panels[i][1]); void body.offsetWidth; body.classList.add("on"); CE.$$("i", dots).forEach((d, k) => d.classList.toggle("on", k === i)); };

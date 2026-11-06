@@ -6,7 +6,11 @@
   if (n && !n.querySelector("a[data-dash]")) { const me = CE.auth && CE.auth.get(), a = CE.h("a", { href: me && me.me ? (me.me.role === "student" ? "student/" : "teacher/") + "#/dash" : "dash/", "data-dash": "" }, "Compass Dash"), ab = n.querySelector('a[href="about.html"]'); ab ? n.insertBefore(a, ab) : n.append(a); }
   // longer French or Arabic labels can overflow the bar: first drop "Create account" (also on the sign-in page), then fold the links into the menu button, as on a phone
   const bar = n && n.closest(".nav"), row = bar && bar.querySelector(".wrap");
-  if (row) { const over = () => row.scrollWidth > row.clientWidth + 1, fit = () => { bar.classList.remove("snug", "tight"); if (over()) bar.classList.add("snug"); if (over()) bar.classList.add("tight"); }; addEventListener("resize", fit); addEventListener("load", fit); setTimeout(fit, 50); if (document.fonts) document.fonts.ready.then(fit); }
+  if (row) { const cta = bar.querySelector(".cta"), over = () => row.scrollWidth > row.clientWidth + 1, fit = () => { const ls = bar.querySelector(".lang-sw"); bar.classList.remove("snug", "tight"); if (ls && cta) cta.prepend(ls); if (over()) bar.classList.add("snug"); if (over()) bar.classList.add("tight"); if (over() && ls) n.append(ls); }; addEventListener("resize", fit); addEventListener("load", fit); setTimeout(fit, 50); if (document.fonts) document.fonts.ready.then(fit); }
+  // the bar turns dark while it floats over the dark top of a page
+  const top = document.querySelector(".crown, main > .hero:first-child"), nb = document.querySelector("header.nav");
+  if (top && nb && scrollY < top.offsetHeight - 60) nb.classList.add("dark");
+  if (top && nb && "IntersectionObserver" in window) new IntersectionObserver(es => nb.classList.toggle("dark", es[0].isIntersecting), { rootMargin: "-60px 0px 0px 0px" }).observe(top);
   const y = document.getElementById("yr"); if (y) y.textContent = new Date().getFullYear();
   const pb = document.getElementById("printBtn"); if (pb) pb.onclick = () => print();
   const s = CE.auth && CE.auth.get();

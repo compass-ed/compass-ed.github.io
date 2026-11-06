@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>Science</title>
+<defs><linearGradient id="a" x1="50" y1="110" x2="150" y2="176" gradientUnits="userSpaceOnUse"><stop stop-color="#5ff0bb"/><stop offset=".6" stop-color="#30a46c"/><stop offset="1" stop-color="#0f7a5b"/></linearGradient>
+<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".95"/><stop offset="1" stop-color="#bfe3e8" stop-opacity=".75"/></linearGradient></defs>
+<ellipse cx="100" cy="180" rx="66" ry="8" fill="#0b3a40" opacity=".18"/>
+<path fill="url(#b)" stroke="#8fc6ce" stroke-width="3" d="M84 40v50L46 152c-7 12 1 26 15 26h78c14 0 22-14 15-26l-38-62V40Z"/>
+<path fill="url(#a)" d="M67 120c14-9 22 6 34 2s18-10 32-2l20 33c6 11-1 23-14 23H61c-13 0-20-12-14-23Z"/>
+<path fill="#fff" opacity=".22" d="M67 120c14-9 22 6 34 2s18-10 32-2l6 10c-16-7-24 4-38 6s-24-8-38-2Z"/>
+<g fill="#fff"><circle cx="82" cy="150" r="7" opacity=".85"/><circle cx="118" cy="160" r="5" opacity=".7"/><circle cx="108" cy="139" r="4" opacity=".8"/><circle cx="130" cy="144" r="3" opacity=".7"/></g>
+<rect x="76" y="28" width="48" height="14" rx="7" fill="#e7f5f7" stroke="#8fc6ce" stroke-width="3"/>
+<path stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".85" d="M93 52v36L72 124"/>
+<g fill="#30a46c"><circle cx="134" cy="52" r="9"/><circle cx="152" cy="30" r="6" opacity=".7"/><circle cx="60" cy="42" r="5" opacity=".55"/></g></svg>

@@ -16,8 +16,8 @@
 <script src="assets/i18n.js"></script>
 <link rel="stylesheet" href="assets/app.css">
 </head>
-<body>
-<header class="nav">
+<body class="home">
+<header class="nav dark">
   <div class="wrap">
     <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass <b>Ed</b></a>
     <button class="ib burger" data-burger aria-label="Menu"><span data-icon="menu"></span></button>
@@ -38,19 +38,17 @@
 </header>
 
 <main>
-  <section class="banner-hero">
-    <div class="wrap">
-      <div class="bh">
-        <video class="loop-bg" src="assets/art/hero-loop.mp4" poster="assets/art/signin-bg.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
-        <div class="bh-art" aria-hidden="true"><img class="compass" src="assets/art/compass.svg" alt=""></div>
-        <div class="bh-text">
-          <span class="eyebrow eyebrow-dark"><span class="dot"></span> <span id="schoolName">Campus</span></span>
-          <h1>Welcome to<br>the campus.</h1>
-          <p class="lead">See what's on this month, explore activities by category, enter competitions and challenges, and keep up with your lessons and homework, all in one place.</p>
-          <div class="row">
-            <a class="btn cyan lg" href="signin.html">Sign in</a>
-            <a class="btn lg bh-ghost" href="#explore">Explore the campus</a>
-          </div>
+  <section class="crown" id="stage">
+    <div class="aurora"></div>
+    <img class="crown-geo" src="assets/art/stage-geo.svg" alt="" aria-hidden="true">
+    <div class="crown-in">
+      <div class="crown-copy"><h1>Welcome to <br>the campus.</h1></div>
+      <div class="scene" id="scene"></div>
+      <div class="crown-side">
+        <p class="lead">See what's on this month, explore activities by category, enter competitions and challenges, and keep up with your lessons and homework, all in one place.</p>
+        <div class="row">
+          <a class="btn cyan lg" href="signin.html">Sign in</a>
+          <a class="btn lg bh-ghost" href="#explore">Explore the campus</a>
         </div>
       </div>
     </div>
@@ -58,6 +56,22 @@
 
   <section class="sec slim"><div class="wrap" data-campus="stats"></div></section>
   <section class="sec"><div class="wrap" data-campus="explore"></div></section>
+  <section class="sec" id="schoolwork">
+    <div class="wrap">
+      <div class="sec-head reveal"><div><div class="kicker">Schoolwork, too</div><h2 style="margin:0">Lessons, homework and quizzes in the same place</h2></div></div>
+      <div class="sw reveal" id="sw">
+        <div class="sw-tabs" role="tablist" aria-label="Schoolwork features">
+          <button type="button" class="sw-tab" role="tab" id="sw-next" data-sw="next" aria-controls="swPanel" aria-selected="false"><span class="ico"><span data-icon="compass"></span></span><span><b>"What to do next" card</b><span>One suggested task chosen from your deadlines, playlists and review queue.</span></span></button>
+          <button type="button" class="sw-tab" role="tab" id="sw-mastery" data-sw="mastery" aria-controls="swPanel" aria-selected="false"><span class="ico"><span data-icon="flag"></span></span><span><b>Mastery checkpoints</b><span>Short tests at the end of each unit, with a pass mark, so you know a topic is yours.</span></span></button>
+          <button type="button" class="sw-tab" role="tab" id="sw-review" data-sw="review" aria-controls="swPanel" aria-selected="false"><span class="ico"><span data-icon="repeat"></span></span><span><b>Review queue</b><span>Anything you got wrong comes back as a flashcard, spaced out so it sticks.</span></span></button>
+          <button type="button" class="sw-tab" role="tab" id="sw-draft" data-sw="draft" aria-controls="swPanel" aria-selected="false"><span class="ico"><span data-icon="pencil"></span></span><span><b>Draft, then hand in</b><span>Save drafts as you go. Every version is kept and teachers mark with a rubric.</span></span></button>
+          <button type="button" class="sw-tab" role="tab" id="sw-overview" data-sw="overview" aria-controls="swPanel" aria-selected="false"><span class="ico"><span data-icon="grid"></span></span><span><b>Class overview for teachers</b><span>Every student against every unit on one screen, so gaps are obvious.</span></span></button>
+          <button type="button" class="sw-tab" role="tab" id="sw-notice" data-sw="notice" aria-controls="swPanel" aria-selected="false"><span class="ico"><span data-icon="megaphone"></span></span><span><b>Announcements with receipts</b><span>Sent to a class, a year group or named students, with who-has-read-it.</span></span></button>
+        </div>
+        <div class="sw-panel" id="swPanel"><div class="aurora"></div><div class="sw-sheet paper" role="tabpanel"></div></div>
+      </div>
+    </div>
+  </section>
   <section class="sec quote-band reveal" id="welcome">
     <div class="wrap quote-grid">
       <div class="quote-mark" aria-hidden="true">&ldquo;</div>
@@ -74,7 +88,7 @@
   <section class="sec" id="journey">
     <div class="wrap">
       <div class="sec-head reveal"><div><div class="kicker">Innovative learning your child will love</div><h2 style="margin:0">A personalised journey, stage by stage</h2></div></div>
-      <div class="grid g4 reveal">
+      <div class="grid g4 reveal journey">
         <a class="card feat lift stage" href="signin.html?signup=1"><span class="stage-age">Ages 3 to 5</span><h4>Early Years</h4><p class="sm mut">Learning through play, curiosity and first friendships. Activities marked <b>Under 11</b> are made for the youngest explorers.</p></a>
         <a class="card feat lift stage" href="signin.html?signup=1"><span class="stage-age">Ages 5 to 11</span><h4>Primary</h4><p class="sm mut">Reading challenges, STEAM builds, art and sport, with house points for every activity finished.</p></a>
         <a class="card feat lift stage" href="signin.html?signup=1"><span class="stage-age">Ages 11 to 16</span><h4>Secondary</h4><p class="sm mut">Units, playlists, quizzes and mastery checkpoints for every subject, plus competitions and clubs marked <b>11 and over</b>.</p></a>
@@ -86,7 +100,7 @@
   <section class="sec alt" id="beyond">
     <div class="wrap">
       <div class="sec-head reveal"><div><div class="kicker">Exceptional learning experiences</div><h2 style="margin:0">Beyond the classroom</h2><p class="mut sm" style="margin:6px 0 0">Through Global Campus and Nord Anglia's collaborations with The Juilliard School, MIT, IMG Academy and UNICEF.</p></div></div>
-      <div class="grid g4 reveal">
+      <div class="grid g4 reveal beyond">
         <div class="card feat lift"><div class="ico"><span data-icon="art"></span></div><h4>Performing &amp; visual arts</h4><p class="sm mut">Art, music, dance and drama activities, with a gallery for winning work.</p></div>
         <div class="card feat lift"><div class="ico"><span data-icon="science"></span></div><h4>STEAM</h4><p class="sm mut">Science, technology, engineering, art and maths challenges, from paper bridges to coding.</p></div>
         <div class="card feat lift"><div class="ico"><span data-icon="sport"></span></div><h4>Sport &amp; wellbeing</h4><p class="sm mut">Tournaments, running club, mindfulness and healthy habits.</p></div>
@@ -104,20 +118,6 @@
         <div class="card step"><span class="num">2</span><h4>Sign in</h4><p class="sm mut">Use the code once to set up your account with a username and password.</p></div>
         <div class="card step"><span class="num">3</span><h4>Choose a house</h4><p class="sm mut">North, East, South or West. Every activity, entry and checkpoint earns points for it.</p></div>
         <div class="card step"><span class="num">4</span><h4>Explore</h4><p class="sm mut">Pick a category, enter a competition, join a club, and keep up with lessons and homework.</p></div>
-      </div>
-    </div>
-  </section>
-  <section class="sec ink art-dark">
-    <div class="wrap">
-      <div class="kicker">Schoolwork, too</div>
-      <h2>Lessons, homework and quizzes in the same place</h2>
-      <div class="grid g3" style="margin-top:24px">
-        <div class="card feat"><div class="ico"><span data-icon="compass"></span></div><h4>"What to do next" card</h4><p class="sm mut">One suggested task chosen from your deadlines, playlists and review queue.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="flag"></span></div><h4>Mastery checkpoints</h4><p class="sm mut">Short tests at the end of each unit, with a pass mark, so you know a topic is yours.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="repeat"></span></div><h4>Review queue</h4><p class="sm mut">Anything you got wrong comes back as a flashcard, spaced out so it sticks.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="pencil"></span></div><h4>Draft, then hand in</h4><p class="sm mut">Save drafts as you go. Every version is kept and teachers mark with a rubric.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="grid"></span></div><h4>Class overview for teachers</h4><p class="sm mut">Every student against every unit on one screen, so gaps are obvious.</p></div>
-        <div class="card feat"><div class="ico"><span data-icon="megaphone"></span></div><h4>Announcements with receipts</h4><p class="sm mut">Sent to a class, a year group or named students, with who-has-read-it.</p></div>
       </div>
     </div>
   </section>
@@ -139,6 +139,7 @@
 <script src="assets/icons.js"></script>
 <script src="assets/demo.js"></script>
 <script src="assets/campus.js"></script>
+<script src="assets/home.js"></script>
 <script src="assets/public.js"></script>
 </body>
 </html>

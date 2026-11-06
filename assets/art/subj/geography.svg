@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>Geography</title>
+<defs><radialGradient id="a" cx=".36" cy=".3" r=".85"><stop stop-color="#9fe6ff"/><stop offset=".5" stop-color="#3e8fe0"/><stop offset="1" stop-color="#1b3f9c"/></radialGradient>
+<linearGradient id="b" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#7be3a8"/><stop offset="1" stop-color="#1f8a56"/></linearGradient>
+<linearGradient id="c" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#3a464a"/><stop offset=".5" stop-color="#7d8d92"/><stop offset="1" stop-color="#2b3335"/></linearGradient>
+<clipPath id="g"><circle cx="96" cy="88" r="60"/></clipPath></defs>
+<ellipse cx="100" cy="182" rx="56" ry="7" fill="#0b3a40" opacity=".18"/>
+<path stroke="url(#c)" stroke-width="7" stroke-linecap="round" d="M60 24c50-18 96 18 92 66-3 34-28 58-58 60"/>
+<rect x="88" y="150" width="14" height="18" rx="3" fill="url(#c)"/><path fill="url(#c)" d="M58 182c0-10 16-16 37-16s37 6 37 16Z"/>
+<circle cx="96" cy="88" r="60" fill="url(#a)"/>
+<g clip-path="url(#g)"><path fill="url(#b)" d="M50 46c10-10 28-14 38-8 6 4 2 12-6 14-6 2-4 8 2 10 10 3 8 14 0 18-6 3-6 10-12 12-10 2-12-10-18-14-8-6-14-22-4-32Z"/><path fill="url(#b)" d="M112 66c10-6 24-4 32 4 10 10 10 26 4 40-4 10-14 22-22 20-8-2-4-12-8-20-4-6-14-8-14-18 0-10 2-20 8-26Z"/><path fill="url(#b)" d="M72 112c8-2 14 4 14 12s-4 18-10 18-10-8-12-14 2-14 8-16Z"/></g>
+<ellipse cx="74" cy="60" rx="18" ry="11" fill="#fff" opacity=".28" transform="rotate(-28 74 60)"/>
+<g transform="translate(138 40)"><circle r="13" fill="#e5484d"/><circle r="5" fill="#fff"/><path fill="#e5484d" d="M-11 8 0 28 11 8Z"/></g></svg>

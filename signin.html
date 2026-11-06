@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .si{min-height:calc(100dvh - var(--nav));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .si .art{position:relative;overflow:hidden;background:#000 url("assets/art/signin-bg.jpg") center/cover no-repeat;z-index:0;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px;isolation:isolate}
+  .si .art{position:relative;overflow:hidden;isolation:isolate;background:#000;z-index:0;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px;isolation:isolate}
   .si .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.72) 100%);z-index:-1}
   .si .art .brand-lg{position:relative;display:flex;align-items:center;gap:12px;font-family:var(--head);font-weight:800;font-size:26px;letter-spacing:-.02em;color:#fff;margin-bottom:auto}
   .si .art .brand-lg img{width:44px;height:44px;display:block}
@@ -39,12 +39,13 @@
 <header class="nav">
   <div class="wrap">
     <a class="brand" href="index.html"><img src="assets/logo.svg" alt="" class="logo-ink">Compass <b>Ed</b></a>
-    <div class="cta"><a class="btn ghost" href="index.html">← Back to campus</a></div>
+    <div class="cta"><a class="btn ghost" href="index.html"><span data-icon="arrowl"></span>Back to campus</a></div>
   </div>
 </header>
 <main class="si">
   <aside class="art" aria-hidden="false">
-    <video class="loop-bg" src="assets/art/signin-loop.mp4" poster="assets/art/signin-bg.jpg" autoplay muted loop playsinline aria-hidden="true"></video>
+    <div class="aurora"></div>
+    <div class="si-cards" aria-hidden="true"><img src="assets/art/subj/science.svg" alt=""><img src="assets/art/subj/maths.svg" alt=""><img src="assets/art/subj/languages.svg" alt=""></div>
     <div class="brand-lg"><img src="assets/logo-white.svg" alt="">Compass <b>Ed</b></div>
     <h2><span class="wel"><span>Welcome</span> <span>to</span> <span><b>campus.</b></span></span><span class="wel-line"></span></h2>
     <p>Sign in with your username and password, or with the 8-digit code your school gave you. New here? A code or the school's join code creates your account in a minute.</p>

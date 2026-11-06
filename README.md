@@ -25,7 +25,8 @@ assets/core.js        API, sessions, router, block renderer, calendar + .ics exp
 assets/campus.js      The campus home page as one renderer: used by index.html and by #/campus in both portals
 assets/config.js      Supabase URL / key, preview-mode switch
 assets/demo.js        Preview mode: a sample campus in the browser that mirrors every database function
-assets/art/           Artwork: compass rose and needle (page transitions), hero and sign-in loops, ID-card backdrop, category patterns, empty-state art
+assets/home.js        The home page stage: compass wheel of subjects, the open book, page turns and the feature previews (sample data, nothing is saved)
+assets/art/           Artwork: open book, compass dial, subject illustrations (subj/), compass rose and needle (page transitions), category patterns, empty-state art
 assets/versions/ assets/trailer/   Version previews and the 30-second trailer
 tools/fix-video.py    Run on every video exported from Moda before adding it: python3 tools/fix-video.py in.mp4 out.mp4 (gives it a real length, so it plays properly on slow school networks)
 supabase/compassed-v2.0.sql     The database: tables ed_* and functions ed_login/ed_signup/ed_claim, ed_s_* (students), ed_t_* (staff), ed_a_* (admin)
@@ -96,7 +97,7 @@ then open http://127.0.0.1:8766/.
 - **Feedback button** in both portals; only the administrator reads messages, under Admin > Feedback.
 
 ## v2.4
-- Name: **Compass Ed**. Clubs are **ECA** (extra-curricular activities). The campus home page is also inside both portals at `#/campus`. Motion everywhere, with ambient loops designed in Moda (`assets/art/*-loop.mp4`), all honouring reduced-motion settings.
+- Name: **Compass Ed**. Clubs are **ECA** (extra-curricular activities). The campus home page is also inside both portals at `#/campus`. Motion everywhere, with the aurora background drawn live by `CE.aurora` in `assets/core.js`, all honouring reduced-motion settings.
 
 ## Integrations (v2.3)
 - **Compass Dash** shares this Supabase project. Compass Ed calls its public `cd_*` functions (never its tables): students link their Compass Dash code + username in Settings; everyone sees the Compass Dash house cup under House points.

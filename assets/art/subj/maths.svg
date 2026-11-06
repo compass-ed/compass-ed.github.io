@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none"><title>Maths</title>
+<defs><linearGradient id="a" x1="34" y1="28" x2="170" y2="170" gradientUnits="userSpaceOnUse"><stop stop-color="#9beef4"/><stop offset=".55" stop-color="#4cc4cf"/><stop offset="1" stop-color="#1b8e99"/></linearGradient>
+<linearGradient id="b" x1="88" x2="112" y1="0" y2="0" gradientUnits="userSpaceOnUse"><stop stop-color="#ffe27a"/><stop offset=".5" stop-color="#f5c518"/><stop offset="1" stop-color="#d79a06"/></linearGradient>
+<radialGradient id="c" cx=".35" cy=".3" r=".8"><stop stop-color="#ff8f8f"/><stop offset="1" stop-color="#d13c3c"/></radialGradient></defs>
+<ellipse cx="102" cy="178" rx="72" ry="8" fill="#0b3a40" opacity=".16"/>
+<path fill="url(#a)" fill-rule="evenodd" d="M30 40c0-9 11-13 17-7l131 131c6 6 2 16-7 16H40c-6 0-10-4-10-10Zm30 62v44c0 3 2 5 5 5h44c4 0 7-5 3-9l-43-44c-4-3-9-1-9 4Z"/>
+<path stroke="#fff" stroke-opacity=".75" stroke-width="3" stroke-linecap="round" d="M37 47v12m0 14v12m0 14v12m0 14v12m0 14v12"/>
+<g stroke="#0b3a40" stroke-opacity=".45" stroke-width="2.5" stroke-linecap="round"><path d="M31 62h9m-9 16h14M31 94h9m-9 16h14m-14 16h9m-9 16h14m-14 16h9"/></g>
+<g transform="rotate(40 112 96)"><rect x="88" y="4" width="24" height="16" rx="5" fill="#e5484d"/><rect x="88" y="16" width="24" height="10" fill="#c4d3d6"/><rect x="88" y="24" width="24" height="108" fill="url(#b)"/><path fill="#f4d7ae" d="M88 132h24l-12 34Z"/><path fill="#2b3335" d="M95.6 154h8.8L100 166Z"/></g>
+<circle cx="156" cy="52" r="26" fill="url(#c)"/><path fill="#fff" d="M142 41h28v6h-5v14c0 3 1 4 4 4v5c-6 1-10-2-10-8V47h-6v23h-6V47h-5Z"/></svg>
