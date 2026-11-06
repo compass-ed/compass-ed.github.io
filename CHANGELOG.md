@@ -2,6 +2,9 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.3.1 — 6 November 2026
+- **Compass Dash (v2.8.5): a clearer Neutral.** Neutral shows every background and subject room in full, with no overlay on the rooms and no particles apart from shop effects a student equipped. Recreational and Super Focus are unchanged.
+
 ## v3.3 — 6 November 2026
 - **A new portal frame.** Both portals sit on a dark aurora frame with one rounded sheet of content that scrolls on its own. The sidebar sits straight on the frame.
 - **A header for every section.** `CE.title` now fills an aurora band with the section's drawing, title, one line about it and its live numbers (`CE.head`, listed in `CE.heads` in each portal). A page's own title line moves up into the band, buttons included. Detail pages such as a lesson keep the plain top bar.
