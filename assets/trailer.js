@@ -11,7 +11,9 @@
   const TINT = { maths: "#d9e8ff", english: "#fbe9cf", science: "#d4f4e4", geography: "#cff1f4", history: "#f7e3cb", computing: "#dfe5f8", art: "#f8dcee", music: "#e6dffb", languages: "#ffdfdb", pe: "#ffedc4", drama: "#eddffb" };
 
   /* ---------- drawings ---------- */
-  const img = {}, load = (k, src) => new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = src; img[k] = i; });
+  /* an SVG with only a viewBox draws as nothing on a canvas in Firefox, so each one gets a real width and height first */
+  const img = {}, load = (k, src) => fetch(src).then(r => r.text()).then(t => { const m = t.match(/viewBox="[^"]*?([\d.]+)\s+([\d.]+)"/); if (m && !/<svg[^>]*\swidth=/.test(t)) t = t.replace("<svg", '<svg width="' + m[1] + '" height="' + m[2] + '"');
+    return new Promise(r => { const i = new Image(); i.onload = i.onerror = r; i.src = URL.createObjectURL(new Blob([t], { type: "image/svg+xml" })); img[k] = i; }); }).catch(() => {});
   const im = (k, x, y, w, h) => { const i = img[k]; if (i && i.naturalWidth) c.drawImage(i, x, y, w, h); };
   const rr = (x, y, w, h, r) => { c.beginPath(); if (c.roundRect) c.roundRect(x, y, w, h, r); else c.rect(x, y, w, h); };
   /* words rise one after another; o: size, font, weight, color, align (start, center, end), t0, now, st (stagger), d, maxW, lh */
