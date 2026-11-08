@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.4.2 — 8 November 2026
+- **Compass Dash (v2.8.7): Qatar History looks like Doha.** A new scene drawn in code: Doha at golden hour from the Corniche, with Doha Tower, the Tornado Tower, the twin Palm Towers, Al Bidda and the Sheraton pyramid across the bay, the Museum of Islamic Art on its island, a pearling dhow sailing home with its lantern lit, the pearl monument, the Qatar flag, and a parent and child stopping to watch. It is built for feeling as well as looks: a warm low sun and lit windows, landmarks kept to the clear edges with calm water behind the reading column, and the pearling past and the modern city in one view.
+- **Fix.** Qatar History pages were showing the History room, because the classic file already mapped the subject to History. The subject keeps History's card style and now picks its own background (`body.dataset.scene`).
+
 ## v3.4.1 — 6 November 2026
 - **Compass Dash is back to its classic look (v2.8.6).** `dash/index.html` is the file from before the Campus Hub restyle, with the blue accent, its own sidebar and the full subject rooms, runner and shop backgrounds as they were. Only the Doha scene for Qatar History is carried over.
 - **Neutral is a touch calmer.** Backgrounds and the shop effects a student chose stay; the automatic landing dust, streak sparks and streak rings now appear at Recreational only.

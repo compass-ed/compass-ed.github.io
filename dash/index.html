@@ -3183,23 +3183,73 @@ const SCN=(()=>{
   o+=`${gl(470,250,140,140,"gw")}<path d="M470 0v176" stroke="#3b2a1e" stroke-width="2.5"/><g transform="translate(470 180)"><path d="M-20 0h40l-8-12h-24z" fill="#9a7a3a"/><path d="M-22 0l-14 46 14 48h44l14-48-14-46z" fill="#e8c06a"/><path d="M-22 0l-14 46 14 48h44l14-48-14-46z" fill="url(#cyl)" opacity=".7"/><path d="M-36 46h72M0 0v94M-22 0l22 46-22 48M22 0l-22 46 22 48" stroke="#7a5a2a" stroke-width="3" fill="none"/><path d="M-22 94h44l-6 12h-32z" fill="#9a7a3a"/><path d="M0 106v14" stroke="#9a7a3a" stroke-width="4"/></g>`;
   return wrap(o,"#d9b88e")};
 
- /* Qatar History: the Doha Corniche at golden hour. An old fort with a wind tower and the flag, a dhow on the Gulf, and the
-    West Bay towers across the water, so the old town and the modern city share one view. */
- const palm=(x,y,s)=>`<g transform="translate(${x} ${y}) scale(${s})">${sh(0,0,60,8)}<path d="M-6 0q-14-130 10-250" stroke="#7a5a3a" stroke-width="14" fill="none" stroke-linecap="round"/>${[-150,-122,-94,-66,-38,-8,22,52,84,116,146].map((a,i)=>{const r=a*Math.PI/180,ex=Math.sin(r)*130,ey=Math.cos(r)*-70+30;return`<path d="M4-250Q${F(ex*.55)} ${F(-300+ey*.2)} ${F(ex)} ${F(-250+ey)}Q${F(ex*.45)} ${F(-268+ey*.5)} 4-250z" fill="${i%2?"#4f7a4f":"#6a955f"}"/>`}).join("")}</g>`;
- S.qatar=()=>{rs(121);const base=640,sea=452;
-  const tw=(x,w,h,k,c)=>{const t=sea-h,m=x+w/2,d=k==="bullet"?`M${x} ${sea}V${t+w*.7}Q${m} ${t-w*.5} ${x+w} ${t+w*.7}V${sea}Z`:k==="point"?`M${x} ${sea}V${t+30}L${m} ${t-34}L${x+w} ${t+30}V${sea}Z`:k==="waist"?`M${x} ${sea}Q${x+w*.22} ${t+h*.5} ${x} ${t}H${x+w}Q${x+w*.78} ${t+h*.5} ${x+w} ${sea}Z`:`M${x} ${sea}V${t+24}H${x+w*.18}V${t}H${x+w*.82}V${t+24}H${x+w}V${sea}Z`;return`<path d="${d}" fill="${c}"/><path d="${d}" fill="url(#qg)"/>`};
-  let o=D(`<pattern id="qg" width="8" height="10" patternUnits="userSpaceOnUse"><path d="M0 9h8" stroke="#fff" stroke-opacity=".3"/></pattern>`)+sky("qs","#9fd0dc","#f7dfb8",sea+6)+gl(1290,250,260,200,"gw",.75)+`<circle cx="1290" cy="250" r="46" fill="#fff1c9" opacity=".9"/>`+cloud(380,130,1.2,.6)+cloud(960,96,.9,.5);
-  const city=[[620,58,120,"box","#b7d2d6"],[700,46,170,"point","#aecbd1"],[770,64,140,"box","#b7d2d6"],[1040,54,190,"box","#aecbd1"],[1216,60,150,"point","#b7d2d6"],[1300,70,120,"box","#aecbd1"],[1392,52,170,"box","#b7d2d6"],[1470,64,110,"box","#aecbd1"],
-   [660,60,96,"box","#8fb5bf"],[846,60,244,"point","#7fa9b6"],[924,52,150,"box","#8fb5bf"],[990,64,306,"bullet","#6f9aa8"],[1098,56,176,"box","#8bb3bd"],[1168,70,262,"waist","#7fa9b6"],[1258,58,132,"box","#8fb5bf"],[1352,60,196,"bullet","#8bb3bd"],[1432,56,104,"box","#8fb5bf"]].map(t=>tw(...t)).join("");
-  o+=city+D(LG("qw",[[0,"#7fbcc4"],[1,"#2f7f8f"]]))+`<rect y="${sea}" width="1600" height="${base-sea}" fill="url(#qw)"/><g opacity=".2" transform="translate(0 ${sea*2}) scale(1 -1)">${city}</g><path d="${Array.from({length:44},()=>`M${F(R()*1600)} ${F(sea+10+R()*(base-sea-20))}h${F(16+R()*46)}`).join("")}" stroke="#fff" stroke-opacity=".3" stroke-width="2" stroke-linecap="round"/>`;
-  /* a wooden dhow with a lateen sail */
-  o+=`<g transform="translate(560 566)"><path d="M-104 0Q-96 34-60 36H70Q104 30 120-12L92 4H-70Q-92 4-104 0Z" fill="#7a4e2c"/><path d="M-96 8Q-40 16 104 2" stroke="#d8b98a" stroke-width="4" fill="none"/><path d="M6 6V-128" stroke="#5a3a22" stroke-width="7"/><path d="M-66-22Q10-158 84-140Q62-58-66-22Z" fill="#f4e8d2"/><path d="M-66-22Q10-158 84-140" stroke="#5a3a22" stroke-width="4" fill="none"/></g><path d="M440 606q120 14 240 0" stroke="#fff" stroke-opacity=".4" stroke-width="3" fill="none"/>`;
-  /* the fort: sand walls, a round corner tower, a wind tower and the flag */
-  const cren=(x,y,n,w,c)=>`<path d="${Array.from({length:n},(_,i)=>`M${x+i*w*2} ${y}v-16h${w}v16z`).join("")}" fill="${c}"/>`;
-  o+=`<g><rect x="0" y="372" width="280" height="${base-372}" fill="#dcc398"/><rect x="0" y="372" width="280" height="${base-372}" fill="url(#cyl)" opacity=".2"/>${cren(0,372,7,20,"#dcc398")}<rect x="210" y="300" width="118" height="${base-300}" rx="8" fill="#e3cca3"/><rect x="210" y="300" width="118" height="${base-300}" fill="url(#cyl)" opacity=".5"/>${cren(212,300,3,20,"#e3cca3")}<path d="M262 370h14v44h-14zM262 470h14v44h-14z" fill="#8a6a44"/><path d="M84 ${base}v-96a36 36 0 0 1 72 0v96z" fill="#6b4a2e"/><path d="M120 ${base}v-132" stroke="#4a3220" stroke-width="3"/><g transform="translate(36 372)"><rect x="0" y="-92" width="74" height="92" fill="#d4b98c"/><path d="M12-82h14v52H12zM32-82h14v52H32zM52-82h14v52H52z" fill="#7a5a3a"/>${cren(0,-92,3,14,"#d4b98c")}</g><path d="M300 300v-104" stroke="#5a5a5a" stroke-width="5"/><path d="M302 196h34l-9 5 9 5-9 5 9 5-9 5 9 5-9 5 9 5-9 5 9 5-9 5 9 4h-34z" fill="#fff"/><path d="M328 196h72v62h-72l9-4-9-5 9-5-9-5 9-5-9-5 9-5-9-5 9-5-9-5 9-5z" fill="#8a1538"/></g>`;
-  /* the Corniche: paving, a low sea wall, lamps and palms */
-  o+=`<rect y="${base-16}" width="1600" height="16" fill="#cdb68c"/>`+pav(base,"#d8c39c","#b89a72","#8a7350")+lamp(880,772,250,"#3a3f44")+palm(1150,782,1)+palm(1440,776,1.15)+palm(700,770,.82);
-  return wrap(o,"#f0dcc0")};
+ /* Qatar History: Doha at golden hour, seen from the Corniche. The West Bay towers catch the last of the sun across the bay,
+    a pearling dhow sails home past them, the Museum of Islamic Art sits on its island and a parent and child stop to watch,
+    so the Gulf the lessons start from and the city it became share one warm view. The landmarks sit at the two edges,
+    where the scene stays clear of the reading column; the middle is calm water and the sun's path. */
+ const palm=(x,y,s,c1,c2,tr)=>`<g transform="translate(${x} ${y}) scale(${s})">${sh(0,0,60,8)}<path d="M-6 0q-14-130 10-250" stroke="${tr||"#7a5a3a"}" stroke-width="14" fill="none" stroke-linecap="round"/>${[-150,-122,-94,-66,-38,-8,22,52,84,116,146].map((a,i)=>{const r=a*Math.PI/180,ex=Math.sin(r)*130,ey=Math.cos(r)*-70+30;return`<path d="M4-250Q${F(ex*.55)} ${F(-300+ey*.2)} ${F(ex)} ${F(-250+ey)}Q${F(ex*.45)} ${F(-268+ey*.5)} 4-250z" fill="${i%2?c1||"#4f7a4f":c2||"#6a955f"}"/>`}).join("")}</g>`;
+ S.qatar=()=>{rs(121);const hz=470,cw=652,sx=1000;
+  let o=D(LG("qs",[[0,"#284a72"],[.36,"#6d6f9e"],[.68,"#ec9f86"],[1,"#fcd69c"]])+LG("qw",[[0,"#f4c48f"],[.1,"#a393b0"],[.5,"#4f6d8c"],[1,"#2b4d66"]])
+   +LG("qt",[[0,"#5b6896"],[1,"#38466f"]])+LG("qb",[[0,"#aba3c4"],[1,"#9590b6"]])+LG("qm",[[0,"#c9b18c"],[.55,"#efdcbc"],[1,"#fbedd2"]],1,0)
+   +RG("qsn",[[0,"#fff7dc"],[.16,"#ffe3a8",.95],[.45,"#ffb97a",.4],[1,"#ff9d6c",0]])+RG("qpe",[[0,"#ffffff"],[.6,"#f6eef3"],[1,"#d9c8d8"]],.38,.35,.7)
+   +`<pattern id="ql" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><path d="M0 0V9M0 0H9" stroke="#fff" stroke-opacity=".2" stroke-width="1.2"/></pattern>`)
+   +`<rect width="1600" height="${hz}" fill="url(#qs)"/>`;
+  /* the first star of the evening, long clouds lit from below, and gulls heading home */
+  o+=`${gl(230,92,46,46,"gw",.8)}<path d="M230 78v28M216 92h28" stroke="#fff6d8" stroke-width="2.4" stroke-linecap="round"/><circle cx="230" cy="92" r="3.6" fill="#fff"/>`;
+  o+=[[290,214,280,15],[600,168,220,11],[1240,142,320,17],[1470,236,230,12],[860,254,190,9]].map(([x,y,w,h])=>`<ellipse cx="${x}" cy="${y}" rx="${w/2}" ry="${h}" fill="#ffcfae" opacity=".5"/><ellipse cx="${x+24}" cy="${y+6}" rx="${F(w/2.7)}" ry="${F(h*.55)}" fill="#fff1d8" opacity=".45"/>`).join("");
+  o+=[[690,196,1],[728,178,.8],[760,212,.7],[1170,112,.9],[1204,128,.7],[1500,170,.8]].map(([x,y,s])=>`<path d="M${x} ${y}q${F(7*s)} ${F(-7*s)} ${F(14*s)} 0q${F(7*s)} ${F(-7*s)} ${F(14*s)} 0" stroke="#3a3552" stroke-width="2.4" fill="none" stroke-linecap="round"/>`).join("");
+  /* the sun, half set into the Gulf between the old shore and West Bay */
+  o+=`<circle cx="${sx}" cy="${hz-24}" r="320" fill="url(#qsn)"/><circle cx="${sx}" cy="${hz-24}" r="54" fill="#fff3cf"/>`;
+  /* West Bay. Each tower is its own outline: Doha Tower's lattice drum, the Tornado's waist, the twin Palm Towers, Al Bidda's slanted roof */
+  const shape=(x,w,h,k)=>{const t=hz-h,m=x+w/2;return k==="doha"?`M${x} ${hz}V${t+w*.6}Q${x} ${t+w*.04} ${m} ${t}Q${x+w} ${t+w*.04} ${x+w} ${t+w*.6}V${hz}Z`
+   :k==="tornado"?`M${x} ${hz}Q${x+w*.27} ${t+h*.5} ${x} ${t}H${x+w}Q${x+w*.73} ${t+h*.5} ${x+w} ${hz}Z`
+   :k==="slant"?`M${x} ${hz}V${t+w*.7}L${x+w} ${t}V${hz}Z`
+   :k==="palmL"?`M${x} ${hz}V${t+w*.9}Q${x+w*.1} ${t+w*.2} ${x+w} ${t}Q${x+w*.92} ${t+w*.5} ${x+w} ${t+w*.9}V${hz}Z`
+   :k==="palmR"?`M${x} ${hz}V${t+w*.9}Q${x+w*.08} ${t+w*.5} ${x} ${t}Q${x+w*.9} ${t+w*.2} ${x+w} ${t+w*.9}V${hz}Z`
+   :k==="spire"?`M${x} ${hz}V${t+40}L${m} ${t}L${x+w} ${t+40}V${hz}Z`
+   :k==="pyr"?`M${x} ${hz}L${x+w*.3} ${t}H${x+w*.7}L${x+w} ${hz}Z`
+   :`M${x} ${hz}V${t+22}H${x+w*.16}V${t}H${x+w*.84}V${t+22}H${x+w}V${hz}Z`};
+  const tower=([x,w,h,k],back)=>{const d=shape(x,w,h,k),t=hz-h,m=x+w/2;let s=`<path d="${d}" fill="url(#${back?"qb":"qt"})"/>`;if(back)return s;
+   if(k==="doha"||k==="tornado")s+=`<path d="${d}" fill="url(#ql)"/>`;
+   s+=`<path d="${d}" fill="url(#cyl)" opacity=".35"/>`;
+   if(k!=="pyr")s+=`<path d="M${x<sx?x+w-1:x+1} ${F(t+(k==="doha"?w*.6:k==="tornado"?0:26))}V${hz}" stroke="#ffcf98" stroke-width="2.5" opacity=".75"/>`;   /* the edge that faces the sun */
+   for(let i=0;i<(h/12|0);i++)s+=`<rect x="${F(x+6+R()*(w-14))}" y="${F(t+30+R()*(h-42))}" width="3" height="4" fill="#ffdc8e" opacity="${F(.45+R()*.5)}"/>`;
+   if(k==="doha")s+=`<path d="M${m} ${t}v-48" stroke="#38466f" stroke-width="3"/><circle cx="${m}" cy="${t-48}" r="3" fill="#ff7a6e"/>`;
+   if(k==="spire")s+=`<path d="M${m} ${t}v-30" stroke="#38466f" stroke-width="2.5"/>`;
+   return s};
+  const back=[[600,40,96,"box"],[648,34,124,"spire"],[700,44,84,"box"],[1060,40,150,"box"],[1112,36,196,"slant"],[1236,44,246,"box"],[1478,40,214,"box"],[1560,40,150,"box"]],
+   front=[[760,46,118,"box"],[818,40,158,"slant"],[870,54,100,"box"],[1100,50,180,"box"],[1156,48,232,"box"],[1214,58,256,"spire"],[1282,62,300,"tornado"],[1356,70,368,"doha"],[1438,42,278,"palmL"],[1484,42,278,"palmR"],[1536,64,318,"slant"]];
+  const pyr=`<path d="M498 ${hz}L548 ${hz-58}H620L670 ${hz}Z" fill="url(#qb)"/><path d="M${[0,1,2,3].map(i=>`${F(508+i*12.5)} ${hz-8-i*14}H${F(660-i*12.5)}`).join("M")}" stroke="#ffdca0" stroke-width="2" opacity=".55"/>`;
+  const city=back.map(t=>tower(t,1)).join("")+pyr+front.map(t=>tower(t)).join("");
+  o+=city+`<rect y="${hz}" width="1600" height="${cw-hz}" fill="url(#qw)"/><g opacity=".24" transform="translate(0 ${hz*2}) scale(1 -1)">${city}</g>`;
+  /* the sun's path on the water, and small waves */
+  o+=`<path d="${Array.from({length:30},(_,i)=>{const y=hz+5+i*6,hw=8+i*4.4+R()*14;return`M${F(sx-hw+R()*10)} ${y}h${F(hw*2*(.5+R()*.5))}`}).join("")}" stroke="#ffe2aa" stroke-width="2.6" stroke-linecap="round" opacity=".8"/>`;
+  o+=`<path d="${Array.from({length:52},()=>`M${F(R()*1600)} ${F(hz+12+R()*(cw-hz-24))}h${F(14+R()*42)}`).join("")}" stroke="#fff" stroke-opacity=".26" stroke-width="2" stroke-linecap="round"/>`;
+  /* the Museum of Islamic Art on its island: stepped limestone blocks, a tall centre and its one arched window */
+  const mia=(x,b)=>{const blk=(w,h,y)=>`<rect x="${x-w/2}" y="${y-h}" width="${w}" height="${h}" fill="url(#qm)"/><path d="M${x-w/2+10} ${y-h/2}h${w-20}" stroke="#a8916c" stroke-width="2" opacity=".55"/>`;
+   return `<path d="M${x-220} ${b}h440l-26 16h-388z" fill="#bfa47c"/>`+blk(300,40,b)+blk(232,44,b-40)+blk(164,46,b-84)+blk(98,64,b-130)
+    +`<path d="M${x-49} ${b-194}h98l-14-18h-70z" fill="url(#qm)"/><path d="M${x-15} ${b-142}v-32a15 15 0 0 1 30 0v32z" fill="#4e4152"/>${gl(x,b-160,30,30,"gw",.5)}`};
+  const miaArt=mia(170,574)+palm(352,574,.42,"#3b5a46","#4f7356","#5a4330")+palm(-2,574,.4,"#3b5a46","#4f7356","#5a4330");
+  o+=`<g opacity=".22" transform="translate(0 ${574*2+14}) scale(1 -1)">${miaArt}</g>`+miaArt;
+  /* a pearling dhow sailing home, a lantern at the stern, and a smaller one further out */
+  const dhow=(x,y,s,lit)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M-104 0Q-96 34-60 36H70Q104 30 120-12L92 4H-70Q-92 4-104 0Z" fill="#5e3a22"/><path d="M-96 8Q-40 16 104 2" stroke="#e7b77a" stroke-width="4" fill="none"/><path d="M6 6V-128" stroke="#4a2f1c" stroke-width="7"/><path d="M-66-22Q10-158 84-140Q62-58-66-22Z" fill="#f8e6c8"/><path d="M-66-22Q10-158 84-140Q62-58-66-22Z" fill="#ffb978" opacity=".28"/><path d="M-66-22Q10-158 84-140" stroke="#4a2f1c" stroke-width="4" fill="none"/><path d="M6-128h22l-22 10z" fill="#8a1538"/>${lit?`${gl(-92,-14,36,36,"gw",.95)}<circle cx="-92" cy="-14" r="6" fill="#ffe6a6"/>`:""}</g>`;
+  o+=dhow(620,606,1,1)+`<path d="M500 646q120 12 250 0" stroke="#fff" stroke-opacity=".35" stroke-width="3" fill="none"/>`+dhow(880,528,.42)+dhow(370,494,.24);
+  /* the Corniche: the sea wall, warm paving, lamps and palms */
+  o+=`<rect y="${cw}" width="1600" height="14" fill="#f0dcb6"/><rect y="${cw+14}" width="1600" height="4" fill="#a8885e" opacity=".5"/>`+pav(cw+18,"#e6cba0","#c6a376","#8a7350")
+   +lamp(330,776,250,"#3a3f44")+lamp(1250,776,250,"#3a3f44")+palm(860,778,.9,"#2f4c3d","#3f6249","#4f3a28")+palm(1596,784,1.15,"#2f4c3d","#3f6249","#4f3a28")+palm(-10,786,1.1,"#2f4c3d","#3f6249","#4f3a28");
+  /* the pearl monument: an open oyster on a plinth with its pearl glowing, for the years Qatar lived from the sea */
+  o+=`<g transform="translate(150 778)">${sh(0,0,96,10,.32)}<path d="M-48 0h96l-12-34h-72z" fill="#d3b98f"/><path d="M-48 0h96l-12-34h-72z" fill="url(#cyl)" opacity=".4"/>
+   <path d="M-72-34Q0-4 72-34Q62-76 0-84Q-62-76-72-34Z" fill="#ece0ca"/><path d="M0-40L-50-74M0-40L-24-82M0-40L0-84M0-40L24-82M0-40L50-74" stroke="#c9b597" stroke-width="2.5"/>
+   <path d="M-70-42Q-34-158 40-154Q82-124 72-42Q0-74-70-42Z" fill="#f3e9d7"/><path d="M0-62L-40-138M0-62L-6-152M0-62L32-150M0-62L60-116" stroke="#d6c4a8" stroke-width="2.5"/>
+   ${gl(0,-62,64,64,"gw",.9)}<circle cx="0" cy="-62" r="21" fill="url(#qpe)"/></g>`;
+  /* a parent and child on the promenade, the child pointing out the towers */
+  o+=`<g transform="translate(1418 790)">${sh(30,0,74,7,.35)}<g fill="#2a2234"><circle cx="0" cy="-170" r="14"/><path d="M-20-152Q0-160 20-152L26-82H18L16 0H4L0-72L-4 0H-16L-18-82H-26Z"/><path d="M18-150L46-108L40-104L14-132Z"/>
+   <circle cx="54" cy="-104" r="10.5"/><path d="M42-93Q54-99 66-93L70-48H64L62 0H56L54-40L52 0H46L44-48H38Z"/><path d="M64-91L88-132L94-128L70-87Z"/><path d="M42-90L40-100L45-104Z"/></g>
+   <path d="M20-152L26-82M66-93L70-48" stroke="#ffcf98" stroke-width="2" opacity=".6" fill="none"/></g>`;
+  /* the flag of Qatar on the Corniche: white with a nine-point serrated edge, then maroon */
+  const zz=Array.from({length:18},(_,i)=>`L${i%2?30:39} ${F(60-(i+1)*60/18)}`).join("");
+  o+=`<path d="M1132 790V418" stroke="#4a4a52" stroke-width="5"/><g transform="translate(1134 420)"><path d="M0 0Q15-4 30-2V58Q15 60 0 60Z" fill="#fff"/><path d="M30-2Q76-10 122 0Q114 30 122 60Q76 50 30 58${zz}Z" fill="#8a1538"/></g>`;
+  return wrap(o,"#f3d0a2")};
 
  const GR={maths:"#8c6745",english:"#5a3a24",science:"#8f9a9c",computing:"#6b7581",geography:"#866447",languages:"#9a907e",french:"#8c8172",spanish:"#b3825d",art:"#958774",music:"#3b2418",history:"#8a7e6c",arabic:"#b89a72",qatar:"#b89a72"};
  const img={},cache={k:"",cv:null};
@@ -3345,8 +3395,8 @@ function go(p,i,nb){dsTestEnd();if(window.PVW&&p!=="shop")pvEnd(1);if(window.qte
  if(!PAGES[p]){p="home";i=null}
  PAGES[p](i);
  try{const si=p==="subject"?i:(p==="topic"&&i)?i[0]:null;
-  if(si!=null&&SUBJ[si])document.body.dataset.sub=(SKN[SUBJ[si].n]||[""])[0];
-  else delete document.body.dataset.sub}catch(e){}calcBtn();const wd=p==="shop"||p==="inv"||p==="ach"||p==="home"||p==="settings";app.classList.toggle("wide",wd);const bw=$("bkw");if(bw)bw.classList.toggle("wide",wd);pgIn();syncBack();scrollTo(0,0);pageA11y(p,nb)}
+  if(si!=null&&SUBJ[si]){const k=(SKN[SUBJ[si].n]||[""])[0];document.body.dataset.sub=k;document.body.dataset.scene=/^Qatar/.test(SUBJ[si].n)?"qatar":k}   /* Qatar History is styled like History but has its own Doha view */
+  else{delete document.body.dataset.sub;delete document.body.dataset.scene}}catch(e){}calcBtn();const wd=p==="shop"||p==="inv"||p==="ach"||p==="home"||p==="settings";app.classList.toggle("wide",wd);const bw=$("bkw");if(bw)bw.classList.toggle("wide",wd);pgIn();syncBack();scrollTo(0,0);pageA11y(p,nb)}
 /* v2.6.9: page entrance as a staggered reveal (no forced layout), and each page announces itself: the title follows the
    page and keyboard focus moves to its heading, so screen readers and keyboard users land on the new content */
 function pgIn(){[...app.children].forEach((c,i)=>c.style.setProperty("--i",Math.min(i,6)));app.classList.add("pg");clearTimeout(pgIn.t);pgIn.t=setTimeout(()=>app.classList.remove("pg"),700)}   /* the reveal plays on a real page change, not on every re-render */
@@ -3363,7 +3413,7 @@ app.innerHTML=`<h2>${u.i} ${u.n}</h2><p class="mut">${u.d}</p>
 <div class="lay l11"><div><h3 class="sec">Topics</h3>${subTopics(i)}</div>
 <div><h3 class="sec">Games and challenges (pick a level)</h3>${lv}`+(i===CI?`<h3 class="sec">Cyber safety games</h3><div class="grid">${cards()}</div><h3 class="sec">Computing games</h3><div class="grid">${gcards(i)}</div><h3 class="sec">Revise</h3><div class="grid"><button class="card game" onclick="go('learn')"><h3>Red flag cheat sheet</h3><p>How to spot bad emails and links</p></button></div>`:`<h3 class="sec">Games</h3><div class="grid">${gcards(i)}</div>`)+(u.n==="Maths"?`<h3 class="sec">Tools</h3><div class="grid"><button class="card game" onclick="calcOpen()"><div class="ic2">${icn("calc")}</div><h3>Scientific calculator</h3><p>Trig, powers, roots, logs, memory and standard form. Your keyboard works too.</p></button></div>`:"")+`</div></div>
 <h3 class="sec">Activities <span class="mut">\u00b7 drag and drop</span></h3><div class="exgrid">${exOf(i).map(k=>exCard(k)).join("")}</div>`}
-const SKN={"Maths":["maths","📐 Exercise book","Page 12"],"English":["english","📖 Reading journal","Entry 3"],"Science":["science","🧪 Lab sheet","Experiment 7"],"Geography":["geography","🧭 Atlas","Sheet 4"],"French":["french","✉ Carte postale","Par avion"],"Spanish":["spanish","✉ Tarjeta postal","Por avión"],"Arabic":["arabic","✉ بطاقة بريدية","بريد جوي"],"Computing":["computing","■ ■ ■ terminal","~/compass $"],"Art & Design":["art","🎨 Sketchbook",'<span class="sw"><i></i><i></i><i></i></span>'],"Music":["music","♫ Score","Bar 8"],"History":["history","📜 Source file","Document 4"],"Qatar History & Citizenship":["qatar","📜 Source file","Document 4"],"Qatar History & Citizenship":["history","📜 Source file","Document 1"]};
+const SKN={"Maths":["maths","📐 Exercise book","Page 12"],"English":["english","📖 Reading journal","Entry 3"],"Science":["science","🧪 Lab sheet","Experiment 7"],"Geography":["geography","🧭 Atlas","Sheet 4"],"French":["french","✉ Carte postale","Par avion"],"Spanish":["spanish","✉ Tarjeta postal","Por avión"],"Arabic":["arabic","✉ بطاقة بريدية","بريد جوي"],"Computing":["computing","■ ■ ■ terminal","~/compass $"],"Art & Design":["art","🎨 Sketchbook",'<span class="sw"><i></i><i></i><i></i></span>'],"Music":["music","♫ Score","Bar 8"],"History":["history","📜 Source file","Document 4"],"Qatar History & Citizenship":["history","📜 Source file","Document 1"]};
 const skin=(i,b,tp)=>{let k=SKN[SUBJ[i].n]||["maths","Notes",""];if(SUBJ[i].n==="Languages"&&/Spanish/i.test(tp||""))k=["spanish","✉ Tarjeta postal","Por avión"];return `<div class="sk sk-${k[0]}"><div class="skh"><span>${emo(k[1])}</span><span>${k[2]}</span></div><div class="skb">${b}</div></div>`};
 const subOf=t=>/^(sub|tf|mt|sr|nt)\d/.test(t)?+t.replace(/\D/g,""):CI;
 function tfQ(i){const u=SUBJ[i],all=u.t.flatMap(tp=>tp.f.map(c=>[c,tp])),pool=[...new Set(all.map(x=>x[0][1]))];
@@ -4455,7 +4505,8 @@ notify(FB.q?"Feedback saved \u2014 it sends when you're back online":"Feedback s
 // VERSIONING RULE: every update increases the version by exactly 0.01 — the last number goes up by one
 // (next: v2.7.0, v2.7.1, ...). Each of the last two numbers only goes up to 9, then rolls over:
 // after v2.5.9 comes v2.6.0, and after v2.9.9 comes v3.0.0 (that is how v1.9.9 was followed by v2.0.0).
-const VER="v2.8.6",CL=[
+const VER="v2.8.7",CL=[
+["v2.8.7","8 Nov 2026","A new view of Doha",["Qatar History now has its own background: Doha at golden hour from the Corniche, with Doha Tower, the Tornado and the Palm Towers across the bay","A pearling dhow sails home, the Museum of Islamic Art sits on its island and the pearl monument glows on the promenade","Before this, Qatar History pages showed the History room by mistake"]],
 ["v2.8.6","6 Nov 2026","Back to the classic look",["The whole site is back to how it looked before the Campus Hub restyle","Qatar History keeps its Doha scene","Neutral is a touch calmer: your backgrounds and shop effects stay, the automatic sparks and streak rings do not"]],
 ["v2.8.1","28 Oct 2026","Visual detail",["A Visual detail slider in Settings, under Accessibility: Super Focus for a calm, plain background with no particles, trails or screen shake; Neutral, as before; or Recreational for drifting light over every background, more particles, longer trails and extra sparkle. It changes straight away and is remembered on this device","Settings are regrouped into Appearance, Accessibility, Sound, Login, Gameplay, Offline, Privacy and About, in two even columns on wide screens and one on tablets and phones, with each control beside the setting it changes","The Teacher Panel link in the menu has a soft blue background instead of an outline"]],
 ["v2.8.0","28 Oct 2026","Teacher accounts",["Every teacher can have their own account: two seats for each subject, each set up once with an invite code and a password the teacher chooses","Teachers see only their subject: its classes and students, assignments, codes, announcements, insights, questions, lessons, whiteboards and live activities","The admin key still works and sees everything, and Manage > School > Teachers shows every seat, its invite code and what teachers have changed","Each class can be given a subject, and classes a teacher makes are set to their subject automatically","Teachers can change their password, and the admin can turn an account off, sign it out or reset the seat"]],
@@ -5943,7 +5994,7 @@ if(ch==="gx"&&!xsOn())setChar(eqChar());boost*=1-.03*k;px+=(prog-px)*.05*k;
 hf+=((qs.mode==="hold"?qs.hs:1)-hf)*(qs.mode==="hold"?.5:.12)*k;if(qs.mode!=="hold"&&1-hf<.002)hf=1;
 const mb=1+Math.min(stk,10)*.08+boost*1.2,qf=(qte?qte.sp:1)*hf,m=mb*qf,SP=SPD*m;const gy=H*.86,cx=Math.max(44,Math.min(W*.18,(W-820)/2-124))+px*Math.min(W*.4,300);
 {const a0=csky(0)||C.b1,b0=csky(1)||C.b2,kk=H+"|"+a0+"|"+b0;if(SKYG.k!==kk){const g=x.createLinearGradient(0,0,0,H);g.addColorStop(0,a0);g.addColorStop(1,b0);SKYG.k=kk;SKYG.g=g}x.fillStyle=SKYG.g;x.fillRect(0,0,W,H)}
-const sk=window.VDL!==0&&document.body.dataset.sub,dkm=document.documentElement.dataset.theme==="dark",scv=sk?SCN.get(sk,Math.round(W*DPR),Math.round(H*DPR),Math.round(gy*DPR),dkm,DPR):null;
+const sk=window.VDL!==0&&document.body.dataset.scene,dkm=document.documentElement.dataset.theme==="dark",scv=sk?SCN.get(sk,Math.round(W*DPR),Math.round(H*DPR),Math.round(gy*DPR),dkm,DPR):null;
 /* v2.6.9: a scene fades in over the sky instead of popping, and crossfades when the subject or theme changes */
 if(scv!==SCF.cv){SCF.prev=SCF.cv;SCF.cv=scv;SCF.t=0}
 if(SCF.prev&&SCF.t<14)x.drawImage(SCF.prev,0,0,W,H);
