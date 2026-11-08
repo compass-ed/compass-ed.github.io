@@ -631,7 +631,7 @@ body[data-sub=music] main .card{background-image:repeating-linear-gradient(trans
 body[data-sub=computing] main .card{background-image:
  repeating-linear-gradient(color-mix(in srgb,var(--sbt) 7%,transparent) 0 1px,transparent 1px 5px)}
 /* the dark lesson surfaces and skinned question papers keep their own look */
-body[data-sub] main .sk,body[data-sub] main .sk .skb,body[data-sub] main .gm{background-image:none}body[data-sub] main>:is(h2,p,.lead,.back,.bkb,h3.sec),body[data-sub] main>.lay>div>h3.sec{text-shadow:0 0 4px var(--bg),0 0 10px var(--bg),0 0 18px var(--bg)}body[data-sub] main .card.game:not(.subj){background-color:color-mix(in srgb,var(--card) 84%,transparent);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+body[data-sub] main .sk,body[data-sub] main .sk .skb,body[data-sub] main .gm{background-image:none}body[data-sub] main>:is(h2,p,.lead,.back,.bkb,h3.sec),body[data-sub] main>.lay>div>h3.sec{text-shadow:0 0 4px var(--bg),0 0 10px var(--bg),0 0 18px var(--bg)}body[data-sub] main .card.game:not(.subj){background-color:color-mix(in srgb,var(--card) 92%,transparent)}
 /* tester sandbox banner */
 #sbxb{position:fixed;left:16px;bottom:16px;z-index:72;display:flex;align-items:center;gap:10px;
  background:var(--card);border:1px solid var(--line);border-left:4px solid #d97706;border-radius:10px;
@@ -4505,7 +4505,8 @@ notify(FB.q?"Feedback saved \u2014 it sends when you're back online":"Feedback s
 // VERSIONING RULE: every update increases the version by exactly 0.01 — the last number goes up by one
 // (next: v2.7.0, v2.7.1, ...). Each of the last two numbers only goes up to 9, then rolls over:
 // after v2.5.9 comes v2.6.0, and after v2.9.9 comes v3.0.0 (that is how v1.9.9 was followed by v2.0.0).
-const VER="v2.8.7",CL=[
+const VER="v2.8.8",CL=[
+["v2.8.8","8 Nov 2026","Smoother motion",["Movement is timed from the screen's own refresh, so the runner glides evenly instead of stuttering","Subject rooms blend into each other with a soft ease","On slower computers the background quietly drops its resolution to keep the frame rate up","Game cards no longer blur the moving room behind them, which was costly on every frame"]],
 ["v2.8.7","8 Nov 2026","A new view of Doha",["Qatar History now has its own background: Doha at golden hour from the Corniche, with Doha Tower, the Tornado and the Palm Towers across the bay","A pearling dhow sails home, the Museum of Islamic Art sits on its island and the pearl monument glows on the promenade","Before this, Qatar History pages showed the History room by mistake"]],
 ["v2.8.6","6 Nov 2026","Back to the classic look",["The whole site is back to how it looked before the Campus Hub restyle","Qatar History keeps its Doha scene","Neutral is a touch calmer: your backgrounds and shop effects stay, the automatic sparks and streak rings do not"]],
 ["v2.8.1","28 Oct 2026","Visual detail",["A Visual detail slider in Settings, under Accessibility: Super Focus for a calm, plain background with no particles, trails or screen shake; Neutral, as before; or Recreational for drifting light over every background, more particles, longer trails and extra sparkle. It changes straight away and is remembered on this device","Settings are regrouped into Appearance, Accessibility, Sound, Login, Gameplay, Offline, Privacy and About, in two even columns on wide screens and one on tablets and phones, with each control beside the setting it changes","The Teacher Panel link in the menu has a soft blue background instead of an outline"]],
@@ -5970,22 +5971,27 @@ window.cubeStumble=()=>{Snd.heat(0);stk=0;boost=0;prog=0;if(!anim)return;cu.sq=M
 /* v2.6.9: the canvas renders at the screen's real pixel density (capped at 2x), so the cube, spikes, grid and text are
    crisp on phones and high-density laptops. A resize only rebuilds what has really changed, after a short pause, and
    keeps the spikes where they were instead of scattering them. */
-let DPR=1,RST=0;
-function rs(){const dpr=Math.min(2,window.devicePixelRatio||1),nw=innerWidth,nh=innerHeight,first=!W;
+let DPR=1,RST=0;const FQ={d:[],min:1e9,q:2};   /* frame timing samples and the resolution cap (see fr) */
+function rs(){const dpr=Math.min(FQ.q,window.devicePixelRatio||1),nw=innerWidth,nh=innerHeight,first=!W;
  if(!first&&nw===W&&nh===H&&dpr===DPR)return;W=nw;H=nh;DPR=dpr;c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);x.setTransform(dpr,0,0,dpr,0,0);
  if(first||!sp.length){sp=[];let p=W*.6;while(p<W+700){sp.push(p);p+=300+Math.random()*300}}
  else{sp=sp.filter(a=>a<W+900);let last=sp[sp.length-1]||W*.6;while(last<W+400){last+=300+Math.random()*300;sp.push(last)}}
  SKYG.k=""}
 rs();addEventListener("resize",()=>{clearTimeout(RST);RST=setTimeout(rs,120)});
 addEventListener("orientationchange",()=>{clearTimeout(RST);RST=setTimeout(rs,200)});
-let LFT=0,DTK=1;function fr(){const n=performance.now();DTK=LFT?Math.min(2,Math.max(.15,(n-LFT)/16.667)):1;LFT=n;try{if(!document.body.classList.contains("tmode"))fr0()}catch(e){console.error(e)}requestAnimationFrame(fr)}
+/* Time comes from the browser's frame clock (the timestamp rAF hands over), not from when the code happened to run,
+   so movement steps evenly every frame. If frames keep arriving late, the background draws at a lower resolution
+   (2x, then 1.5x, 1.25x, 1x) until it keeps up; it never steps back up during a visit, so it cannot flicker between sizes. */
+function fqCheck(d){if(d>120||document.hidden){FQ.d.length=0;return}FQ.min=Math.min(FQ.min,d);FQ.d.push(d);if(FQ.d.length<120)return;
+ const m=FQ.d.sort((a,b)=>a-b)[60];FQ.d.length=0;if(m>FQ.min*1.3&&DPR>1){FQ.q=DPR>1.5?1.5:DPR>1.25?1.25:1;rs()}}
+let LFT=0,DTK=1;function fr(ts){const n=ts||performance.now();if(LFT)fqCheck(n-LFT);DTK=LFT?Math.min(2,Math.max(.15,(n-LFT)/16.667)):1;LFT=n;try{if(!document.body.classList.contains("tmode"))fr0()}catch(e){console.error(e)}requestAnimationFrame(fr)}
 /* v2.5.2: the cube and the scene behind it run gently, at a little over half speed, whenever the cube is
    simply running along — both while you are reading a page and while a question is on screen. Everything
    slows together, so the jumps and the ground still match. Anything that is actually happening runs at
    full speed: a leap, a stand-off, a crash, a bump and the death animation. */
 const IDLE_SPEED=.55;
 function fr0(){const full=qs.mode!=="idle"||!!qs.die||QT.on;   /* "idle" means the cube is just running */
- let k=anim?(full?1:IDLE_SPEED)*DTK:0;if(qs.stop>0){qs.stop-=1;k=0}   /* v2.6.9: a crash freezes the world for a few frames (hit-stop) */
+ let k=anim?(full?1:IDLE_SPEED)*DTK:0;if(qs.stop>0){qs.stop-=DTK;k=0}   /* v2.6.9: a crash freezes the world for a few frames (hit-stop) */
  t+=k;window.CHT=t;cu.hit=(cu.hit||0)*(1-.09*(k||1));if(cu.hit<.01)cu.hit=0;
  {let ox=0,oy=0;if(qs.shake>0){const d=window.VDL===0?0:qs.shake/8;ox=(Math.random()-.5)*9*d;oy=(Math.random()-.5)*6*d;qs.shake=Math.max(0,qs.shake-(k||1))}x.setTransform(DPR,0,0,DPR,ox*DPR,oy*DPR)}
 if(ch==="gx"&&!xsOn())setChar(eqChar());boost*=1-.03*k;px+=(prog-px)*.05*k;
@@ -5997,9 +6003,9 @@ const mb=1+Math.min(stk,10)*.08+boost*1.2,qf=(qte?qte.sp:1)*hf,m=mb*qf,SP=SPD*m;
 const sk=window.VDL!==0&&document.body.dataset.scene,dkm=document.documentElement.dataset.theme==="dark",scv=sk?SCN.get(sk,Math.round(W*DPR),Math.round(H*DPR),Math.round(gy*DPR),dkm,DPR):null;
 /* v2.6.9: a scene fades in over the sky instead of popping, and crossfades when the subject or theme changes */
 if(scv!==SCF.cv){SCF.prev=SCF.cv;SCF.cv=scv;SCF.t=0}
-if(SCF.prev&&SCF.t<14)x.drawImage(SCF.prev,0,0,W,H);
-if(scv){const f=Math.min(1,SCF.t/14);x.globalAlpha=f;x.drawImage(scv,0,0,W,H);x.globalAlpha=1}
-if(SCF.t<14)SCF.t+=(k||1);else SCF.prev=null;
+if(SCF.prev&&SCF.t<22)x.drawImage(SCF.prev,0,0,W,H);
+if(scv){const f=SS(SCF.t/22);x.globalAlpha=f;x.drawImage(scv,0,0,W,H);x.globalAlpha=1}
+if(SCF.t<22)SCF.t+=DTK;else SCF.prev=null;
 const mp=Math.max(m,qte?0.3:0);const skA=csky(0)||C.b1,skB=csky(1)||C.b2,dflt=!csky(0);const vf=window.VDL===0,bth=!scv&&!vf&&BT_draw(k*mp,gy),bmg=!scv&&!bth&&!vf?BM_draw(k*mp,gy,skA,skB,dflt,!!eqV("anim")):"";if(!vf)animFx();if(window.VDL===2&&window.vdRich)vdRich(x,W,H,gy,t);
 x.fillStyle=scv?(dkm?gshade(SCN.gr(sk)):SCN.gr(sk)):bth?BT_gd():bmg?bmg:csky(1)?AS(csky(1),-.55):AS(C.b2,ALUM(C.b1)<.35?.05:-.1);x.fillRect(0,gy,W,H-gy);
 x.strokeStyle=C.gl;x.lineWidth=1;gx+=SP*k;const off=gx%60;x.beginPath();for(let i=-60;i<W+60;i+=60){const X=Math.round(i-off)+.5;x.moveTo(X,gy);x.lineTo(X,H)}for(let y=gy+30;y<H;y+=30){const Y=Math.round(y)+.5;x.moveTo(0,Y);x.lineTo(W,Y)}x.stroke();

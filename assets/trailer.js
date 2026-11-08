@@ -56,10 +56,14 @@
   const num = n => Math.round(n).toLocaleString(window.CE && CE.locale || undefined);
   const X = x => rtl ? W - x : x;   // mirror a left-edge x for right-to-left
 
+  /* the dot grid never moves, so it is drawn once and laid over the moving glows each frame (720 small fills saved per frame) */
+  let dots = null;
   function bg(now) {
     const g = c.createLinearGradient(0, 0, W, H); g.addColorStop(0, "#03191c"); g.addColorStop(1, "#000"); c.fillStyle = g; c.fillRect(0, 0, W, H);
     [[.8, .08, 640, .6, 0], [.16, .96, 560, .42, 2.1], [.5, .5, 980, .14, 4]].forEach(([fx, fy, r, a, ph]) => { const x = W * fx + Math.sin(now * .35 + ph) * 90, y = H * fy + Math.cos(now * .3 + ph) * 60, rg = c.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, "rgba(27,142,153," + a + ")"); rg.addColorStop(1, "rgba(27,142,153,0)"); c.fillStyle = rg; c.fillRect(0, 0, W, H); });
-    c.fillStyle = "rgba(255,255,255,.07)"; for (let y = 30; y < H; y += 44) for (let x = 30; x < W; x += 44) c.fillRect(x, y, 2, 2);
+    if (!dots) { dots = document.createElement("canvas"); dots.width = cv.width; dots.height = cv.height; const b = dots.getContext("2d"); b.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+      b.fillStyle = "rgba(255,255,255,.07)"; for (let y = 30; y < H; y += 44) for (let x = 30; x < W; x += 44) b.fillRect(x, y, 2, 2); }
+    c.drawImage(dots, 0, 0, W, H);
   }
 
   /* ---------- scenes: each gets its own local time in seconds ---------- */

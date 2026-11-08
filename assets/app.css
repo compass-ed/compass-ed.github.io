@@ -770,7 +770,7 @@ body.compact .pf .stat .l,body.compact .pf .item .s{display:block}   /* the port
 .phead .btn{background:var(--cyan);border-color:var(--cyan);color:#000}
 .phead .btn.ghost{background:transparent;border-color:rgba(255,255,255,.7);color:#fff} .phead .btn.ghost:hover{background:#fff;border-color:#fff;color:#000}
 .ph-r{position:relative;z-index:1;display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;flex:none;max-width:52%} .ph-r:empty{display:none}
-.ph-st{display:grid;gap:1px;min-width:92px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.09);color:#fff;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:background .18s}
+.ph-st{display:grid;gap:1px;min-width:92px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.11);color:#fff;transition:background .18s}
 a.ph-st:hover{background:rgba(255,255,255,.18);text-decoration:none}
 .ph-st b{font:800 24px/1.1 var(--head);letter-spacing:-.02em} .ph-st small{font-size:12px;color:#c9d2d4}
 .ph-ring{display:grid;justify-items:center;gap:6px;font-size:12px;font-weight:700;color:#c9d2d4}

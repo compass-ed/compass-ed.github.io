@@ -384,8 +384,8 @@
     const draw = now => {
       const moved = Math.abs(auTo[0] - auTint[0]) + Math.abs(auTo[1] - auTint[1]) + Math.abs(auTo[2] - auTint[2]) > .004;
       raf = seen && (!still || moved) && !document.hidden ? requestAnimationFrame(draw) : 0;
-      if (now - last < 33 && last) return; last = now;
-      auTint.forEach((v, i) => { auTint[i] = v + (auTo[i] - v) * .06; });
+      const dt = last ? Math.min(100, now - last) : 16.7; last = now;
+      auTint.forEach((v, i) => { auTint[i] = v + (auTo[i] - v) * (1 - Math.pow(.94, dt / 33)); });   /* the same colour ease at any frame rate */
       gl.uniform2f(uR, c.width, c.height); gl.uniform1f(uT, still ? 40 : 40 + now / 1000); gl.uniform3fv(uC, auTint); gl.uniform2fv(uM, auPt); gl.drawArrays(gl.TRIANGLES, 0, 3);
       if (!c.parentNode) el.append(c);   /* only once there is a picture: an opaque empty canvas would hide the CSS gradient underneath */
     };

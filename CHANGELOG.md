@@ -2,6 +2,11 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.4.3 — 8 November 2026
+- **Smoother Compass Dash (v2.8.8).** Movement is timed from the browser's frame clock (the timestamp `requestAnimationFrame` passes in) instead of when the code happened to run, so the runner moves the same distance every frame and stops stuttering. Subject rooms blend over a fixed time with an ease, and the crash freeze lasts the same time at 60 or 120 frames a second.
+- **Higher frame rate on slower computers.** If frames keep arriving late (the middle frame time over 1.3 times the fastest one, checked every 120 frames), the background canvas steps down from 2x to 1.5x, 1.25x and 1x resolution until it keeps up. It never steps back up during a visit, and gaps from switching tabs are ignored.
+- **Less work per frame.** The game cards on subject pages and the number chips in the portal headers no longer use a live blur over moving backgrounds, which the browser had to redraw on every frame. The trailer draws its dot grid once instead of every frame. The portal header aurora now animates at the screen's full rate, with its colour changes eased the same at any frame rate.
+
 ## v3.4.2 — 8 November 2026
 - **Compass Dash (v2.8.7): Qatar History looks like Doha.** A new scene drawn in code: Doha at golden hour from the Corniche, with Doha Tower, the Tornado Tower, the twin Palm Towers, Al Bidda and the Sheraton pyramid across the bay, the Museum of Islamic Art on its island, a pearling dhow sailing home with its lantern lit, the pearl monument, the Qatar flag, and a parent and child stopping to watch. It is built for feeling as well as looks: a warm low sun and lit windows, landmarks kept to the clear edges with calm water behind the reading column, and the pearling past and the modern city in one view.
 - **Fix.** Qatar History pages were showing the History room, because the classic file already mapped the subject to History. The subject keeps History's card style and now picks its own background (`body.dataset.scene`).
