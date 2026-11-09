@@ -567,8 +567,10 @@
     }
     if (!side.dataset.lift) { side.dataset.lift = "1"; const pg = CE.$("#page"), hd = CE.$("#phead"), mn = CE.$(".main");
       /* a page's own title line moves up into the header band, buttons and all, whichever page drew it */
-      if (hd && pg) new MutationObserver(() => { if (hd.classList.contains("hide")) return; const l = pg.firstElementChild; if (!l || !(l.matches(".page-lead") || (l.matches(".row.between") && CE.$(":scope>div>h2", l)))) return; const t = CE.$("h2", l), sb = CE.$(".sm", l); CE.head({ title: t && t.textContent, sub: sb ? sb.textContent : "", acts: [...l.children].slice(1) }); l.remove(); }).observe(pg, { childList: true });
-      if (hd && mn) new IntersectionObserver(([e]) => mn.classList.toggle("past", !e.isIntersecting || hd.classList.contains("hide"))).observe(hd); }
+      if (hd && pg) new MutationObserver(() => { if (CE.watchTitle) CE.watchTitle(); if (hd.classList.contains("hide")) return; const l = pg.firstElementChild; if (!l || !(l.matches(".page-lead") || (l.matches(".row.between") && CE.$(":scope>div>h2", l)))) return; const t = CE.$("h2", l), sb = CE.$(".sm", l); CE.head({ title: t && t.textContent, sub: sb ? sb.textContent : "", acts: [...l.children].slice(1) }); l.remove(); }).observe(pg, { childList: true });
+      /* the top bar shows the page title only once the page's own title (the header band, or a detail page's h1) has scrolled out of view */
+      if (hd && mn && pg) { const tio = new IntersectionObserver(([e]) => mn.classList.toggle("past", !e.isIntersecting)); let wt = 0;
+        CE.watchTitle = () => { const t = hd.classList.contains("hide") ? CE.$("h1", pg) : hd; tio.disconnect(); clearTimeout(wt); if (t) tio.observe(t); else wt = setTimeout(() => { if (hd.classList.contains("hide") && !CE.$("h1", pg)) mn.classList.add("past"); }, 400); }; } }
     const a = CE.$("a.nl.on", side), p = CE.$(".nl-pill", side); if (!p) return;
     p.style.opacity = a ? 1 : 0; if (a) { p.style.height = a.offsetHeight + "px"; p.style.transform = "translateY(" + a.offsetTop + "px)"; }
   };
@@ -616,7 +618,7 @@
   /* sub-tabs under the top bar: a page group calls CE.subnav([[label, hash], ...]) */
   CE.subnav = tabs => { let el = CE.$("#subnav"); if (!el) return; el.innerHTML = ""; if (!tabs || !tabs.length) { el.classList.add("hide"); return; } el.classList.remove("hide"); const cur = (location.hash || "#/").split("?")[0]; tabs.forEach(([l, hsh, m]) => el.append(CE.h("a", { class: "tab" + ((m ? m.test(cur) : cur === hsh) ? " on" : ""), href: hsh }, l))); };
   CE.title = t => { const el = CE.$("#ptitle"); if (el) el.textContent = t; document.title = t + " · Compass Ed";
-    const head = headEl(); if (!head) return; const m = CE.heads[location.hash.replace(/^#\/?/, "").split(/[/?]/)[0] || "home"]; head.classList.toggle("hide", !m); CE.$(".main").classList.toggle("past", !m);
+    const head = headEl(); if (!head) return; const m = CE.heads[location.hash.replace(/^#\/?/, "").split(/[/?]/)[0] || "home"]; head.classList.toggle("hide", !m); if (CE.watchTitle) CE.watchTitle();
     if (m) { CE.head({ title: t, sub: m[1] || "", art: m[0], kicker: "" }); CE.$("#phR").replaceChildren(); CE.$("#phA").replaceChildren(); } };
   CE.loading = el => { el.innerHTML = ""; for (let i = 0; i < 3; i++) el.append(CE.h("div", { class: "card stack" }, CE.h("div", { class: "skel", style: { width: "40%" } }), CE.h("div", { class: "skel" }), CE.h("div", { class: "skel", style: { width: "70%" } }))); };
   CE.fail = (el, e) => { el.innerHTML = ""; el.append(CE.h("div", { class: "empty" }, CE.h("div", { class: "big" }, CE.icon("warn")), CE.h("div", { class: "b" }, CE.errText(e)), CE.h("div", { class: "sm", style: { marginTop: "8px" } }, CE.h("button", { class: "btn sm", onclick: () => location.reload() }, "Try again")))); };

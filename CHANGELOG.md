@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.4.4 — 9 November 2026
+- **Polish pass on Compass Ed.** Card titles under a section heading are now `h3` (styled as before with `.as-h4`), and the Versions page entries are `h2` (`.as-h3`), so the heading outline no longer skips a level for screen readers. In dark mode, cyan text uses the brand cyan, which reads at 6:1 or better on every dark surface (the darker cyan was 3.3:1 on its own tint). Four-card rows go two by two between 520 and 1100 px instead of three and an orphan. The subject labels on the home page wheel and the small labels in its book never drop below 11 px. Version notes keep a readable line length.
+- **Portal details.** A detail page such as a lesson shows its title in the top bar only once its own heading has scrolled away, so the title is no longer shown twice. The schoolwork board drops its coloured edge stripes; each card's badge already shows its state. Counting numbers use even-width digits so they do not jitter, text fields take the brand caret, scrollbars follow the theme, and gallery tiles without a photo get a tinted placeholder.
+
 ## v3.4.3 — 8 November 2026
 - **Smoother Compass Dash (v2.8.8).** Movement is timed from the browser's frame clock (the timestamp `requestAnimationFrame` passes in) instead of when the code happened to run, so the runner moves the same distance every frame and stops stuttering. Subject rooms blend over a fixed time with an ease, and the crash freeze lasts the same time at 60 or 120 frames a second.
 - **Higher frame rate on slower computers.** If frames keep arriving late (the middle frame time over 1.3 times the fastest one, checked every 120 frames), the background canvas steps down from 2x to 1.5x, 1.25x and 1x resolution until it keeps up. It never steps back up during a visit, and gaps from switching tabs are ignored.

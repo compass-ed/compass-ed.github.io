@@ -21,7 +21,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 var(--font);-w
 @keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001s!important;animation-iteration-count:1!important;transition-duration:.001s!important}}   /* once, too: a looping animation squeezed to .001s spins about 1,000 times a second (school PCs often turn animations off) */
 h1,h2,h3,h4{font-family:var(--head);letter-spacing:-.025em;line-height:1.12;margin:0 0 .4em;font-weight:800;text-wrap:balance}
-h1{font-size:clamp(36px,5.4vw,68px);letter-spacing:-.035em;line-height:1.04} h2{font-size:clamp(27px,3.5vw,44px);letter-spacing:-.03em} h3{font-size:21px} h4{font-size:17px;font-weight:700}
+h1{font-size:clamp(36px,5.4vw,68px);letter-spacing:-.035em;line-height:1.04} h2{font-size:clamp(27px,3.5vw,44px);letter-spacing:-.03em} h3{font-size:21px} h4,.as-h4{font-size:17px;font-weight:700} .as-h3{font-size:21px}
 p{margin:0 0 1em} a{color:var(--cyan-text);text-decoration:none;text-underline-offset:3px} a:hover{text-decoration:underline}
 ::selection{background:var(--cyan);color:#000}
 img,svg,video{max-width:100%;display:block}
@@ -34,7 +34,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .stack{display:grid;gap:12px}
 .hide{display:none!important}
 .grid{display:grid;gap:16px} .g2{grid-template-columns:repeat(2,minmax(0,1fr))} .g3{grid-template-columns:repeat(3,minmax(0,1fr))} .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
-@media (max-width:1100px){.g4{grid-template-columns:repeat(3,minmax(0,1fr))}} @media (max-width:820px){.g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr))}} @media (max-width:520px){.g4,.g3,.g2{grid-template-columns:1fr}}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}} @media (max-width:820px){.g4,.g3{grid-template-columns:repeat(2,minmax(0,1fr))}} @media (max-width:520px){.g4,.g3,.g2{grid-template-columns:1fr}}
 
 /* ---- buttons, badges, forms ---- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:2px solid var(--ink);background:var(--ink);color:#fff;border-radius:var(--r3);padding:10px 18px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap;line-height:1.2;text-decoration:none}
@@ -228,7 +228,7 @@ table.tb{width:100%;border-collapse:collapse;font-size:14px}
 .lesson{max-width:780px}
 
 /* ---- settings: dark mode, dyslexia-friendly, detail level, transparency ---- */
-:root[data-theme="dark"]{--bg:#0f1213;--bg2:#141819;--bg3:#1c2224;--ink:#f3f6f7;--ink2:#d5dcde;--mute:#9aa6a9;--line:#263033;--line2:#334043;--cyan-soft:#12363a;--cyan-tint:#0f2a2e;--ok-soft:#113524;--warn-soft:#3a2a0c;--bad-soft:#3d1717;--sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);--sh2:0 20px 50px -20px rgba(0,0,0,.8);--cyan-text:var(--cyan3)}
+:root[data-theme="dark"]{--bg:#0f1213;--bg2:#141819;--bg3:#1c2224;--ink:#f3f6f7;--ink2:#d5dcde;--mute:#9aa6a9;--line:#263033;--line2:#334043;--cyan-soft:#12363a;--cyan-tint:#0f2a2e;--ok-soft:#113524;--warn-soft:#3a2a0c;--bad-soft:#3d1717;--sh:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);--sh2:0 20px 50px -20px rgba(0,0,0,.8);--cyan-text:var(--cyan)}
 :root[data-theme="dark"] body{background:var(--bg)} :root[data-theme="dark"] .card,:root[data-theme="dark"] .item,:root[data-theme="dark"] .subj,:root[data-theme="dark"] .modal .box,:root[data-theme="dark"] .pop,:root[data-theme="dark"] .topbar,:root[data-theme="dark"] .in,:root[data-theme="dark"] .pill,:root[data-theme="dark"] .q .opt,:root[data-theme="dark"] .flash .cardf,:root[data-theme="dark"] .cal .d,:root[data-theme="dark"] .ver button,:root[data-theme="dark"] .seg button.on,:root[data-theme="dark"] .heat th,:root[data-theme="dark"] .side.teach,:root[data-theme="dark"] .mock{background:var(--bg2);color:var(--ink)}
 :root[data-theme="dark"] .nav .wrap{background:rgba(15,18,19,.8)} :root[data-theme="dark"] .ring::after{background:var(--bg2)}
 :root[data-theme="dark"] .btn{background:#fff;border-color:#fff;color:#000} :root[data-theme="dark"] .btn:hover{background:#e6e6e6;border-color:#e6e6e6} :root[data-theme="dark"] .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)} :root[data-theme="dark"] .btn.ghost:hover{background:var(--bg3)}
@@ -394,7 +394,7 @@ body.glass .side{background:color-mix(in srgb,#000 calc(100% - var(--glass) / 2)
 :root[data-theme="dark"] .quote-band{background:#000}
 @media (max-width:720px){.quote-grid{grid-template-columns:1fr}.quote-mark{font-size:120px;line-height:.6;margin:0}}
 .stage{text-decoration:none;color:inherit} .stage-age{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan-text);background:var(--cyan-soft);padding:4px 10px;border-radius:999px;width:max-content}
-.steps-grid .step{position:relative;padding-top:38px} .step .num{position:absolute;top:-16px;left:16px;width:46px;height:46px;border-radius:30%;transform:rotate(-7deg);background:var(--cyan);color:#000;box-shadow:0 12px 20px -12px rgba(4,40,44,.6);font-weight:800;display:grid;place-items:center;font-family:var(--head)} .step h4{margin:0 0 6px}
+.steps-grid .step{position:relative;padding-top:38px} .step .num{position:absolute;top:-16px;left:16px;width:46px;height:46px;border-radius:30%;transform:rotate(-7deg);background:var(--cyan);color:#000;box-shadow:0 12px 20px -12px rgba(4,40,44,.6);font-weight:800;display:grid;place-items:center;font-family:var(--head)} .step h4,.step .as-h4{margin:0 0 6px}
 /* polish pass */
 .ver-row .vwrap video{aspect-ratio:16/10;object-fit:cover}
 .page>*,.card,.grid>*{min-width:0} .tbw{max-width:100%} .page{overflow-x:clip}
@@ -573,7 +573,7 @@ body.compact .pf .stat .l,body.compact .pf .item .s{display:block}   /* the port
 .wheel{position:absolute;left:50%;top:calc(var(--cs)*.56);width:calc(var(--wx,min(100vw - 40px,1420px)) - var(--cs));height:calc(var(--top) + var(--bh) - var(--y0) - var(--cs)*.56);translate:-50% 0;z-index:3;pointer-events:none;transform:translate(calc(var(--px)*12px),calc(var(--py)*8px))}
 .sc{position:absolute;left:50%;top:100%;width:var(--cs);aspect-ratio:1;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:1px;padding:calc(var(--cs)*.08) calc(var(--cs)*.06) calc(var(--cs)*.07);border:0;border-radius:30%;background:linear-gradient(150deg,#fff,#d2e8ec);color:#04282c;box-shadow:0 18px 30px -14px rgba(0,0,0,.75),inset 0 1px 0 #fff;cursor:pointer;pointer-events:auto;touch-action:pan-y;will-change:transform;transition:box-shadow .3s}
 .sc img{width:74%;height:auto;align-self:center;pointer-events:none}
-.sc span{font:800 clamp(10px,calc(var(--cs)*.082),13px)/1.1 var(--head);letter-spacing:-.01em;text-align:center}
+.sc span{font:800 clamp(11px,calc(var(--cs)*.082),13px)/1.1 var(--head);letter-spacing:-.01em;text-align:center}
 .sc:hover{box-shadow:0 22px 34px -12px rgba(0,0,0,.8),0 0 0 2px var(--sc),inset 0 1px 0 #fff}
 .sc[aria-checked=true]{box-shadow:0 0 0 3px var(--sc),0 26px 44px -14px rgba(0,0,0,.85),inset 0 1px 0 #fff}
 .sc:focus-visible{outline:3px solid #fff;outline-offset:3px;border-radius:30%}
@@ -590,7 +590,7 @@ body.compact .pf .stat .l,body.compact .pf .item .s{display:block}   /* the port
 .pg-art{position:absolute;inset-inline-end:-2%;bottom:-3%;width:50%;transform:rotate(-7deg);filter:drop-shadow(0 8px 10px rgba(4,40,44,.22));pointer-events:none}
 .pg-go{position:absolute;inset-inline-start:0;bottom:.3em;font-weight:800;font-family:var(--head);color:#000;border-bottom:2px solid var(--subj);padding-bottom:1px} .pg-go:hover{text-decoration:none;color:var(--cyan-text)}
 .pg-head{display:flex;align-items:baseline;justify-content:space-between;gap:.6em;margin-bottom:.7em} .pg-head b{font:800 1.2em/1.15 var(--head);letter-spacing:-.02em;color:#000}
-.pv-tag{font-size:.78em;font-weight:700;color:var(--mute);white-space:nowrap}
+.pv-tag{font-size:max(11px,.78em);font-weight:700;color:var(--mute);white-space:nowrap}
 .ribbon{position:absolute;left:50%;top:92%;width:3.2%;height:13%;margin-left:-1.6%;background:var(--subj);clip-path:polygon(0 0,100% 0,100% 100%,50% 86%,0 100%);transition:background .4s;z-index:-1;transform:translateZ(-1px)}
 .leaf{display:none;position:absolute;top:6%;bottom:10.500%;inset-inline-start:50%;width:45.4%;transform-origin:0 50%;transform-style:preserve-3d;z-index:4;pointer-events:none}
 [dir=rtl] .leaf{transform-origin:100% 50%} .leaf.rev{inset-inline-start:4.6%;transform-origin:100% 50%} [dir=rtl] .leaf.rev{transform-origin:0 50%}
@@ -704,7 +704,7 @@ body.compact .pf .stat .l,body.compact .pf .item .s{display:block}   /* the port
 .sw-panel::after{bottom:7%;inset-inline-end:6%;transform:rotate(9deg);background:url("art/subj/maths.svg") center/74% no-repeat,linear-gradient(150deg,#fff,#d2e8ec)}
 @media (max-width:860px){.sw-panel::before,.sw-panel::after{display:none}}
 /* the book's own furniture: page numbers, and ruled lines on the working page */
-.pg-folio{position:absolute;inset-inline-start:0;top:-.3em;font-size:.82em;font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums} .pg-run{inset-inline-start:2em} .pg-b .pg-folio{inset-inline:auto 0}
+.pg-folio{position:absolute;inset-inline-start:0;top:-.3em;font-size:max(11px,.82em);font-weight:700;color:var(--mute);font-variant-numeric:tabular-nums} .pg-run{inset-inline-start:2em} .pg-b .pg-folio{inset-inline:auto 0}
 @media (min-width:761px){.book>.pg-b .pg-head{padding-inline-end:2em}}
 @media (min-width:761px){.book>.pg-b{background:repeating-linear-gradient(180deg,transparent 0 1.9em,rgba(27,142,153,.13) 1.9em calc(1.9em + 1px))}}
 :root[lang="ar"] .crown h1{line-height:1.32}
@@ -824,8 +824,8 @@ a.ph-st:hover{background:rgba(255,255,255,.18);text-decoration:none}
 .board.c3{grid-template-columns:repeat(3,minmax(232px,1fr))}
 .bcol{display:grid;gap:10px;padding:12px;border-radius:22px;background:var(--bg3)}
 .bcol>h4{display:flex;align-items:center;justify-content:space-between;margin:2px 6px}
-.bcard{position:relative;overflow:hidden;display:grid;gap:8px;padding:14px;border-radius:16px;background:var(--bg);color:inherit;text-decoration:none;box-shadow:var(--sh);border-inline-start:4px solid var(--cyan);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
-.bcard>*{position:relative;z-index:1} .bcard:hover{transform:translateY(-2px);text-decoration:none} .bcard.late{border-inline-start-color:var(--bad)} .bcard.done{border-inline-start-color:var(--ok)} .bcard.draft{border-inline-start-color:var(--warn)}
+.bcard{position:relative;overflow:hidden;display:grid;gap:8px;padding:14px;border-radius:16px;background:var(--bg);color:inherit;text-decoration:none;box-shadow:var(--sh);transition:transform .2s cubic-bezier(.2,.7,.2,1)}
+.bcard>*{position:relative;z-index:1} .bcard:hover{transform:translateY(-2px);text-decoration:none}
 .bc-s{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--mute)} .art.sm{width:24px;height:24px}
 .bc-t{font-weight:800;line-height:1.3}
 .bcol .none{padding:14px;text-align:center;font-size:13px;color:var(--mute);border:1.5px dashed var(--line2);border-radius:14px}
@@ -873,3 +873,9 @@ a.ph-st:hover{background:rgba(255,255,255,.18);text-decoration:none}
 @media (max-width:560px){.cal{gap:3px} .cal .d{min-height:62px;padding:4px} .cal .ev{height:6px;padding:0;border-radius:3px;font-size:0}}
 @media print{.dash,.calwrap{display:block} html,body{height:auto!important;overflow:visible!important} .main{height:auto!important;margin:0!important;overflow:visible!important;border-radius:0!important} .shell{background:none!important} .phead{display:none!important}}
 @media (prefers-reduced-motion:reduce){.ring,.bar i,.pod-b,.ph-art{animation:none} .nl-pill{transition:none}}
+/* finishing: browser parts in the house colours, steady numerals, a calmer gallery placeholder, a readable measure on the Versions page */
+input,textarea{caret-color:var(--cyan3)} :root[data-theme="dark"] input,:root[data-theme="dark"] textarea{caret-color:var(--cyan)}
+html,.main,.pal-l,.modal .box{scrollbar-color:var(--line2) transparent}
+.kpi .n,.ph-st b,.stat .n,.tk-d b,.dblock b,.pm b,.pod-b b,.ring span,.tb td,.trl-time,.cal .d .n{font-variant-numeric:tabular-nums}
+.gallery .g .ph{background:radial-gradient(80% 90% at 30% 20%,var(--cyan-soft),var(--bg3))} .gallery .g .ph .i{width:40px;height:40px;color:var(--cyan-text)}
+.card.flat[id^="v"] p{max-width:56ch}

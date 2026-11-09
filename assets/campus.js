@@ -34,11 +34,11 @@
       compGrid.innerHTML = "";
       const comps = r.competitions.filter(c => age === "all" || !c.ages || c.ages === "all" || c.ages === age);
       if (!comps.length) compGrid.append(CE.emptyArt("trophy", "Nothing open right now", "Check back soon."));
-      comps.forEach(c => compGrid.append(h("a", { class: "card feat lift", href: link("#/competition/" + c.id, "#/competition/" + c.id), style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "row between" }, h("span", { class: "badge " + (c.kind === "tournament" ? "ink" : "cyan") }, c.kind), h("span", { class: "xs mut" }, D.left(c.closes))), h("h4", {}, c.title), h("p", { class: "sm mut" }, c.blurb), c.ages && c.ages !== "all" ? h("span", { class: "badge" }, c.ages === "11plus" ? "11 and over" : "Under 11") : null)));
+      comps.forEach(c => compGrid.append(h("a", { class: "card feat lift", href: link("#/competition/" + c.id, "#/competition/" + c.id), style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "row between" }, h("span", { class: "badge " + (c.kind === "tournament" ? "ink" : "cyan") }, c.kind), h("span", { class: "xs mut" }, D.left(c.closes))), h("h3", { class: "as-h4" }, c.title), h("p", { class: "sm mut" }, c.blurb), c.ages && c.ages !== "all" ? h("span", { class: "badge" }, c.ages === "11plus" ? "11 and over" : "Under 11") : null)));
       clubGrid.innerHTML = "";
       const cl = (r.clubs || []).filter(c => age === "all" || c.ages === "all" || c.ages === age);
       if (!cl.length) clubGrid.append(CE.emptyArt("sprout", "No clubs listed yet", "Staff add ECA clubs under Campus > Clubs."));
-      cl.forEach(c => clubGrid.append(h("a", { class: "card feat lift", href: link("#/clubs", "#/clubs"), style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "ico" }, CE.icon("users")), h("h4", {}, c.title), h("p", { class: "sm mut", style: { margin: 0 } }, c.day + " · " + c.time + (c.place ? " · " + c.place : "")))));
+      cl.forEach(c => clubGrid.append(h("a", { class: "card feat lift", href: link("#/clubs", "#/clubs"), style: { textDecoration: "none", color: "inherit" } }, h("div", { class: "ico" }, CE.icon("users")), h("h3", { class: "as-h4" }, c.title), h("p", { class: "sm mut", style: { margin: 0 } }, c.day + " · " + c.time + (c.place ? " · " + c.place : "")))));
     };
 
     /* calendar + news side by side */
@@ -49,7 +49,7 @@
     if (!r.events.length) el.append(CE.emptyArt("inbox", "No whole-school events yet", "Staff add them under Notices > Calendar."));
     r.events.slice(0, 6).forEach(e => el.append(h(portal ? "a" : "div", { class: "item", href: portal ? link("#/calendar", "#/calendar") : null }, h("div", { class: "ico sm" }, CE.icon({ exam: "exam", trip: "bus", competition: "trophy" }[e.kind] || "calendar")), h("div", { class: "grow" }, h("div", { class: "t" }, e.title), h("div", { class: "s" }, D.dt(e.starts) + (e.place ? " · " + e.place : ""))))));
     if (!r.news.length) nl.append(CE.emptyArt("inbox", "No news yet", "Staff post news under Campus > News."));
-    r.news.slice(0, 3).forEach(x => nl.append(h("a", { class: "card lift", href: link("#/news", "#/news"), style: { textDecoration: "none", color: "inherit" } }, x.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("h4", { style: { marginTop: "6px" } }, x.title), h("p", { class: "sm mut", style: { margin: 0 } }, x.body.replace(/\*\*/g, "").slice(0, 160) + (x.body.length > 160 ? "…" : "")), h("div", { class: "xs mut", style: { marginTop: "8px" } }, D.ago(x.created)))));
+    r.news.slice(0, 3).forEach(x => nl.append(h("a", { class: "card lift", href: link("#/news", "#/news"), style: { textDecoration: "none", color: "inherit" } }, x.featured ? h("span", { class: "badge cyan" }, "Featured") : null, h("h3", { class: "as-h4", style: { marginTop: "6px" } }, x.title), h("p", { class: "sm mut", style: { margin: 0 } }, x.body.replace(/\*\*/g, "").slice(0, 160) + (x.body.length > 160 ? "…" : "")), h("div", { class: "xs mut", style: { marginTop: "8px" } }, D.ago(x.created)))));
     place("calendar", two);
 
     /* showcase: recent winners beside the school's links (links column disappears when there are none) */
