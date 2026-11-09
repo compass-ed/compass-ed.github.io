@@ -75,7 +75,8 @@
       s.at = Date.now(); LS.set("ce_auth", s); return s;
     },
     set(tok, me) { LS.set("ce_auth", { tok, me, at: Date.now() }); },
-    clear() { LS.del("ce_auth"); dashOut();   // and stop deadline reminders reaching this device for the next person who signs in
+    clear() { const t = (LS.get("ce_auth") || {}).tok; if (t) { const q = (LS.get("cgOutbox") || []).filter(x => !(x.body && x.body.p_key === t)); q.length ? LS.set("cgOutbox", q) : LS.del("cgOutbox"); }   // Compass Dash's offline queue may hold this session's homework scores
+      LS.del("ce_auth"); dashOut();   // and stop deadline reminders reaching this device for the next person who signs in
       if (!parentPush()) try { pushSub().then(x => x && x.unsubscribe()).catch(() => {}); } catch (e) {} },   // a parent's weekly summary shares the subscription: CE.signOut then drops only this account's reminders
     args() { const s = CE.auth.get(); return s ? { p_key: s.tok } : {}; }
   };
@@ -251,11 +252,12 @@
       try {
         if (cb.checked) {
           if (await Notification.requestPermission() !== "granted") { draw(false); return CE.toast("Notifications are blocked for this site. Allow them in your browser's site settings, then try again.", "bad"); }
-          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(key) });
+          const opt = { userVisibleOnly: true, applicationServerKey: b64key(key) };
+          sub = await reg.pushManager.subscribe(opt).catch(async e => { if (e.name !== "InvalidStateError" || !sub) throw e; await sub.unsubscribe(); return reg.pushManager.subscribe(opt); });   // made with an older key: start again
           const x = await o.save(CE.pushKeys(sub)); if (!x.ok) throw new Error(CE.errText(x));
           reg.showNotification("Compass Ed", { body: CE.t(o.on), icon: CE.root + "assets/icon-192.png", tag: "push-on" }).catch(() => {});
           draw(true);
-        } else { if (sub) await o.del(sub.endpoint).catch(() => {}); draw(false); }   // the browser subscription stays: other children's summaries or a student's reminders may share it
+        } else { if (sub) { const x = await o.del(sub.endpoint); if (!x || !x.ok) throw new Error(CE.errText(x)); } draw(false); }   // the browser subscription stays: other children's summaries or a student's reminders may share it
       } catch (e) { draw(!cb.checked); CE.toast(String(e.message || e), "bad"); }
       finally { const i = box.querySelector("input"); if (i) i.focus(); } };   // the switch is redrawn: keep keyboard focus on it
     const draw = on => box.replaceChildren(h("div", { class: "row between" }, h("div", {}, h("b", {}, o.title), h("div", { class: "sm mut" }, o.text)),

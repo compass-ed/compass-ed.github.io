@@ -8298,7 +8298,7 @@ const CEB=(()=>{
   try{const s=sess();tok=s?s.tok:"";
    if(document.documentElement.classList.contains("ce-wait"))dl=setTimeout(()=>{if(cdUser()&&!mine(sess()))park();forget();wait(false)},12000);
    if(preview()){if(ceAcct())await off();return cdVerify()}
-   if(!s){await off();teachOff();cdVerify()}
+   if(!s){await off();teachOff();cdVerify();if(window.CURP==="topic")redraw()}   /* no stale "Set as homework" button */
    else if(s.me.role==="student"){teachOff();await on(s)}
    else{if(ceAcct())await off();else cdVerify();await teachOn(s)}}
   catch(e){}finally{clearTimeout(dl);busy=0;wait(false);if(again){again=0;sync()}}}
@@ -8310,7 +8310,9 @@ const CEB=(()=>{
  let act=0;["pointerdown","keydown"].forEach(t=>addEventListener(t,()=>{const ce=ss("cdCE");if(ce&&ce.charAt(0)!=="L"&&Date.now()-act>60000){act=Date.now();sess()}},true));
  const goTop=u=>{(window.top||window).location.href=new URL(u,location.href).href};
  async function signOut(){fbClose();const s=sess();wait(true);setTimeout(()=>goTop("../signin.html"),12000);await out();teachOff();
-  if(s){await cdRpc("ed_logout",{p_key:s.tok}).catch(()=>{});try{localStorage.removeItem("ce_auth")}catch(e){}}goTop("../signin.html")}
+  if(s){obPut(obAll().filter(x=>!(x.body&&x.body.p_key===s.tok)));   /* never leave this session's token in the offline queue */
+   if(!preview()&&"serviceWorker"in navigator)await Promise.race([navigator.serviceWorker.getRegistration().then(r=>r&&r.pushManager&&r.pushManager.getSubscription()).then(x=>x&&cdRpc("ed_s_push_del",{p_key:s.tok,p_endpoint:x.endpoint})),new Promise(r=>setTimeout(r,3000))]).catch(()=>{});   /* this account's deadline reminders stop here */
+   await cdRpc("ed_logout",{p_key:s.tok}).catch(()=>{});try{localStorage.removeItem("ce_auth")}catch(e){}}goTop("../signin.html")}
  /* every "Sign in" in Compass Dash now means the Compass Ed account; a student code from a teacher still works without one */
  const own=cdOpen;cdOpen=function(){if(preview())return own();const s=sess(),u=cdUser(),x=`<button class="btn alt" onclick="fbClose()">${L("Close","Fermer","إغلاق")}</button>`;
   if(s&&s.me.role!=="student")return cdShell(`<h2>${L("Staff account","Compte du personnel","حساب الطاقم")}</h2><p class="mut" style="margin-top:0">${L("You are signed in to Compass Ed as staff. Student accounts are for students; your tools are in the Teacher Panel.","Vous êtes connecté à Compass Ed en tant que membre du personnel. Les comptes élèves sont réservés aux élèves ; vos outils sont dans l'espace enseignant.","أنت مسجّل الدخول إلى Compass Ed كعضو في الطاقم. حسابات الطلاب مخصّصة للطلاب؛ وأدواتك في لوحة المعلم.")}</p><div class="fbr">${x}<button class="btn" onclick="fbClose();go('teach')">${L("Open the Teacher Panel","Ouvrir l'espace enseignant","فتح لوحة المعلم")}</button></div>`);
@@ -8351,7 +8353,7 @@ const CEB=(()=>{
  const ed=(fn,a)=>{const s=sess();if(!s)return Promise.resolve(null);try{if(parent!==window&&parent.CE&&parent.CE.capi)return parent.CE.capi(fn,a)}catch(e){}return preview()?Promise.resolve(null):cdRpc(fn,Object.assign({p_key:s.tok},a))};
  {const tp0=topic;topic=function(a){tp0(a);const s=sess(1),st=app.querySelector(".steps");if(s&&s.me.role!=="student"&&st)st.insertAdjacentHTML("afterend",`<p><button class="btn alt sm" onclick="CEB.hw(${+a[0]},${+a[1]})">${L("Set as homework","Donner en devoir","تعيين كواجب")}</button></p>`)}}
  if(window.CURP==="topic")redraw();   /* a #/topic/ link drew its page before this was added */
- const gone=()=>{fbClose();notify(L("You were signed out of Compass Ed after 20 minutes without use. Sign in again to set homework.","Vous avez été déconnecté de Compass Ed après 20 minutes sans activité. Reconnectez-vous pour donner un devoir.","تم تسجيل خروجك من Compass Ed بعد 20 دقيقة دون استخدام. سجّل الدخول مجددًا لتعيين الواجب."),"err");redraw()};   /* the staff lock ended the session: say so, and the button goes */
+ const gone=()=>{fbClose();notify(L("You are no longer signed in to Compass Ed. Sign in again to set homework.","Vous n'êtes plus connecté à Compass Ed. Reconnectez-vous pour donner un devoir.","لم تعد مسجّلًا الدخول إلى Compass Ed. سجّل الدخول مجددًا لتعيين الواجب."),"err");redraw()};   /* the session ended (20-minute lock, or signed out elsewhere): say so, and the button goes */
  function hw(si,ti){const s=sess(),tp=SUBJ[si]&&SUBJ[si].t[ti];if(!s)return gone();if(s.me.role==="student"||!tp)return;const cls=s.me.classes||[],x=`<button class="btn alt" onclick="fbClose()">${L("Cancel","Annuler","إلغاء")}</button>`;
   cdShell(`<h2>${L("Set as homework","Donner en devoir","تعيين كواجب")}</h2><p class="mut" style="margin-top:0">${esc(tp.n)}</p>`+(cls.length
    ?`<div class="tcf2"><div><label for="hwc">${L("Class","Classe","الصف")}</label><select id="hwc">${cls.map(c=>`<option value="${+c.id}">${esc(c.name)}</option>`).join("")}</select></div><div><label for="hwd">${L("Due","À rendre le","موعد التسليم")}</label><input id="hwd" type="date" value="${dayS(7)}" min="${dayS(0)}"></div></div>
@@ -8363,7 +8365,7 @@ const CEB=(()=>{
   else{b.disabled=false;notify(L("Could not set the homework. Check your connection and try again.","Impossible de donner le devoir. Vérifiez votre connexion et réessayez.","تعذّر تعيين الواجب. تحقّق من اتصالك وحاول مجددًا."),"err")}}
  /* a finished topic test counts for any Compass Ed homework on that topic; offline, it waits in the outbox like other results */
  {const ah=asgHook;asgHook=function(k,o){ah(k,o);const s=sess(1);if(!(k==="test"&&o&&o.n&&s&&s.me.role==="student"&&(preview()||!cdUser()||mine(s))))return;const a={p_s:o.s,p_t:o.ti,p_score:Math.round(o.ok/o.n*100)};
-  (preview()?ed("ed_s_dash_done",a):obSend("ed_s_dash_done",Object.assign({p_key:s.tok},a),"homework score").then(r=>{if(r&&r.queued)notify(L("Saved offline: your homework score is sent when you're back online.","Enregistré hors ligne : ton score de devoir sera envoyé dès ton retour en ligne.","حُفظ دون اتصال: ستُرسل درجة واجبك عند عودة الاتصال."),"info")})).catch(()=>{})}}
+  (preview()?ed("ed_s_dash_done",a):obSend("ed_s_dash_done",Object.assign({p_key:s.tok},a),"test score")).catch(()=>{})}}   /* no message: offline, Compass Dash can't tell whether this topic is homework */
  return{sync,signOut,back,signIn:()=>goTop("../signin.html?next=student%23%2Fdash"),code:()=>own(),hw,hwSend};
 })();
 </script>
