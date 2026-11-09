@@ -61,6 +61,8 @@
   /* ---------- session (one model for every role) ---------- */
   const LS = { get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }, del(k) { try { localStorage.removeItem(k); } catch (e) {} } };
   CE.LS = LS;
+  const pushSub = () => "serviceWorker" in navigator ? navigator.serviceWorker.getRegistration().then(r => r && r.pushManager && r.pushManager.getSubscription()) : Promise.resolve(null);
+  const parentPush = () => { try { return Object.keys(localStorage).some(k => k.startsWith("ce_pp_")); } catch (e) { return false; } };   // a parent link turned its weekly summary on here (parent.js)
   const IDLE = 20 * 60 * 1000;   // staff sessions lock in this browser after 20 minutes without use
   // one sign-in with Compass Dash: leaving Compass Ed also ends a Teacher Panel session open in this tab
   // (Compass Dash signs its student account out by itself the next time it opens without this session)
@@ -74,7 +76,7 @@
     },
     set(tok, me) { LS.set("ce_auth", { tok, me, at: Date.now() }); },
     clear() { LS.del("ce_auth"); dashOut();   // and stop deadline reminders reaching this device for the next person who signs in
-      try { navigator.serviceWorker.getRegistration().then(r => r && r.pushManager && r.pushManager.getSubscription()).then(x => x && x.unsubscribe()).catch(() => {}); } catch (e) {} },
+      if (!parentPush()) try { pushSub().then(x => x && x.unsubscribe()).catch(() => {}); } catch (e) {} },   // a parent's weekly summary shares the subscription: CE.signOut then drops only this account's reminders
     args() { const s = CE.auth.get(); return s ? { p_key: s.tok } : {}; }
   };
   CE.capi = async (fn, a) => {
@@ -82,7 +84,11 @@
     if (r && r.error === "bad_key") { CE.auth.clear(); location.replace(ROOT + "signin.html"); throw new Error("bad_key"); }
     return r;
   };
-  CE.signOut = function () { const s = CE.auth.get(); if (s) CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); CE.auth.clear(); CE.go(ROOT + "signin.html"); };
+  // shortcut: a session the server already ended (bad_key) can't drop its reminder row, so with a parent's summary on, that student's reminders keep reaching this device until another student turns reminders on here; fine for a family phone
+  CE.signOut = async function () { const s = CE.auth.get();
+    if (s) { if (parentPush()) await Promise.race([pushSub().then(x => x && CE.api("ed_s_push_del", { p_key: s.tok, p_endpoint: x.endpoint })), new Promise(r => setTimeout(r, 3000))]).catch(() => {});   // never hold up signing out
+      CE.api("ed_logout", { p_key: s.tok }).catch(() => {}); }
+    CE.auth.clear(); CE.go(ROOT + "signin.html"); };
   /* Load the profile (and lists) for a portal page. Redirects to sign-in when there is no session or the wrong role. */
   CE.requireRole = async function (roles) {
     const s = CE.auth.get();
@@ -227,6 +233,36 @@
     label(false); return btn;
   };
   if (SAY) { addEventListener("hashchange", () => CE.sayStop()); addEventListener("pagehide", () => CE.sayStop()); }
+
+  /* ---------- a switch for notifications on this device (v2.9): deadline reminders for students, the weekly summary for
+     parents. It shows only once the school's sender is running (st.ready), and each visit refreshes the device's language and
+     time zone. o: { title, text, on (the confirmation shown once), status(endpoint), save(keys), del(endpoint) } ---------- */
+  const b64key = k => Uint8Array.from(atob(k.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - k.length % 4) % 4)), c => c.charCodeAt(0));
+  CE.pushKeys = s => { const j = s.toJSON(); return { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_lang: CE.lang || "en", p_tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" }; };
+  CE.pushCard = async o => {
+    const h = CE.h, key = CE.cfg.vapidPublicKey, can = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const reg = can ? await navigator.serviceWorker.getRegistration().catch(() => null) : null;
+    let sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
+    const st = await o.status(sub ? sub.endpoint : "").catch(() => null);
+    if (!key || !st || !st.ok || !(st.ready || CE.demo)) return null;
+    if (sub && st.on) o.save(CE.pushKeys(sub)).catch(() => {});   // keeps the language and time zone up to date
+    const box = h("div", { class: "stack" });
+    const toggle = async cb => { cb.disabled = true;
+      try {
+        if (cb.checked) {
+          if (await Notification.requestPermission() !== "granted") { draw(false); return CE.toast("Notifications are blocked for this site. Allow them in your browser's site settings, then try again.", "bad"); }
+          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(key) });
+          const x = await o.save(CE.pushKeys(sub)); if (!x.ok) throw new Error(CE.errText(x));
+          reg.showNotification("Compass Ed", { body: CE.t(o.on), icon: CE.root + "assets/icon-192.png", tag: "push-on" }).catch(() => {});
+          draw(true);
+        } else { if (sub) await o.del(sub.endpoint).catch(() => {}); draw(false); }   // the browser subscription stays: other children's summaries or a student's reminders may share it
+      } catch (e) { draw(!cb.checked); CE.toast(String(e.message || e), "bad"); }
+      finally { const i = box.querySelector("input"); if (i) i.focus(); } };   // the switch is redrawn: keep keyboard focus on it
+    const draw = on => box.replaceChildren(h("div", { class: "row between" }, h("div", {}, h("b", {}, o.title), h("div", { class: "sm mut" }, o.text)),
+        reg && !CE.demo ? h("label", { class: "chk" }, h("input", { type: "checkbox", checked: on, "aria-label": o.title, onchange: e => toggle(e.target) }), on ? "On" : "Off") : null),
+      !reg || CE.demo ? h("p", { class: "xs mut", style: { margin: 0 } }, CE.demo ? "Preview: the sample campus can't send reminders." : /iPhone|iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ? "On iPhone or iPad, add Compass Ed to your Home Screen first (Share, then Add to Home Screen) and turn reminders on there." : "This browser can't show reminders.") : null);
+    draw(!!(sub && st.on)); return box;
+  };
 
   /* ---------- the year portfolio (v2.9): one school year of a student's record, shared by both portals and made to print ---------- */
   CE.ayLabel = y => y + "/" + String(y + 1).slice(2);   // a slash keeps "2026/27" in order inside Arabic text; a dash flips it
@@ -488,7 +524,8 @@
      (the bridge at the end of dash/index.html), so this page only frames it. */
   CE.dashPage = page => {
     CE.title("Compass Dash"); page.innerHTML = "";
-    const f = CE.h("iframe", { class: "dash-frame", src: ROOT + "dash/", title: "Compass Dash", allow: "fullscreen; autoplay" });
+    const ds = CE.q("s"), dt = CE.q("t"), topic = /^\d+$/.test(ds || "") && /^\d+$/.test(dt || "") ? "#/topic/" + ds + "/" + dt : "";   // #/dash?s=&t= opens one topic (homework links)
+    const f = CE.h("iframe", { class: "dash-frame", src: ROOT + "dash/" + topic, title: "Compass Dash", allow: "fullscreen; autoplay" });
     // full screen: the real thing where the browser allows it, else (iPhone) Compass Dash fills the page until Exit
     const wrap = CE.h("div", { class: "dash-wrap" }), root = document.documentElement;
     const isFull = () => (document.fullscreenElement || document.webkitFullscreenElement) === wrap || wrap.classList.contains("max");

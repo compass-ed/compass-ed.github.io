@@ -10,7 +10,7 @@
   Object.assign(CE.heads, { home: ["book"], campus: ["geography", "The public home page, right here. You stay signed in."], explore: ["geography", "Things to try in your own time. Every activity you finish earns points for your house."], competitions: ["pe", "Competitions, challenges and tournaments across the campus. Enter before they close; winners get a notification."], clubs: ["music"], subjects: ["english", "Subjects with lessons and quizzes set for your class appear first."], subject: ["english"], assignments: ["maths", "Everything your teachers have set, from to do to returned."], review: ["languages"], progress: ["science", "Your lessons, checkpoints, badges and places in one view."], goals: ["pe"], house: ["pe", "How your house, your class and you are doing this year."], news: ["languages", "What's happening across the campus."], announcements: ["languages", "Messages from your teachers and the school."], calendar: ["history", "Lessons, deadlines, trips and events for you and your class."], day: ["history"], voice: ["languages"], showcase: ["art"], community: ["drama"], id: ["computing"], settings: ["computing", "Your account, your look and how Compass Ed reaches you."], search: ["geography"] });
 
   const S = { home: null };
-  const KIND = { homework: "Homework", assignment: "Assignment", quiz: "Quiz" };
+  const KIND = { homework: "Homework", assignment: "Assignment", quiz: "Quiz", dash: "Compass Dash" };
   const card = (title, body, extra) => h("div", { class: "card" }, h("div", { class: "hd" }, h("h3", {}, title), extra || null), body);
   const statusBadge = a => a.status === "returned" ? h("span", { class: "badge ok" }, "Returned" + (a.score != null ? " · " + a.score + "%" : "")) : a.status === "submitted" ? h("span", { class: "badge cyan" }, "Handed in") : a.status === "draft" ? h("span", { class: "badge warn" }, "Draft saved") : a.due && new Date(a.due) < Date.now() ? h("span", { class: "badge bad" }, "Overdue") : h("span", { class: "badge" }, D.until(a.due) || "No due date");
   const dBlock = d => h("div", { class: "dblock" }, h("b", {}, new Date(d).getDate()), h("small", {}, new Date(d).toLocaleDateString(CE.locale || "en-GB", { weekday: "short" })));
@@ -165,31 +165,9 @@
   }
 
   /* ---------- v2.9: deadline reminders on this device (Web Push). Shows once the school's sender has run. ---------- */
-  const pushSave = s => { const j = s.toJSON(); return CE.capi("ed_s_push_save", { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth, p_lang: CE.lang || "en", p_tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC" }); };
-  const b64key = k => Uint8Array.from(atob(k.replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - k.length % 4) % 4)), c => c.charCodeAt(0));
-  async function remindCard() {
-    const key = CE.cfg.vapidPublicKey, can = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
-    const reg = can ? await navigator.serviceWorker.getRegistration().catch(() => null) : null;
-    let sub = reg ? await reg.pushManager.getSubscription().catch(() => null) : null;
-    const st = await CE.capi("ed_s_push", { p_endpoint: sub ? sub.endpoint : "" }).catch(() => null);
-    if (!key || !st || !st.ok || !(st.ready || CE.demo)) return null;
-    const box = h("div", { class: "stack" });
-    const toggle = async cb => { cb.disabled = true;
-      try {
-        if (cb.checked) {
-          if (await Notification.requestPermission() !== "granted") { draw(false); return CE.toast("Notifications are blocked for this site. Allow them in your browser's site settings, then try again.", "bad"); }
-          sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64key(key) });
-          const x = await pushSave(sub); if (!x.ok) throw new Error(CE.errText(x));
-          reg.showNotification("Compass Ed", { body: CE.t("Reminders are on. You'll get one the day before work is due."), icon: CE.root + "assets/icon-192.png", tag: "remind-on" }).catch(() => {});
-          draw(true);
-        } else { if (sub) { await CE.capi("ed_s_push_del", { p_endpoint: sub.endpoint }).catch(() => {}); await sub.unsubscribe().catch(() => {}); sub = null; } draw(false); }
-      } catch (e) { draw(!cb.checked); CE.toast(String(e.message || e), "bad"); }
-      finally { const i = box.querySelector("input"); if (i) i.focus(); } };   // the switch is redrawn: keep keyboard focus on it
-    const draw = on => box.replaceChildren(h("div", { class: "row between" }, h("div", {}, h("b", {}, "Deadline reminders"), h("div", { class: "sm mut" }, "A notification on this device the day before work is due, if you haven't handed it in yet.")),
-        reg && !CE.demo ? h("label", { class: "chk" }, h("input", { type: "checkbox", checked: on, "aria-label": "Deadline reminders", onchange: e => toggle(e.target) }), on ? "On" : "Off") : null),
-      !reg || CE.demo ? h("p", { class: "xs mut", style: { margin: 0 } }, CE.demo ? "Preview: the sample campus can't send reminders." : /iPhone|iPad/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1) ? "On iPhone or iPad, add Compass Ed to your Home Screen first (Share, then Add to Home Screen) and turn reminders on there." : "This browser can't show reminders.") : null);
-    draw(!!(sub && st.on)); return box;
-  }
+  const remindCard = () => CE.pushCard({ title: "Deadline reminders", text: "A notification on this device the day before work is due, if you haven't handed it in yet.",
+    on: "Reminders are on. You'll get one the day before work is due.", status: p_endpoint => CE.capi("ed_s_push", { p_endpoint }),
+    save: k => CE.capi("ed_s_push_save", k), del: p_endpoint => CE.capi("ed_s_push_del", { p_endpoint }) });
 
   async function home() {
     CE.title("Home"); CE.loading(page);
@@ -413,6 +391,7 @@
       const left = h("div", { class: "stack" }), right = h("div", { class: "stack" }); g.append(left, right);
       left.append(card("Instructions", h("div", { html: CE.rich(a.instr || "No instructions given.") }), a.instr ? CE.readAloud(() => a.title + "\n" + CE.plain(CE.rich(a.instr))) : null));
       if (a.kind === "quiz" && a.quiz_id) left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? "This is a quiz assignment." : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Your best score counts. You can retake it until the due date.")), h("a", { class: "btn cyan", href: "#/quiz/" + a.quiz_id + "?assign=" + a.id }, st === "todo" ? "Start quiz" : "Retake quiz")));
+      else if (a.kind === "dash") left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? a.dash_topic : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Learn and practise the topic in Compass Dash, then take its test. Your best score before the due date counts.")), h("a", { class: "btn cyan", href: "#/dash?s=" + a.dash_s + "&t=" + a.dash_t }, "Open in Compass Dash")));
       else {
         const body = h("textarea", { class: "in", placeholder: "Type your answer, working or notes here. You can save a draft and come back.", style: { minHeight: "220px" } }, a.sub ? a.sub.body : "");
         const links = h("input", { class: "in", placeholder: "Links to files or photos, separated by spaces", value: a.sub ? (a.sub.links || []).join(" ") : "" });
@@ -671,7 +650,7 @@
   addEventListener("hashchange", setSub); setSub();
   // reminders follow the language and time zone this device uses now
   if (!CE.demo && "serviceWorker" in navigator) navigator.serviceWorker.getRegistration().then(r => r && r.pushManager && r.pushManager.getSubscription())
-    .then(s => s && CE.capi("ed_s_push", { p_endpoint: s.endpoint }).then(st => st.ok && st.on && pushSave(s))).catch(() => {});
+    .then(s => s && CE.capi("ed_s_push", { p_endpoint: s.endpoint }).then(st => st.ok && st.on && CE.capi("ed_s_push_save", CE.pushKeys(s)))).catch(() => {});
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); CE.shellUp(); };
   CE.router([
     { path: "/house", handler: house }, { path: "/clubs", handler: clubs }, { path: "/search", handler: search },

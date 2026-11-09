@@ -21,7 +21,13 @@
     const g = h("div", { class: "grid g2" }); page.append(g);
     g.append(card("Coming up", r.events.length ? h("div", { class: "list" }, ...r.events.map(e => h("div", { class: "item" }, h("div", { class: "grow" }, h("div", { class: "t sm" }, e.title), h("div", { class: "s xs" }, D.dt(e.starts) + (e.place ? " · " + e.place : "")))))) : h("div", { class: "empty" }, "No events in the next two weeks.")));
     g.append(card("Clubs", r.clubs.length ? h("div", { class: "list" }, ...r.clubs.map(c => h("div", { class: "item" }, h("div", { class: "grow" }, h("div", { class: "t sm" }, c.title), h("div", { class: "s xs" }, c.day + " " + c.time))))) : h("div", { class: "empty" }, "Not signed up to any clubs.")));
-    page.append(h("p", { class: "xs mut" }, "This page shows only what is listed above. The only thing it can change is your answer to a permission slip. Your child can make a new link at any time, which stops this one working."));
+    const wk = h("div"), pp = "ce_pp_" + tok.slice(0, 8); page.append(wk);   // pp: tells a portal sign-out on this device to keep the shared push subscription (core.js)   /* a weekly summary on this phone, once the school's sender is running (compassed-v2.10.sql) */
+    CE.pushCard({ title: "Weekly summary", text: "A short note on this phone every Friday: work handed in, marks, house points and what is due next week.",
+      on: "The weekly summary is on. The first one arrives on Friday.", status: p_endpoint => CE.api("ed_s_parent_push", { p_tok: tok, p_endpoint }).then(r => { if (r && r.ok && !r.on) CE.LS.del(pp); return r; }),
+      save: k => CE.api("ed_s_parent_push_save", Object.assign({ p_tok: tok }, k)).then(r => { if (r && r.ok) CE.LS.set(pp, 1); return r; }),
+      del: p_endpoint => CE.api("ed_s_parent_push_del", { p_tok: tok, p_endpoint }).then(r => { CE.LS.del(pp); return r; }) })
+      .then(c => c ? wk.replaceWith(card("Notifications", c)) : wk.remove()).catch(() => wk.remove());
+    page.append(h("p", { class: "xs mut" }, "This page shows only what is listed above. It can change only your answer to a permission slip and, on this phone, whether you get the weekly summary. Your child can make a new link at any time, which stops this one working."));
   } catch (e) { CE.fail(page, e); }
 
   /* Permission slips (compassed-v2.9-features.sql): read the details, answer yes or no, sign with your name */

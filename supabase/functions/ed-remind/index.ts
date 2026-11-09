@@ -1,6 +1,7 @@
-// Compass Ed deadline reminders (v2.9). Supabase runs this every hour (see README, "Deadline reminders"):
-// it asks the database which students have work due in the next 24 hours (ed_push_due), sends each a Web Push
-// message, and removes devices the push service says are gone (ed_push_gone).
+// Compass Ed deadline reminders (v2.9) and weekly parent summaries (v2.10). Supabase runs this every hour (see README,
+// "Deadline reminders"): it asks the database which students have work due in the next 24 hours (ed_push_due) and which
+// parents are due their Friday summary (ed_push_weekly), sends each a Web Push message, and removes devices the push
+// service says are gone (ed_push_gone).
 // Secrets (Edge Functions > Secrets): VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT (mailto:you@your-school), CRON_SECRET.
 // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are provided by Supabase. Web Push is RFC 8291 (encryption) + RFC 8292 (VAPID),
 // done here with the built-in Web Crypto so the function needs no packages.
@@ -38,7 +39,7 @@ export async function encrypt(text: string, p256dh: string, auth: string) {
   return cat(head, as, ct);
 }
 
-type Msg = { endpoint: string; p256dh: string; auth: string; title: string; body: string; url: string; tag: string; ttl: number; assign_id: number };
+type Msg = { endpoint: string; p256dh: string; auth: string; title: string; body: string; url: string; tag: string; ttl: number; assign_id?: number };
 async function send(m: Msg) {
   if (!HOSTS.test(m.endpoint)) return 400;
   const res = await fetch(m.endpoint, { method: "POST", headers: {
@@ -63,10 +64,11 @@ async function handler(req: Request) {
   } catch { return new Response("VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY missing or not a pair", { status: 500 }); }
   const r = await rpc("ed_push_due");
   if (!r.ok) return new Response("database said " + r.status + ": " + await r.text(), { status: 500 });
-  const due: Msg[] = await r.json(), gone: string[] = [], again: Msg[] = []; let sent = 0, failed = 0;
+  const w = await rpc("ed_push_weekly");   // an older database without parent summaries just sends reminders
+  const due: Msg[] = (await r.json()).concat(w.ok ? await w.json() : []), gone: string[] = [], again: Msg[] = []; let sent = 0, failed = 0;
   for (let i = 0; i < due.length; i += 20) await Promise.all(due.slice(i, i + 20).map(async m => {
-    try { const s = await send(m); if (s === 404 || s === 410) gone.push(m.endpoint); else if (s < 300) sent++; else { failed++; if (s === 429 || s >= 500) again.push(m); console.log("push", s, new URL(m.endpoint).host); } }
-    catch (e) { failed++; again.push(m); console.log("push failed", String(e)); }   // network trouble or the 10-second limit
+    try { const s = await send(m); if (s === 404 || s === 410) gone.push(m.endpoint); else if (s < 300) sent++; else { failed++; if ((s === 429 || s >= 500) && m.assign_id) again.push(m); console.log("push", s, new URL(m.endpoint).host); } }
+    catch (e) { failed++; if (m.assign_id) again.push(m); console.log("push failed", String(e)); }   // network trouble or the 10-second limit; a missed weekly summary waits for next week
   }));
   if (gone.length) await rpc("ed_push_gone", { p_endpoints: gone });
   if (again.length) await rpc("ed_push_retry", { p_endpoints: again.map(m => m.endpoint), p_assign: again.map(m => m.assign_id) });   // next hour tries these again
