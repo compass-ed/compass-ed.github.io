@@ -8311,7 +8311,7 @@ const CEB=(()=>{
  const goTop=u=>{(window.top||window).location.href=new URL(u,location.href).href};
  async function signOut(){fbClose();const s=sess();wait(true);setTimeout(()=>goTop("../signin.html"),12000);await out();teachOff();
   if(s){obPut(obAll().filter(x=>!(x.body&&x.body.p_key===s.tok)));   /* never leave this session's token in the offline queue */
-   if(!preview()&&"serviceWorker"in navigator)await Promise.race([navigator.serviceWorker.getRegistration().then(r=>r&&r.pushManager&&r.pushManager.getSubscription()).then(x=>x&&cdRpc("ed_s_push_del",{p_key:s.tok,p_endpoint:x.endpoint})),new Promise(r=>setTimeout(r,3000))]).catch(()=>{});   /* this account's deadline reminders stop here */
+   if(!preview()&&"serviceWorker"in navigator)await Promise.race([navigator.serviceWorker.getRegistration("../").then(r=>r&&r.pushManager&&r.pushManager.getSubscription()).then(x=>x&&cdRpc("ed_s_push_del",{p_key:s.tok,p_endpoint:x.endpoint})),new Promise(r=>setTimeout(r,3000))]).catch(()=>{});   /* this account's deadline reminders stop here ("../": Compass Ed's worker holds the subscription, not Compass Dash's own) */
    await cdRpc("ed_logout",{p_key:s.tok}).catch(()=>{});try{localStorage.removeItem("ce_auth")}catch(e){}}goTop("../signin.html")}
  /* every "Sign in" in Compass Dash now means the Compass Ed account; a student code from a teacher still works without one */
  const own=cdOpen;cdOpen=function(){if(preview())return own();const s=sess(),u=cdUser(),x=`<button class="btn alt" onclick="fbClose()">${L("Close","Fermer","إغلاق")}</button>`;
