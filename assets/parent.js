@@ -8,7 +8,7 @@
     if (!r.ok) { CE.LS.del("ce_pp_" + tok.slice(0, 8)); page.innerHTML = ""; return page.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("key")), h("div", { class: "b" }, "This link is not valid"), h("div", { class: "sm" }, "Ask your child to make a new link from Settings in Compass Ed."))); }
     page.innerHTML = "";
     const card = (t, b) => h("div", { class: "card" }, h("h3", {}, t), b);
-    page.append(h("div", {}, h("div", { class: "kicker" }, r.school + " · weekly summary"), h("h1", { style: { fontSize: "32px" } }, r.name), h("div", { class: "mut" }, [r.class, r.year ? "Year " + r.year : null, r.house ? "House " + r.house : null].filter(Boolean).join(" · ") + " · as of " + D.long(new Date()))));
+    page.append(h("div", {}, h("div", { class: "kicker" }, r.school + " · weekly summary"), h("h1", {}, r.name), h("div", { class: "mut" }, [r.class, r.year ? "Year " + r.year : null, r.house ? "House " + r.house : null].filter(Boolean).join(" · ") + " · as of " + D.long(new Date()))));
     const slipBox = h("div", { class: "stack" }); page.append(slipBox); slips(slipBox);   /* the one thing this page can do: sign a permission slip */
     page.append(h("div", { class: "grid g4" },
       h("div", { class: "card stat" }, h("span", { class: "n" }, r.week.lessons), h("span", { class: "l" }, "Lessons this week")),
@@ -34,7 +34,7 @@
   async function slips(box) {
     let r; try { r = await CE.api("ed_s_parent_slips", { p_tok: tok }); } catch (e) { return; }   // older database: no slips yet
     if (!r || !r.ok || !r.rows.length) return;
-    box.innerHTML = ""; box.append(h("h2", { style: { margin: "8px 0 0" } }, "Permission slips"));
+    box.innerHTML = ""; box.append(h("h2", {}, "Permission slips"));
     r.rows.forEach(x => box.append(slipCard(x)));
   }
   function slipCard(x) {

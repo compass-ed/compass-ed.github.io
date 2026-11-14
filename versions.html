@@ -13,10 +13,10 @@
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .ver-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:28px;align-items:start}
-  .ver-row img,.ver-row video{width:100%;border-radius:16px;border:1px solid var(--line);box-shadow:var(--sh);display:block}
-  .ver-row ul{padding-left:20px;margin:0}
+  .ver-row img,.ver-row video{width:100%;border-radius:var(--r);border:1px solid var(--line);box-shadow:var(--sh);display:block}
+  .ver-row ul{padding-inline-start:20px;margin:0}
   .ver-row li{margin:6px 0}
-  .ver-tag{font-family:var(--mono);background:var(--ink);color:#fff;padding:4px 10px;border-radius:999px;font-size:13px}
+  .ver-tag{font-family:var(--mono);background:var(--ink);color:var(--bg);padding:4px 10px;border-radius:999px;font-size:13px}
   @media (max-width:900px){.ver-row{grid-template-columns:1fr}}
 </style>
 </head>
@@ -50,7 +50,7 @@
     </div>
   </section>
 
-  <section class="sec" style="padding-top:8px">
+  <section class="sec">
     <div class="wrap stack" style="gap:28px">
 
       <article class="card flat" id="v3-5">
@@ -122,7 +122,7 @@
       <article class="card ver-row" id="v2-4">
         <div>
           <div class="row"><span class="ver-tag">v2.4</span><span class="mut sm">28 October 2026</span></div>
-          <h2 style="margin-top:10px">Motion, in every corner</h2>
+          <h2 class="as-h3" style="margin-top:10px">Motion, in every corner</h2>
           <ul class="sm">
             <li>The campus home page inside both portals, without signing out.</li>
             <li>"Welcome to campus" entrance, reveal-on-scroll sections, hover lifts, pressed buttons, smoother transitions.</li>
@@ -136,7 +136,7 @@
       <article class="card ver-row" id="v2-3">
         <div>
           <div class="row"><span class="ver-tag">v2.3</span><span class="mut sm">28 October 2026</span></div>
-          <h2 style="margin-top:10px">Codes, consent and connections</h2>
+          <h2 class="as-h3" style="margin-top:10px">Codes, consent and connections</h2>
           <ul class="sm">
             <li>Login codes in the form <b>1234-5678</b>: unique, printable, revocable; a code creates an account or resets credentials.</li>
             <li>Admin dashboard for accounts, codes, calendar feeds and links; sign out any account everywhere.</li>
@@ -152,7 +152,7 @@
       <article class="card ver-row" id="v2-2">
         <div>
           <div class="row"><span class="ver-tag">v2.2</span><span class="mut sm">28 October 2026</span></div>
-          <h2 style="margin-top:10px">Polish, directories and a content pack</h2>
+          <h2 class="as-h3" style="margin-top:10px">Polish, directories and a content pack</h2>
           <ul class="sm">
             <li>Student and staff portals now live at <b>/student/</b> and <b>/teacher/</b>.</li>
             <li>Navigation simplified to seven grouped sections per portal, with sub-tabs.</li>

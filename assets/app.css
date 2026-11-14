@@ -879,3 +879,242 @@ html,.main,.pal-l,.modal .box{scrollbar-color:var(--line2) transparent}
 .kpi .n,.ph-st b,.stat .n,.tk-d b,.dblock b,.pm b,.pod-b b,.ring span,.tb td,.trl-time,.cal .d .n{font-variant-numeric:tabular-nums}
 .gallery .g .ph{background:radial-gradient(80% 90% at 30% 20%,var(--cyan-soft),var(--bg3))} .gallery .g .ph .i{width:40px;height:40px;color:var(--cyan-text)}
 .card.flat[id^="v"] p{max-width:56ch}
+
+/* ---- public pages polish pass: focus, anchors, heroes, legal, sign-in, 404, menu, footer ---- */
+:root{--focus:var(--cyan3);--ok-text:#17703d;--warn-text:#8a5200;--bad-text:#b02a2a}
+:root[data-theme="dark"]{--focus:var(--cyan);--ok-text:#5fd596;--warn-text:#f0b453;--bad-text:#ff8f8f}
+/* anchors land below the floating bar; no smooth scrolling when motion is turned off */
+html{scroll-padding-top:calc(var(--nav) + 12px)}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+/* a focus ring that can be seen on white (3:1) and on the black hero and footer */
+:focus-visible{outline-color:var(--focus)}
+.in:focus{border-color:var(--focus);box-shadow:0 0 0 3px color-mix(in srgb,var(--cyan) 38%,transparent)}
+/* status colours readable at 12px (AA); hues and backgrounds unchanged */
+.badge.ok{color:var(--ok-text)} .badge.warn{color:var(--warn-text)} .badge.bad{color:var(--bad-text)} .btn.bad{color:var(--bad-text)}
+/* controls: disabled stays still, hover on tabs and switches, tidy checkboxes, placeholders, select arrow */
+.btn:disabled,.btn:disabled:hover,.btn:disabled:active{transform:none;box-shadow:none} .btn.cyan:disabled:hover{background:var(--cyan);border-color:var(--cyan)}
+.btn.soft:hover{background:color-mix(in srgb,var(--cyan) 26%,var(--bg));border-color:transparent}
+.seg button,.tabs button{transition:color .15s,background .15s} .seg button:hover:not(.on),.tabs button:hover:not(.on){color:var(--ink)}
+.sec .pill:hover:not(.on){border-color:var(--ink2);background:var(--bg2)}
+.chk{align-items:flex-start} .chk input{flex:none;margin:3px 0 0}
+.in::placeholder{color:var(--mute);opacity:.8} .in.big::placeholder{letter-spacing:.04em;font-size:16px}
+.in.big,.code-in{direction:ltr}   /* codes read left to right in Arabic too */
+select.in,:root[data-theme="dark"] select.in{appearance:none;-webkit-appearance:none;padding-inline-end:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%237d8b8e' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:14px}
+[dir="rtl"] select.in,:root[data-theme="dark"][dir="rtl"] select.in{background-position:left 12px center}
+.err{min-height:0} .err:empty{display:none} .err:not(:empty){color:var(--bad-text);background:var(--bad-soft);border-radius:var(--r2);padding:8px 12px}
+/* cards: no extra space under the last line, one shadow colour, one radius */
+:where(.card,.feat)>:last-child{margin-bottom:0} .feat>h3,.feat>h4,.feat>p{margin-bottom:0}
+.sec .card p.sm{font-size:14px;line-height:1.55}
+.sec-head h2{margin:0}
+.card.tint{border-color:color-mix(in srgb,var(--cyan) 30%,var(--line))}
+.lift:hover{box-shadow:0 1px 2px rgba(4,40,44,.05),0 20px 36px -18px rgba(4,40,44,.3)}
+.stat-strip .card{box-shadow:var(--sh),0 18px 36px -22px rgba(4,40,44,.35)}
+.modal .box,.cookie,.ver-row .vwrap,.gallery .g{border-radius:var(--r)}
+.cookie{border:1px solid rgba(255,255,255,.14);bottom:calc(16px + env(safe-area-inset-bottom))}
+/* inner-page heroes clear the floating bar again, and the first section breathes under them */
+.hero{padding:calc(var(--nav) + clamp(24px,5vw,64px)) 0 clamp(28px,4vw,56px)} .hero .wrap>:last-child{margin-bottom:0}
+.legal-hero{padding-bottom:clamp(20px,3vw,36px)}
+.hero+.sec{padding-top:clamp(28px,4vw,48px)}
+#trailer .wrap{width:min(1100px,100% - 32px)}
+/* home: one gap, not two, between neighbours on the same background (skipped when the section before is an empty, hidden one) */
+.home .sec.alt:not(:has(>[data-campus]>.hide:only-child))+.sec.alt{padding-top:0}
+.home .sec:not(.alt):not(.quote-band):not(.slim):not(:has(>[data-campus]>.hide:only-child))+.sec:not(.alt):not(.quote-band){padding-top:0}
+.steps-grid{row-gap:34px}   /* the number and subject badges overhang each card by 16px */
+/* legal pages: a comfortable measure, a full-width page when there is no contents list, chips for the contents on phones */
+.prose{max-width:70ch} .prose p,.prose li{font-size:15.5px}
+.legal-body .wrap>.prose:only-child{grid-column:1/-1;max-width:920px}
+.prose .tb td{vertical-align:top;font-size:14px;line-height:1.55} .prose .tb td:first-child{white-space:nowrap}
+.toc a{padding:8px 10px;transition:background .15s,color .15s} .toc a:hover{color:var(--ink)}
+@media (max-width:860px){.toc{gap:6px;margin-bottom:4px} .toc a{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r3);padding:8px 12px}}
+/* not found */
+.notfound h1{font-size:clamp(32px,5vw,56px)} .notfound .mut{max-width:46ch}
+.notfound .btn.bh-ghost,:root[data-theme="dark"] .notfound .btn.bh-ghost{background:transparent;border-color:#fff;color:#fff} .notfound .btn.bh-ghost:hover,:root[data-theme="dark"] .notfound .btn.bh-ghost:hover{background:#fff;border-color:#fff;color:#000}
+/* menu on phones: rows you can tap, no desktop underline, a bigger button */
+.nav .burger{width:40px;height:40px}
+@media (max-width:980px){.nav nav a,:root:not([lang="en"]) .nav nav a{padding:12px 14px;border-radius:12px;font-size:15px} .nav nav a::after{display:none}}
+.nav.tight nav a,:root:not([lang="en"]) .nav.tight nav a{padding:12px 14px;border-radius:12px;font-size:15px} .nav.tight nav a::after{display:none}
+@media (max-width:420px){.nav .burger{width:36px;height:36px}}
+/* footer: links big enough to tap, room for the home indicator */
+.foot{padding:36px 0 calc(36px + env(safe-area-inset-bottom))} .foot .wrap{gap:4px 22px} .foot a{display:inline-block;padding:8px 0;transition:color .15s} .foot a:hover{color:#fff}
+@media (max-width:520px){.foot .wrap>span:first-child{flex-basis:100%}}
+/* trailer: controls stay on touch screens, a scrubber tall enough to hit (same width, so seeking is unchanged) */
+@media (hover:none){.trl .trl-bar{opacity:1}}
+.trl-prog{position:relative;display:flex;align-items:center;height:22px;overflow:visible;background:none} .trl-prog::before{content:"";position:absolute;inset:8px 0;border-radius:999px;background:rgba(255,255,255,.25)} .trl-prog i{position:relative;flex:none;height:6px}
+
+/* ---- portal polish pass: surfaces, states, reading pages, phones, Arabic ---- */
+/* two surface names: the sheet behind the cards, and the rows inside a card. In dark mode they are three steps apart instead of one colour */
+body{--canvas:var(--bg2);--well:var(--bg2)} :root[data-theme="dark"] body{--canvas:var(--bg);--well:var(--bg3)}
+.main{background:var(--canvas)}
+.fd::before{box-shadow:0 0 0 4px var(--canvas)} .fd.un::before{box-shadow:0 0 0 4px var(--canvas),0 0 0 8px color-mix(in srgb,var(--cyan) 30%,transparent)}
+.ticket{--sf:var(--canvas)} .card .ticket{--sf:var(--bg)}
+:root[data-theme="dark"] .shell .topbar{background:color-mix(in srgb,var(--canvas) 88%,transparent)}
+:root[data-theme="dark"] .main .card:not(.tint):not(.ink):not(.res):not(.today){border-color:var(--line)}
+:root[data-theme="dark"] .main .item:not(.on),:root[data-theme="dark"] .prow,:root[data-theme="dark"] .acard,:root[data-theme="dark"] .badge-tile:not(.on),:root[data-theme="dark"] .cal .d,:root[data-theme="dark"] .card .ticket{background:var(--well)}
+:root[data-theme="dark"] .card .ticket{--sf:var(--bg2)}
+:root[data-theme="dark"] .main .card.tint .item{background:var(--bg2)}
+:root[data-theme="dark"] .main a.item:hover,:root[data-theme="dark"] .main .item.click:hover{background:var(--cyan-tint)}
+:root[data-theme="dark"] .cal .d.o{background:none} :root[data-theme="dark"] .cal .d.today,:root[data-theme="dark"] .cal .d:has(.ev):hover{background:var(--cyan-tint)}
+:root[data-theme="dark"] .subnav a:not(.on):not(:hover),:root[data-theme="dark"] .club,:root[data-theme="dark"] .ticket{background:var(--bg2)}
+@media (min-width:761px){:root[data-theme="dark"] .topbar a.ib[href="#/search"]{background:var(--bg2)}}
+/* the menu drawer on phones and tablets had no background of its own */
+@media (max-width:980px){.side,:root[data-theme="dark"] .side{background:radial-gradient(120% 40% at 0% 100%,rgba(27,142,153,.42),transparent 70%),#000;padding-bottom:calc(18px + env(safe-area-inset-bottom))} .side{transition:transform .24s cubic-bezier(.2,.7,.2,1)}}
+/* status text and focus on dark surfaces */
+.timer.low,.cal .ev.exam{color:var(--bad-text)} .cal .ev.trip{color:var(--warn-text)}
+.side :focus-visible,.phead :focus-visible,.card.ink :focus-visible,.story.lead :focus-visible{outline-color:var(--cyan)}
+input[type=range],input[type=checkbox],input[type=radio]{accent-color:var(--cyan3)} :root[data-theme="dark"] input:is([type=range],[type=checkbox],[type=radio]){accent-color:var(--cyan)}
+/* buttons keep their meaning in dark mode, and a destructive button no longer turns black on hover */
+.btn.bad:hover{background:#f9d5d5;border-color:#f9d5d5}
+:root[data-theme="dark"] .btn.soft{background:var(--cyan-soft);border-color:var(--cyan-soft);color:var(--cyan)} :root[data-theme="dark"] .btn.soft:hover{background:color-mix(in srgb,var(--cyan) 30%,var(--bg));border-color:transparent}
+:root[data-theme="dark"] .btn.bad{background:var(--bad-soft);border-color:var(--bad-soft);color:var(--bad-text)} :root[data-theme="dark"] .btn.bad:hover{background:color-mix(in srgb,var(--bad) 34%,var(--bg));border-color:transparent}
+:root[data-theme="dark"] .btn.say.on{background:var(--cyan-soft);border-color:var(--cyan2);color:var(--ink)}
+:root[data-theme="dark"] .phead .btn:not(.ghost){background:var(--cyan);border-color:var(--cyan);color:#000} :root[data-theme="dark"] .phead .btn.ghost{border-color:rgba(255,255,255,.7);color:#fff} :root[data-theme="dark"] .phead .btn.ghost:hover{background:#fff;border-color:#fff;color:#000}
+:root[data-theme="dark"] .nextc .btn{background:#000;border-color:#000;color:#fff}
+.story.lead .btn.ghost,.card.ink .btn.ghost{color:#fff;border-color:rgba(255,255,255,.7)} .story.lead .btn.ghost:hover,.card.ink .btn.ghost:hover{background:#fff;border-color:#fff;color:#000} .story.lead .btn.say.on{background:var(--cyan);border-color:var(--cyan);color:#000}
+.ib{transition:background .15s,color .15s,transform .12s} .ib:active{transform:scale(.94)}
+.bcard:active,.ticket:active,.acard:active,.tile:active,.kpi:active,.nextc:active{transform:scale(.99)}
+/* one step between page title, card title and label */
+.main .card .hd h3,.main .card>h3{font-size:18px;letter-spacing:-.015em;line-height:1.2} .main .card .hd{margin-bottom:12px;min-height:32px} .card .hd>.btn,.card .hd>.badge{flex:none}
+.main .kicker{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase} :root[lang="ar"] .main .kicker{text-transform:none;font-size:13px}
+.nextc .nk{opacity:1;color:#0b4a52} .nextc .ns{opacity:1;color:#0b3d42}
+/* rows: long titles and links wrap inside the card, numbers line up */
+.item>.grow{min-width:0} .item .t,.item .s{overflow-wrap:anywhere} .item>.badge:first-child{min-width:30px;justify-content:center;font-variant-numeric:tabular-nums} .item>.b:last-child{font-variant-numeric:tabular-nums}
+.main .item.cur{box-shadow:inset 0 0 0 1.5px var(--cyan)}
+.main .card .card.flat{border-color:var(--line);padding:14px;border-radius:var(--r2)}
+.res{margin-bottom:8px} .main .card .card.res.ok{border-color:var(--ok)} .main .card .card.res.bad{border-color:var(--bad)} .res.ok .i{color:var(--ok)} .res.bad .i{color:var(--bad)}
+/* empty states inside a card are a quiet panel; the dashed box is kept for whole-page ones */
+.card .empty,.pop .empty,.bcol .none{padding:16px;border:0;border-radius:var(--r2);background:var(--well,var(--bg2));font-size:14px} .card.tint .empty{background:var(--bg)}
+:root[data-theme="dark"] .card .empty,:root[data-theme="dark"] .pop .empty{background:var(--well,var(--bg3))} :root[data-theme="dark"] .card.tint .empty{background:var(--bg2)}
+.empty .b{color:var(--ink);font-family:var(--head);font-size:17px} .empty a:not(.btn){font-weight:700} .card .empty.art{padding:28px 20px}
+/* detail pages: one back link, one title size, a centred reading column */
+a.back{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:4px 12px;margin-inline-start:-12px;border-radius:var(--r3);font-size:13px;font-weight:700;color:var(--mute);text-decoration:none;transition:background .15s,color .15s} a.back:hover{background:var(--bg3);color:var(--ink);text-decoration:none}
+.dhead h1,.dhead h2{font-size:clamp(26px,3vw,34px);margin:8px 0 6px}
+.narrow,.page:has(>.lesson)>*{width:100%;max-width:780px;margin-inline:auto}
+.lesson{font-size:16.5px;line-height:1.7;gap:16px} .lesson .blk>p:last-child{margin-bottom:0} .lesson .blk h3{margin:18px 0 0;font-size:22px}
+.lesson ul{padding-left:0;padding-inline-start:22px;margin:0} .lesson li{margin:6px 0} .lesson li::marker{color:var(--cyan-text)}
+.lesson .key{padding:16px 18px;border-left:0;border-inline-start:4px solid var(--cyan);border-radius:0 var(--r2) var(--r2) 0} [dir="rtl"] .lesson .key{border-radius:var(--r2) 0 0 var(--r2)}
+.lesson .fig figcaption{margin-top:6px} .lesson .item{font-size:15px}
+body.compact .lesson{font-size:15px}
+/* quiz answers: the letter follows the state, answered checks stop reacting, no bar replay on every tap */
+.q .opt{text-align:start;transition:border-color .15s,background .15s} .q .opt:active{transform:scale(.995)}
+:root .q .opt.on .k{background:var(--ink);color:var(--bg)} :root .q .opt.ok .k{background:var(--ok);color:#fff} :root .q .opt.bad .k{background:var(--bad);color:#fff}
+:root[data-theme="dark"] .q .opt.on{background:var(--bg3)} :root[data-theme="dark"] .q .opt.ok{background:var(--ok-soft)} :root[data-theme="dark"] .q .opt.bad{background:var(--bad-soft)}
+.q[data-done] .opt{cursor:default;pointer-events:none} .q .opt.x{opacity:.6}
+.card:has(>.q) .bar i{animation:none;transition:none}
+/* flashcards and their four grade buttons */
+.flash .cardf{border-radius:var(--r);overflow-wrap:anywhere;transition:transform .18s cubic-bezier(.2,.7,.2,1),border-color .15s} .flash .cardf:hover{border-color:var(--cyan)} .flash .cardf:active{transform:scale(.99)}
+:root[data-theme="dark"] .flash .cardf.back{background:var(--cyan-tint);border-color:var(--cyan-soft)}
+.grades{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:520px){.grades{grid-template-columns:repeat(2,minmax(0,1fr))} .grades .btn{padding-block:12px} .flash .cardf{padding:28px 18px;min-height:200px;font-size:18px}}
+/* assignment: the two columns follow the window, the rubric scrolls instead of squeezing */
+.split{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);align-items:start} @media (max-width:900px){.split{grid-template-columns:1fr}}
+.tbw>.rub{min-width:460px} .rub{border-collapse:separate;border-spacing:0} .rub th,.rub td{border:0;border-bottom:1px solid var(--line);padding:10px} .rub th{text-align:start;font-size:12px;font-weight:700;background:var(--well,var(--bg2));color:var(--ink2)} .rub tr:last-child>*{border-bottom:0} .rub td.on{border-radius:8px}
+/* filters: the switch keeps its own width, pills answer to the pointer and scroll sideways on phones */
+.page>.seg{justify-self:start}
+.pill{transition:background .15s,color .15s,transform .12s} .pill:active{transform:scale(.97)} .main .pill:hover{background:var(--bg3);color:var(--ink);text-decoration:none} .main .pill.on:hover{background:var(--ink);color:var(--bg)}
+.subnav::-webkit-scrollbar,.pill-row::-webkit-scrollbar{display:none}
+@media (max-width:640px){.page>.pill-row{flex-wrap:nowrap;min-width:0;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--pad)*-1);padding-inline:var(--pad);padding-block:2px} .page>.pill-row .pill{flex:none}}
+/* news */
+.story>img{border-radius:var(--r2);aspect-ratio:16/9;object-fit:cover} .story>.xs.mut{margin-top:10px}
+/* dialogs: a short rise, room for the close button, a sheet from the bottom on phones */
+.modal .box{max-height:92dvh} .modal.show .box{animation:rise .22s cubic-bezier(.2,.7,.2,1) both} .modal .x{right:auto;inset-inline-end:12px}
+.modal .box>h3,.modal .box>.stack>h3:first-child{padding-inline-end:40px} .modal .box>.stack>h3:first-child{margin:0} .modal .box>.stack{gap:14px} .modal .box>.stack>.row:last-child{margin-top:4px}
+@media (max-width:520px){.modal{align-items:flex-end;padding:8px} .modal .box{padding:20px 16px calc(16px + env(safe-area-inset-bottom));border-radius:var(--r) var(--r) var(--r2) var(--r2)} .modal .box>.stack>.row:last-child>.btn{flex:1}}
+/* notifications: scrolls inside itself, unread rows carry a dot */
+.pop{max-height:min(70dvh,520px);overflow:auto;overscroll-behavior:contain;border-radius:var(--r);padding:8px;scrollbar-width:thin} .pop.show{animation:rise .18s cubic-bezier(.2,.7,.2,1)}
+.main .pop .item{background:none;padding:10px;align-items:flex-start} .pop .item+.item{margin-top:2px} .main .pop a.item:hover,.main .pop .item.un{background:var(--cyan-tint)}
+:root[data-theme="dark"] .main .pop .item{background:none} :root[data-theme="dark"] .main .pop a.item:hover,:root[data-theme="dark"] .main .pop .item.un{background:var(--cyan-tint)}
+.pop .item.un .t::before{content:"";display:inline-block;width:8px;height:8px;margin-inline-end:6px;border-radius:50%;background:var(--cyan2)}
+@media (max-width:520px){.pop,[dir="rtl"] .pop{position:fixed;inset:68px 8px auto 8px;width:auto}}
+/* calendar: drawn arrows that mirror in Arabic, hover only where there is something to open */
+[dir="rtl"] .calwrap .ib .i{transform:scaleX(-1)} .cal-m{min-width:9ch;text-align:center;font-size:18px}
+.cal .d:hover{background:var(--well,var(--bg2))} .cal .d.o:hover{background:none} .cal .d.today:hover,.cal .d:has(.ev):hover{background:var(--cyan-tint)}
+.cal .ev{transition:filter .15s} .cal .ev:hover{filter:brightness(.95)}
+@media (max-width:560px){.calwrap #ics{width:100%}}
+/* goals: past terms open and close like the rest of the cards */
+details.card>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;font-family:var(--head);font-size:17px;transition:color .15s} details.card>summary::-webkit-details-marker{display:none}
+details.card>summary::after{content:"";flex:none;width:8px;height:8px;margin-inline:4px;border-inline-end:2px solid var(--mute);border-block-end:2px solid var(--mute);transform:rotate(45deg);transition:transform .2s} details.card[open]>summary::after{transform:rotate(-135deg)} details.card>summary:hover{color:var(--cyan-text)}
+.goal .hd{margin-bottom:10px} .goal h3{font-size:18px;margin:0}
+/* settings: one readable column, each preference on its own ruled row */
+.col{width:100%;max-width:760px;gap:16px} .col .card p,.col .card .sm.mut{max-width:68ch}
+.col .card>.stack>.row.between{padding-block:10px;border-top:1px solid var(--line);flex-wrap:nowrap;align-items:center} .col .card>.stack>.row.between:first-child{border-top:0;padding-top:0} .col .card>.stack>.row.between:last-child{padding-bottom:0} .col .card>.stack>.row.between>div:first-child{min-width:0}
+@media (max-width:640px){.col .card>.stack>.row.between{flex-wrap:wrap}}
+/* houses: readable names with a colour dot, a podium that fits a phone */
+.btn[class*="house-"]::before{content:"";flex:none;width:10px;height:10px;border-radius:50%;background:var(--hc)} .btn.ghost[class*="house-"]:hover,:root[data-theme="dark"] .btn.ghost[class*="house-"]:hover{background:color-mix(in srgb,var(--hc) 14%,transparent)}
+.pod-n{font-size:14px;line-height:1.25}
+@media (max-width:520px){.podium{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:16px} .pod-w{height:110px}}
+/* phones: grids that fit 320px, no zoom on focus, nothing hidden under the Feedback button or the home indicator */
+.tiles{grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr))} .tiles.sm{grid-template-columns:repeat(auto-fill,minmax(min(100%,190px),1fr))} .tickets{grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr))} .acts{grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr))} .clubs{grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr))}
+@media (max-width:420px){.tk-d{width:76px} .tk-d b{font-size:26px}}
+@media (max-width:760px){:where(.shell,.modal) .in:not(.big){font-size:16px}}
+@media (max-width:640px){.shell .page{padding-bottom:calc(84px + env(safe-area-inset-bottom))}}
+.toast{bottom:calc(24px + env(safe-area-inset-bottom))} .fab-fb{bottom:calc(18px + env(safe-area-inset-bottom))} @media (max-width:640px){.fab-fb{bottom:calc(14px + env(safe-area-inset-bottom))}}
+/* Arabic: hover nudges and the collapsed-menu count follow the reading direction */
+[dir="rtl"] .item.click:hover,[dir="rtl"] a.item:hover,[dir="rtl"] .side a.nl:hover{transform:translateX(-2px)}
+@media (min-width:981px){.shell.mini .side a.nl .n{right:auto;inset-inline-end:6px}}
+
+/* ---- staff portal and parent page polish pass: headers, tables, dialogs, forms, states ---- */
+/* sign-out sits on the black menu, so it gets the menu's own grey and hover */
+.side .ib{color:#c9d2d4} .side .ib:hover{background:rgba(255,255,255,.12);color:#fff}
+.pop{color:var(--ink)} .topbar a.ib[href="#/search"]{margin-inline-start:auto}
+/* page headers: one markup, title and line on the left with a readable measure, actions on the right, full-width buttons on phones */
+.shell .page-lead h2{font-size:clamp(24px,2.6vw,32px);line-height:1.15} .page-lead a.back+h2{margin-top:4px}
+.page-lead>div:first-child{flex:1 1 320px;min-width:0} .page-lead>div:first-child>.sm.mut{max-width:72ch}
+.page-lead>.row{flex:0 1 auto;max-width:100%;flex-wrap:wrap} .page-lead>.btn,.page-lead>.badge{flex:none}
+@media (max-width:520px){.page-lead>.row{width:100%} .page-lead>.row>.btn,.page-lead>.btn{flex:1 1 auto}}
+/* long copy in a card keeps to a line you can read on a wide screen */
+.main .card>p,.main .card>.stack>p,.main .card .fb-body,.main .card>.pre{max-width:75ch} .main .card>.sm.mut,.main .card>.stack>.sm.mut{max-width:84ch}
+/* confirmations readable on their fill */
+.toast.ok{background:#157a41} .toast.bad{background:#b42c2c} .toast{z-index:220}
+/* tables: headings on one line, no rule against the card edge, quiet row buttons, an empty row that looks intended */
+.tb th{white-space:nowrap;font-weight:700} .tb th,.tb td{text-align:start} .tb td{line-height:1.35} .tb tbody tr:last-child td{border-bottom:0}
+.main .tb th{background:var(--well,var(--bg2))} .tb tbody tr:hover td{background:var(--well,var(--bg2))}
+.tb td.mut[colspan]{padding:22px;text-align:center} .tb tr:has(>td[colspan]):hover td{background:none}
+.main .tb .btn.sm.ghost,.main .item .btn.sm.ghost,:root[data-theme="dark"] .main .tb .btn.sm.ghost,:root[data-theme="dark"] .main .item .btn.sm.ghost{border-color:transparent;background:color-mix(in srgb,var(--ink) 7%,transparent)}
+.main .tb .btn.sm.ghost:hover,.main .item .btn.sm.ghost:hover,:root[data-theme="dark"] .main .tb .btn.sm.ghost:hover,:root[data-theme="dark"] .main .item .btn.sm.ghost:hover{background:color-mix(in srgb,var(--ink) 14%,transparent)}
+.main .tb .in{min-height:34px;padding-block:6px}
+/* on phones the name stays put while the other columns scroll */
+@media (max-width:760px){body:not(.glass) .main .tbw .tb :is(th,td):first-child{position:sticky;inset-inline-start:0;z-index:1} body:not(.glass) .main .tbw .tb td:first-child{background:#fff} :root[data-theme="dark"] body:not(.glass) .main .tbw .tb td:first-child{background:var(--bg2)} body:not(.glass) .main .tbw .tb tbody tr:hover td:first-child:not([colspan]){background:var(--well,var(--bg2))}}
+:root[data-theme="dark"] .heat td.h3{color:#fff}
+:root[data-theme="dark"] .modal .item,:root[data-theme="dark"] .picker .item,:root[data-theme="dark"] .parent .item{background:var(--bg3)}
+/* forms: fields line up with buttons, every tick box and radio the same size, disabled looks disabled */
+:is(.shell,.modal,.parent,.picker) .in{line-height:1.35;min-height:42px} :is(.shell,.modal,.parent,.picker) textarea.in{line-height:1.5}
+:is(.shell,.modal,.parent,.picker) input:is([type=checkbox],[type=radio]){width:18px;height:18px;flex:none}
+.in:disabled,:root[data-theme="dark"] .in:disabled{background:var(--bg3);color:var(--mute);cursor:not-allowed}
+.modal details>summary{padding:6px 0;font-weight:700;cursor:pointer} .modal details[open]>summary{margin-bottom:6px}
+button.item{width:100%;font:inherit;text-align:start;cursor:pointer}
+/* small controls: disabled, hover and pressed states; tab strips scroll without a scrollbar */
+.ib:disabled,.ib:disabled:hover,.ib:disabled:active{opacity:.35;cursor:not-allowed;background:none;transform:none}
+.tabs{scrollbar-width:none} .tabs::-webkit-scrollbar{display:none} .tabs button{border-radius:8px 8px 0 0}
+.pill{display:inline-flex;align-items:center;gap:4px} .ib.xs{width:24px;height:24px;margin-inline:2px -6px} .ib.xs .i{width:14px;height:14px}
+.ib.step{background:var(--bg3)} .ib.step:hover{background:var(--line)} [dir="rtl"] .ib.step .i{transform:scaleX(-1)}
+@media (pointer:coarse){:is(.shell,.modal,.parent) .btn.sm{min-height:38px;padding-inline:14px} .main .ib,.modal .ib{width:42px;height:42px} .tabs button,.seg button{min-height:40px} .main .pill,.modal .pill{min-height:36px} .main .ib.xs,.modal .ib.xs{width:32px;height:32px}}
+/* dialogs: the title clears the close button, Save stays in reach in long editors */
+.modal .box{--mp:24px;--mb:24px;overscroll-behavior:contain;scroll-padding-bottom:84px} .modal .box>.stack>.row.between:first-child{padding-inline-end:40px}
+@media (max-width:520px){.modal .box{--mp:16px;--mb:calc(16px + env(safe-area-inset-bottom))}}
+.modal .box>.stack>.row:last-child:has(>.btn.cyan){position:sticky;bottom:0;z-index:2;margin:4px calc(var(--mp)*-1) calc(var(--mb)*-1);padding:12px var(--mp) var(--mb);background:#fff;border-top:1px solid var(--line)}
+:root[data-theme="dark"] .modal .box>.stack>.row:last-child:has(>.btn.cyan){background:var(--bg2)}
+body.glass .modal .box>.stack>.row:last-child:has(>.btn.cyan){position:static;margin:4px 0 0;padding:0;background:none;border:0}
+/* the question-bank picker floats above the dialog, clear of the toast, on the reading side */
+.picker{position:fixed;inset-inline-end:16px;bottom:calc(16px + env(safe-area-inset-bottom));z-index:210;width:min(520px,calc(100vw - 32px));max-height:70dvh;overflow:auto;overscroll-behavior:contain;border-color:var(--line2);box-shadow:var(--sh2);animation:rise .2s cubic-bezier(.2,.7,.2,1)} .picker .hd h4{margin:0}
+/* empty and loading states */
+.page>.empty{padding:40px 24px} .empty .sm:not(.btn){max-width:46ch;margin-inline:auto} .page>:is(.grid,.list,.stack,.tiles,.acts,.clubs,.tickets):empty{display:none}
+.page>*>.skel:only-child{height:220px;border-radius:var(--r)}
+.cal:empty{min-height:320px;border-radius:12px;background:linear-gradient(90deg,var(--bg3) 25%,var(--bg2) 50%,var(--bg3) 75%) 0 0/200% 100%;animation:sk 1.2s infinite} .card>.cal{margin-top:12px} .card>.row.between:has(.ib.step){row-gap:10px}
+/* numbers: two to a row on phones, linked tiles lift, alert tiles show their state */
+@media (max-width:520px){.grid:is(.g3,.g4):has(>.card.stat){grid-template-columns:repeat(2,minmax(0,1fr));gap:10px} .grid:has(>.card.stat) .stat:not(.kpi) .n{font-size:clamp(22px,7vw,30px)}}
+.stat .n{overflow-wrap:anywhere}
+.main a.card{color:inherit;text-decoration:none;transition:transform .18s cubic-bezier(.2,.7,.2,1),box-shadow .18s} .main a.card:hover{text-decoration:none;box-shadow:var(--sh2);transform:translateY(-2px)} .main a.card:active{transform:scale(.99)}
+.card.stat.warn,.main .card.stat.warn{background:var(--warn-soft)} .card.stat.warn .n{color:var(--warn-text)}
+/* work board: the state of a card shows on its edge, not only in its badge */
+.bcard{border-inline-start:3px solid transparent} .bcard.draft{border-inline-start-color:var(--cyan)} .bcard.done{border-inline-start-color:var(--ok)} .bcard .bar{height:6px} .bcol>h4 .badge{background:var(--bg)}
+/* admin links: three fields in a row on a desk, stacked with the remove button beside the name on a phone */
+.link-row{display:grid;grid-template-columns:1fr 1.4fr 1.6fr auto;gap:8px;align-items:center}
+@media (max-width:700px){.link-row{grid-template-columns:minmax(0,1fr) auto;padding-bottom:12px;border-bottom:1px solid var(--line)} .link-row:last-child{padding-bottom:0;border-bottom:0} .link-row .in{grid-column:1} .link-row .ib{grid-column:2;grid-row:1}}
+.modal .tbw>.rub{min-width:600px} .rub td.pick{transition:background .12s} .rub td.on{font-weight:600}
+/* seating plan and heatmap */
+.seat .s{transition:border-color .15s,transform .15s} .seat .s:hover{border-color:var(--cyan2);transform:translateY(-1px)} .seat .s.sel{outline:3px solid var(--focus);outline-offset:2px}
+.card.stack>.row.between>.row.xs{gap:6px} .heat td:hover{outline:2px solid var(--line2);outline-offset:1px}
+/* parent summary: a phone-width column, the child's name as the page title, answers easy to tap */
+.wrap.parent{max-width:860px;padding:28px 0 calc(60px + env(safe-area-inset-bottom))} .parent h1{font-size:clamp(28px,5vw,36px);margin:2px 0 4px} .parent h2{font-size:22px;margin:8px 0 0}
+.parent .card h3{font-size:18px} .parent .card .hd{flex-wrap:wrap} .parent .item{align-items:flex-start} .parent .item .badge{margin-top:2px;flex:none} .parent .slip>div:not([class]){max-width:68ch}
+@media (max-width:520px){.parent .slip form .row .btn{flex:1 1 auto;min-height:46px} .parent .slip fieldset.choice{flex-direction:column}}

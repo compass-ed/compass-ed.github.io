@@ -4,7 +4,7 @@
   const SUBJ = [["Maths"], ["English"], ["Science"], ["Geography"], ["History"], ["Computing"], ["Art & Design"], ["Music"], ["Languages"], ["PE & Wellbeing"], ["Drama"]];
   SUBJ.forEach((s, i) => $("#uSubj").append(CE.h("option", { value: i }, s[0])));
   const tabs = { in: [$("#tabIn"), $("#fIn")], code: [$("#tabCode"), $("#fCode")], up: [$("#tabUp"), $("#fUp")] };
-  const show = k => { Object.entries(tabs).forEach(([n, [t, f]]) => { t.classList.toggle("on", n === k); f.classList.toggle("hide", n !== k); }); if (k === "code") $("#cCode").focus(); };
+  const show = k => { Object.entries(tabs).forEach(([n, [t, f]]) => { t.classList.toggle("on", n === k); t.setAttribute("aria-selected", n === k); f.classList.toggle("hide", n !== k); }); if (k === "code") $("#cCode").focus(); };
   $("#tabIn").onclick = () => show("in"); $("#tabCode").onclick = () => show("code"); $("#tabUp").onclick = () => show("up");
   $("#toCode").onclick = $("#toCode2").onclick = e => { e.preventDefault(); show("code"); };
   show(qs.get("signup") === "1" ? "up" : qs.get("code") != null ? "code" : "in");

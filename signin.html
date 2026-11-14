@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="assets/app.css">
 <style>
   .si{min-height:calc(100dvh - var(--nav));display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-  .si .art{position:relative;overflow:hidden;isolation:isolate;background:#000;z-index:0;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px;isolation:isolate}
+  .si .art{position:relative;overflow:hidden;isolation:isolate;background:#000;z-index:0;color:#fff;padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;justify-content:flex-end;gap:14px}
   .si .art::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.72) 100%);z-index:-1}
   .si .art .brand-lg{position:relative;display:flex;align-items:center;gap:12px;font-family:var(--head);font-weight:800;font-size:26px;letter-spacing:-.02em;color:#fff;margin-bottom:auto}
   .si .art .brand-lg img{width:44px;height:44px;display:block}
@@ -28,11 +28,17 @@
   .si .seg button{width:100%}
   .code-in{font-family:var(--mono);font-size:30px;letter-spacing:.18em;text-align:center;padding:16px 12px;font-weight:500}
   .legal{font-size:12px;color:var(--mute);line-height:1.5}
-  .legal a{color:var(--ink2)}
+  .legal a{color:var(--ink2);text-decoration:underline}
   .steps{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mute);font-weight:600}
   .steps i{width:22px;height:22px;border-radius:50%;display:inline-grid;place-items:center;background:var(--bg3);font-style:normal}
-  .steps i.on{background:var(--ink);color:#fff}
+  .steps i.on{background:var(--ink);color:var(--bg)}
   @media (max-width:900px){.si{grid-template-columns:1fr}.si .art{min-height:220px;padding:24px 20px;justify-content:flex-end}.si .art .brand-lg{margin-bottom:28px;font-size:22px}.si .art .brand-lg img{width:34px;height:34px}.si .art p{display:none}.si .art h2{font-size:24px}}
+  .si .box h2{font-size:clamp(24px,2.2vw,30px);margin:0}
+  .si .seg button{padding:8px 6px;font-size:14px;line-height:1.2}
+  .si form .btn.w:disabled{opacity:.7}
+  .si form .btn.w:disabled::after{content:"";width:14px;height:14px;border:2px solid currentColor;border-inline-end-color:transparent;border-radius:50%;animation:siSpin .8s linear infinite}
+  @keyframes siSpin{to{transform:rotate(360deg)}}
+  @media (max-width:900px){.si .art{min-height:0;padding:20px 20px 18px;gap:10px}.si-cards,.si .art .brand-lg{display:none}.si .form{padding:20px 16px 32px;place-items:start center}}
 </style>
 </head>
 <body>
@@ -63,7 +69,7 @@
         <h2>Sign in</h2>
         <label class="f">Username<input class="in" id="iUser" autocomplete="username" autocapitalize="off" required></label>
         <label class="f">Password<input class="in" id="iPw" type="password" autocomplete="current-password" required></label>
-        <div class="err" id="iErr"></div>
+        <div class="err" id="iErr" role="alert"></div>
         <button class="btn cyan lg w" id="iBtn" type="submit">Sign in</button>
         <p class="help">Forgotten your password? Ask a teacher for a login code, then use the <a href="#" id="toCode">Use a code</a> tab.</p>
       </form>
@@ -81,7 +87,7 @@
           <label class="chk"><input type="checkbox" id="cTerms"><span>I accept the <a href="terms.html" target="_blank">Terms of Service</a> and have read the <a href="privacy.html" target="_blank">Privacy Policy</a>.</span></label>
           <label class="chk" id="cParentWrap"><input type="checkbox" id="cParent"><span class="sm">I am under 13 and a parent or carer has agreed (<a href="consent.html" target="_blank">consent form</a>).</span></label>
         </div>
-        <div class="err" id="cErr"></div>
+        <div class="err" id="cErr" role="alert"></div>
         <button class="btn cyan lg w" id="cBtn" type="submit">Continue</button>
       </form>
 
@@ -98,7 +104,7 @@
         </div>
         <label class="f hide" id="teacherFields">Main subject<select class="in" id="uSubj"><option value="-1">All subjects</option></select></label>
         <label class="chk"><input type="checkbox" id="uTerms"><span>I accept the <a href="terms.html" target="_blank">Terms of Service</a> and have read the <a href="privacy.html" target="_blank">Privacy Policy</a>.</span></label>
-        <div class="err" id="uErr"></div>
+        <div class="err" id="uErr" role="alert"></div>
         <button class="btn lg w" id="uBtn" type="submit">Create account</button>
         <p class="help">Have a login code instead? Use the <a href="#" id="toCode2">Use a code</a> tab.</p>
       </form>

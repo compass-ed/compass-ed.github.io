@@ -2,6 +2,10 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.5.1 — 14 November 2026
+- **Polish pass across the whole site.** Public pages: clearer keyboard focus, a phone menu that closes on tap or Escape, heroes that clear the floating bar, readable badges, a shorter sign-in panel on phones with a spinner on submit. Portals: distinct dark-mode surfaces, card and table hierarchy, consistent page headers on every staff view, sticky Save rows in long editors, phone-friendly grids, dialogs and tables, and Arabic layout fixes. Parent page and 404 tidied.
+- **Compass Dash keeps its classic look, with finer finish.** Consistent form fields, bars and radii, steadier numbers, proper dialog rows, hover lifts only where a device hovers, larger touch targets, and bars that clear the phone home indicator.
+
 ## v3.5 — 9 November 2026
 - **Compass Dash topics as homework.** Staff signed in to Compass Ed get a "Set as homework" button on every Compass Dash topic page: pick one of your classes and a due date. Students see it in Schoolwork with "Open in Compass Dash", which opens that topic. Their best topic-test score before the due date goes straight into the mark book, already marked; after the deadline only a first, late attempt counts. Teachers can still open a result to add feedback or change the score. Needs `supabase/compassed-v2.10.sql`.
 - **A weekly summary for parents.** The private parent page can turn on a Friday note on that phone: work handed in, marks and their average, house points and what is due next week, in English, French or Arabic. It goes through the same `ed-remind` sender as deadline reminders (redeploy it after running the v2.10 SQL). When a child makes a new parent link, the old link's phones stop getting it. On iPhone, add the parent page to the Home Screen first; it opens the parent's own link from there. Signing out of a portal on the same phone, or switching one child's summary off, no longer stops the others.

@@ -1,7 +1,14 @@
 /* Public pages: menu, year, signed-in shortcut, and the live campus data on the home page. */
 (function () {
   const b = document.querySelector("[data-burger]"), n = document.getElementById("pubnav");
-  if (b && n) b.addEventListener("click", () => n.classList.toggle("open"));
+  if (b && n) {
+    const set = o => { n.classList.toggle("open", o); b.setAttribute("aria-expanded", o); };
+    b.setAttribute("aria-controls", "pubnav"); set(false);
+    b.addEventListener("click", () => set(!n.classList.contains("open")));
+    n.addEventListener("click", e => { if (e.target.closest("a")) set(false); });
+    addEventListener("keydown", e => { if (e.key === "Escape" && n.classList.contains("open")) { set(false); b.focus(); } });
+    document.addEventListener("click", e => { if (!e.target.closest(".nav")) set(false); });
+  }
   // Compass Dash: inside your portal when signed in (its menu stays in reach), else on its own page
   if (n && !n.querySelector("a[data-dash]")) { const me = CE.auth && CE.auth.get(), a = CE.h("a", { href: me && me.me ? (me.me.role === "student" ? "student/" : "teacher/") + "#/dash" : "dash/", "data-dash": "" }, "Compass Dash"), ab = n.querySelector('a[href="about.html"]'); ab ? n.insertBefore(a, ab) : n.append(a); }
   // longer French or Arabic labels can overflow the bar: first drop "Create account" (also on the sign-in page), then fold the links into the menu button, as on a phone;
