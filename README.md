@@ -19,6 +19,7 @@ assets/tx.js          Page-transition handshake, loaded first in every <head>
 assets/i18n.js        Languages (English, French, Arabic right to left): picks the language and swaps the text on screen
 assets/i18n/fr.js ar.js   The French and Arabic dictionaries (exact text, sentences with links, and rules for text with numbers)
 dash/                 Compass Dash, the KS3 revision app, now part of Compass Ed (opens inside both portals at #/dash). One page, index.html, holding its styles, content and game; it shares the look of the portals through the tokens at the top and the "Campus Hub style" block
+quest/index.html      Compass Quest, the auto-marked work of every subject (one question at a time, retry what you missed; staff see class completion). Own page and shell over the same session and RPCs, no SQL   -> assets/quest.js (retry rules checked by tools/quest-check.js)
 assets/public.js      Shared bits of the public pages (nav, print)   assets/signin.js   The sign-in page
 assets/app.css        Design system              assets/icons.js  Hand-drawn SVG icon set
 assets/core.js        API, sessions, router, block renderer, calendar + .ics export

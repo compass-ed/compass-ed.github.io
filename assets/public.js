@@ -10,7 +10,7 @@
     document.addEventListener("click", e => { if (!e.target.closest(".nav")) set(false); });
   }
   // Compass Dash: inside your portal when signed in (its menu stays in reach), else on its own page
-  if (n && !n.querySelector("a[data-dash]")) { const me = CE.auth && CE.auth.get(), a = CE.h("a", { href: me && me.me ? (me.me.role === "student" ? "student/" : "teacher/") + "#/dash" : "dash/", "data-dash": "" }, "Compass Dash"), ab = n.querySelector('a[href="about.html"]'); ab ? n.insertBefore(a, ab) : n.append(a); }
+  if (n && !n.querySelector("a[data-dash]")) { const me = CE.auth && CE.auth.get(), a = CE.h("a", { href: me && me.me ? (me.me.role === "student" ? "student/" : "teacher/") + "#/dash" : "dash/", "data-dash": "" }, "Compass Dash"), ab = n.querySelector('a[href="about.html"]'); ab ? n.insertBefore(a, ab) : n.append(a); a.after(CE.h("a", { href: "quest/", "data-quest": "" }, "Compass Quest")); }
   // longer French or Arabic labels can overflow the bar: first drop "Create account" (also on the sign-in page), then fold the links into the menu button, as on a phone;
   // on the narrowest phones the wordmark goes too (the logo stays) and the button label is trimmed
   const bar = n && n.closest(".nav"), row = bar && bar.querySelector(".wrap");

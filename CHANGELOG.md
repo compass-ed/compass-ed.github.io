@@ -2,6 +2,11 @@
 
 Each new version from v2.2 onwards ships with an animated preview in `assets/versions/` and an entry on the site's Versions page.
 
+## v3.6 — 15 November 2026
+- **Compass Quest, a new sub-site at `quest/`.** The auto-marked work of every subject in one place: quiz assignments, Compass Dash homework, the next checkpoints and practice quizzes in each subject, and the review cards due today, grouped by subject with a completion ring each. The player shows one question at a time with large answers and keys 1 to 4; the server marks each round, the student reads why, then retries only the questions they missed (right answers are kept and the full set is sent again, so the best score counts as before). Timers and opening and closing times are respected. Review and Progress pages use the same data as Compass Ed.
+- **Staff see class completion there.** Each quiz or Compass Dash task per class with done out of total and the average, linking to the assignment in the staff portal, where work is still set.
+- **One sign-in, nothing to run.** Compass Quest uses the Compass Ed session and the existing database functions: no SQL. It is linked from both portal menus, quiz and Compass Dash assignments, and the public navigation. Written work is still handed in in Compass Ed.
+
 ## v3.5.1 — 14 November 2026
 - **Polish pass across the whole site.** Public pages: clearer keyboard focus, a phone menu that closes on tap or Escape, heroes that clear the floating bar, readable badges, a shorter sign-in panel on phones with a spinner on submit. Portals: distinct dark-mode surfaces, card and table hierarchy, consistent page headers on every staff view, sticky Save rows in long editors, phone-friendly grids, dialogs and tables, and Arabic layout fixes. Parent page and 404 tidied.
 - **Compass Dash keeps its classic look, with finer finish.** Consistent form fields, bars and radii, steadier numbers, proper dialog rows, hover lifts only where a device hovers, larger touch targets, and bars that clear the phone home indicator.

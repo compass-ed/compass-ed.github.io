@@ -10,7 +10,7 @@
     demo = !!C.allowDemo && (local || localStorage.getItem("ce_demo") === "1");
   } catch (e) { demo = !!C.allowDemo && local; }
 
-  const ROOT = /\/(student|teacher)\/[^/]*$/.test(location.pathname) ? "../" : "";
+  const ROOT = /\/(student|teacher|quest)\/[^/]*$/.test(location.pathname) ? "../" : "";
   const CE = window.CE = Object.assign(window.CE || {}, { cfg: C, demo, subjects: [], categories: [], me: null, root: ROOT, PORTAL: { student: ROOT + "student/", teacher: ROOT + "teacher/" } });
 
   /* ---------- API ---------- */
@@ -93,7 +93,7 @@
   /* Load the profile (and lists) for a portal page. Redirects to sign-in when there is no session or the wrong role. */
   CE.requireRole = async function (roles) {
     const s = CE.auth.get();
-    if (!s) { location.replace(ROOT + "signin.html?next=" + encodeURIComponent((/\/teacher\//.test(location.pathname) ? "teacher" : "student") + location.hash)); return null; }
+    if (!s) { location.replace(ROOT + "signin.html?next=" + encodeURIComponent((/\/quest\//.test(location.pathname) ? "quest" : /\/teacher\//.test(location.pathname) ? "teacher" : "student") + location.hash)); return null; }
     let me = s.me;
     try { const r = await CE.capi("ed_me"); if (r.ok) { me = r; CE.auth.set(s.tok, r); } } catch (e) { if (e.message === "bad_key") return null; }
     if (!roles.includes(me.role)) { location.replace(me.role === "student" ? CE.PORTAL.student : CE.PORTAL.teacher); return null; }
@@ -137,7 +137,7 @@
   CE.esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   CE.h = (tag, attrs, ...kids) => {
     const el = document.createElement(tag);
-    for (const k in attrs || {}) { const v = attrs[k]; if (v == null || v === false) continue; if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v); else if (k === "html") el.innerHTML = v; else if (k === "style" && typeof v === "object") Object.assign(el.style, v); else el.setAttribute(k, v === true ? "" : v); }
+    for (const k in attrs || {}) { const v = attrs[k]; if (v == null || v === false) continue; if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v); else if (k === "html") el.innerHTML = v; else if (k === "style" && typeof v === "object") { for (const s in v) { if (s[0] === "-") el.style.setProperty(s, v[s]); else el.style[s] = v[s]; } } else el.setAttribute(k, v === true ? "" : v); }
     for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(k));
     return el;
   };
@@ -647,7 +647,7 @@
     (CE.jump || []).forEach(([l, href]) => add(CE.t(l), href));
     const ph = CE.t("Search or jump to…"), inp = h("input", { class: "pal-in", type: "search", placeholder: ph, "aria-label": ph }), list = h("div", { class: "pal-l" }), d = h("dialog", { id: "pal", class: "pal" }, h("div", { class: "pal-h" }, CE.icon("explore"), inp, h("kbd", { class: "kbd" }, "esc")), list);
     let sel = 0, rows = [];
-    const go = r => { d.close(); location.hash = r.href; };
+    const go = r => { d.close(); r.href[0] === "#" ? location.hash = r.href : CE.go(r.href); };
     const draw = () => { const raw = inp.value.trim(), q = raw.toLowerCase(); rows = all.filter(r => !q || r.label.toLowerCase().includes(q)); if (q.length > 1) rows.push({ label: CE.t("Search everything for") + " “" + raw + "”", href: "#/search?q=" + encodeURIComponent(raw) }); sel = Math.min(sel, Math.max(0, rows.length - 1)); list.replaceChildren(...rows.map((r, i) => h("a", { class: "item" + (i === sel ? " on" : ""), href: r.href, onclick: e => { e.preventDefault(); go(r); } }, h("div", { class: "ico sm" }, r.ico ? r.ico.cloneNode(true) : CE.icon("compass")), h("div", { class: "t sm" }, r.label)))); };
     inp.addEventListener("input", () => { sel = 0; draw(); });
     d.addEventListener("keydown", e => { if ((e.key === "ArrowDown" || e.key === "ArrowUp") && rows.length) { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : -1) + rows.length) % rows.length; draw(); list.children[sel].scrollIntoView({ block: "nearest" }); } else if (e.key === "Enter" && rows[sel]) { e.preventDefault(); go(rows[sel]); } });
