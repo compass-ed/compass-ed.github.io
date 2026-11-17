@@ -30,7 +30,7 @@
       if (!r.notifs.length) pop.append(h("div", { class: "empty" }, "Nothing yet."));
       r.notifs.slice(0, 12).forEach(n => pop.append(h("a", { class: "item" + (n.read ? "" : " un"), href: n.link || "#/", onclick: async () => { pop.classList.remove("show"); if (!n.read) { await CE.capi("ed_notif_read", { p_id: n.id }); S.home = null; loadBell(); } } },
         h("div", { class: "ico sm" }, CE.icon({ grade: "checkcircle", assign: "pencil", announce: "megaphone", event: "calendar", playlist: "book", competition: "trophy", points: "cup", club: "users", peer: "eye" }[n.kind] || "bell")), h("div", { class: "grow" }, h("div", { class: "t sm" }, n.title), h("div", { class: "s xs" }, n.body ? n.body + " · " : "", D.ago(n.created))))));
-      const due = r.assigns.filter(a => a.status === "todo" || a.status === "draft").length + (r.review_due ? 1 : 0); $("#nDue").textContent = due; $("#nDue").classList.toggle("hide", !due);
+      const due = r.assigns.filter(a => a.status === "todo" || a.status === "draft").length; $("#nDue").textContent = due; $("#nDue").classList.toggle("hide", !due);
       $("#nAnn").textContent = r.unread_anns; $("#nAnn").classList.toggle("hide", !r.unread_anns);
     } catch (e) {}
   }
@@ -390,8 +390,8 @@
       const g = h("div", { class: "grid split" }); page.append(g);
       const left = h("div", { class: "stack" }), right = h("div", { class: "stack" }); g.append(left, right);
       left.append(card("Instructions", h("div", { html: CE.rich(a.instr || "No instructions given.") }), a.instr ? CE.readAloud(() => a.title + "\n" + CE.plain(CE.rich(a.instr))) : null));
-      if (a.kind === "quiz" && a.quiz_id) left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? "This is a quiz assignment." : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Your best score counts. You can retake it until the due date.")), h("div", { class: "row" }, h("a", { class: "btn cyan", href: "#/quiz/" + a.quiz_id + "?assign=" + a.id }, st === "todo" ? "Start quiz" : "Retake quiz"), h("a", { class: "btn ghost", href: "../quest/#/play/" + a.quiz_id + "?assign=" + a.id }, "Do it in Compass Quest"))));
-      else if (a.kind === "dash") left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? a.dash_topic : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Learn and practise the topic in Compass Dash, then take its test. Your best score before the due date counts.")), h("div", { class: "row" }, h("a", { class: "btn cyan", href: "#/dash?s=" + a.dash_s + "&t=" + a.dash_t }, "Open in Compass Dash"), h("a", { class: "btn ghost", href: "../quest/" }, "Do it in Compass Quest"))));
+      if (a.kind === "quiz" && a.quiz_id) left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? "This is a quiz assignment." : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Your best score counts. You can retake it until the due date.")), h("a", { class: "btn cyan", href: "../quest/#/play/" + a.quiz_id + "?assign=" + a.id + "&back=assignment/" + a.id }, st === "todo" ? "Start quiz" : "Retake quiz")));
+      else if (a.kind === "dash") left.append(h("div", { class: "card tint row between" }, h("div", {}, h("div", { class: "b" }, st === "todo" ? a.dash_topic : "Best score: " + (a.sub.score != null ? a.sub.score + "%" : "–")), h("div", { class: "sm mut" }, "Learn and practise the topic in Compass Dash, then take its test. Your best score before the due date counts.")), h("a", { class: "btn cyan", href: "#/dash?s=" + a.dash_s + "&t=" + a.dash_t }, "Open in Compass Dash")));
       else {
         const body = h("textarea", { class: "in", placeholder: "Type your answer, working or notes here. You can save a draft and come back.", style: { minHeight: "220px" } }, a.sub ? a.sub.body : "");
         const links = h("input", { class: "in", placeholder: "Links to files or photos, separated by spaces", value: a.sub ? (a.sub.links || []).join(" ") : "" });
@@ -638,14 +638,14 @@
   }
 
   const GROUPS = [
-    [["Campus Hub", "#/campus"], ["Student Voice", "#/voice"], ["Showcase", "#/showcase"], ["Culture & community", "#/community"], ["My ID", "#/id"]],
-    [["Activities", "#/explore", /^#\/(explore|activity)/], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"]],
-    [["Subjects", "#/subjects", /^#\/(subjects|subject|lesson|quiz)/], ["Assignments", "#/assignments", /^#\/assignment/], ["Review queue", "#/review"]],
-    [["Progress & badges", "#/progress"], ["Goals", "#/goals", /^#\/(goals|portfolio)/], ["House points", "#/house"]],
-    [["News", "#/news"], ["Announcements", "#/announcements"]],
-    [["Calendar", "#/calendar"], ["My day", "#/day"]]
+    [["Home", "#/"], ["My day", "#/day"], ["Calendar", "#/calendar"]],
+    [["Assignments", "#/assignments", /^#\/assignment/], ["Subjects", "#/subjects", /^#\/(subjects|subject|lesson|quiz)/]],
+    [["Announcements", "#/announcements"], ["News", "#/news"]],
+    [["Progress", "#/progress"], ["Goals", "#/goals"], ["Year portfolio", "#/portfolio", /^#\/portfolio/], ["House points", "#/house"]],
+    [["Campus", "#/campus"], ["Activities", "#/explore", /^#\/(explore|activity)/], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["Culture & community", "#/community"], ["Showcase", "#/showcase"], ["Student Voice", "#/voice"]],
+    [["Settings", "#/settings"], ["My ID", "#/id"]]
   ];
-  CE.jump = GROUPS.flat();
+  CE.jump = [...GROUPS.flat(), ["Review queue", "#/review"]];
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g || []); };
   addEventListener("hashchange", setSub); setSub();
   // reminders follow the language and time zone this device uses now
@@ -657,9 +657,9 @@
     { path: "/dash", handler: () => CE.dashPage(page) }, { path: "/voice", handler: voice }, { path: "/showcase", handler: showcase }, { path: "/community", handler: community }, { path: "/id", handler: idCard },
     { path: "/", handler: home }, { path: "/campus", handler: campusPage }, { path: "/explore", handler: explore }, { path: "/explore/:cat", handler: explore }, { path: "/activity/:id", handler: activity },
     { path: "/competitions", handler: competitions }, { path: "/competition/:id", handler: competition }, { path: "/news", handler: news },
-    { path: "/subjects", handler: subjects }, { path: "/subject/:id", handler: subject }, { path: "/lesson/:id", handler: lesson }, { path: "/quiz/:id", handler: quiz },
-    { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignment }, { path: "/review", handler: review }, { path: "/progress", handler: progress },
+    { path: "/subjects", handler: subjects }, { path: "/subject/:id", handler: subject }, { path: "/lesson/:id", handler: lesson }, { path: "/quiz/:id", handler: p => { const a = CE.q("assign"); location.replace("../quest/#/play/" + encodeURIComponent(p.id) + "?" + (a ? "assign=" + encodeURIComponent(a) + "&back=assignment/" + encodeURIComponent(a) : "back=subjects")); } },
+    { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignment }, { path: "/review", handler: () => location.replace("../quest/#/review") }, { path: "/progress", handler: progress },
     { path: "/calendar", handler: calendar }, { path: "/day", handler: myDay }, { path: "/goals", handler: goals }, { path: "/portfolio", handler: portfolio }, { path: "/portfolio/:ay", handler: portfolio }, { path: "/announcements", handler: announcements }, { path: "/settings", handler: settings }
-  ]);
+  ], home);
   loadBell();
 })();

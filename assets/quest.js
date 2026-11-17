@@ -18,7 +18,9 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
   $("#signout").onclick = CE.signOut;
   if (staff) $("#backEd").href = "../teacher/";
   if (CE.langSwitch && !$(".lang-sw")) $(".qtop").append(CE.langSwitch());
-  const TABS = staff ? [["Classes", "#/", "users"]] : [["My Quest", "#/", "flag"], ["Review", "#/review", "repeat"], ["Progress", "#/progress", "chart"]];
+  const TABS = staff ? [["Class completion", "#/", "users"]] : [["My Quest", "#/", "flag"], ["Review queue", "#/review", "repeat"]];
+  // ?back= from Compass Ed: a relative student-portal path only (allow-list stops open redirects)
+  const backTo = () => { const b = CE.q("back"); return b && /^[a-z]+(\/[\w-]+)?$/.test(b) ? { href: "../student/#/" + b, label: /^assignment\//.test(b) ? "Back to assignment" : "Back to Compass Ed" } : null; };
   $("#qnav").append(...TABS.map(([l, href, ic]) => h("a", { href }, CE.icon(ic), h("span", {}, l))));
   const title = (t, tab) => { document.title = t + " · Compass Quest"; document.body.classList.toggle("playing", tab === "play"); CE.$$("#qnav a").forEach(a => { const on = a.getAttribute("href") === (tab && tab !== "play" ? tab : "#/"); a.classList.toggle("on", on); on ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current"); }); };
   const ring = p => { const r = CE.ring(p); r.setAttribute("role", "img"); r.setAttribute("aria-label", p + "%"); if (p >= 100) r.classList.add("full"); return r; };
@@ -31,7 +33,7 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
     A.rows.forEach(a => {
       const best = a.sub && a.sub.score != null ? a.sub.score : null, t = { subj: a.subj, title: a.title, due: a.due, best, done: best != null };
       if (a.kind === "quiz" && a.quiz_id) { set.add(a.quiz_id); tasks.push(Object.assign(t, { tag: "Quiz", href: "#/play/" + a.quiz_id + "?assign=" + a.id })); }
-      else if (a.kind === "dash") tasks.push(Object.assign(t, { tag: "Compass Dash", note: a.dash_topic, ext: true, href: "../dash/" + (/^\d+$/.test(a.dash_s) && /^\d+$/.test(a.dash_t) ? "#/topic/" + a.dash_s + "/" + a.dash_t : "") }));
+      else if (a.kind === "dash") tasks.push(Object.assign(t, { tag: "Compass Dash", note: a.dash_topic, ext: true, href: "../student/#/dash" + (/^\d+$/.test(a.dash_s) && /^\d+$/.test(a.dash_t) ? "?s=" + a.dash_s + "&t=" + a.dash_t : "") }));
     });
     const shown = tasks.filter(t => !t.done || !t.due || new Date(t.due) > now - 7 * 864e5);   // finished work drops off a week after its due date
     const next = {};   // from the subjects you study: the next three unfinished quizzes or checkpoints in each, not the whole course
@@ -67,7 +69,7 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
     try {
       const r = await capi("ed_s_quiz", { p_id: +p.id }); if (!r.ok) return CE.fail(page, r);
       title(r.title, "play"); page.innerHTML = "";
-      const back = h("a", { class: "back", href: "#/" }, "← My Quest"), box = h("div", { class: "card qplay" }), live = h("div", { class: "qsr", role: "status", "aria-live": "polite" });
+      const bk = backTo(), back = bk ? h("a", { class: "back", href: bk.href }, bk.label) : h("a", { class: "back", href: "#/" }, "← My Quest"), box = h("div", { class: "card qplay" }), live = h("div", { class: "qsr", role: "status", "aria-live": "polite" });
       page.append(h("div", {}, back), box, live);
       const lock = (t, s) => { box.innerHTML = ""; box.append(h("div", { class: "empty" }, h("div", { class: "big" }, CE.icon("lock")), h("div", { class: "b" }, t), h("div", { class: "sm" }, s || ""))); };
       if (r.open === false) return lock(r.opens && new Date(r.opens) > Date.now() ? "This assessment opens " + D.dt(r.opens) : "This assessment closed " + D.dt(r.closes), r.minutes ? "Time limit: " + r.minutes + " minutes." : "");
@@ -124,7 +126,7 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
         live.textContent = score + ". " + CE.t(msg);
         if (fin) x.results.forEach((res, k) => box.append(resCard(res, k, true)));
         else { box.append(h("h2", { class: "qsub" }, wrong.length === 1 ? "1 to fix" : wrong.length + " to fix")); wrong.forEach(k => box.append(resCard(x.results[k], k, false))); }
-        box.append(h("div", { class: "qact wrap" }, ...(fin ? [h("a", { class: "btn qa grow", href: "#/" }, "Back to My Quest"), wrong.length ? h("a", { class: "btn ghost", href: "#/review" }, "Review queue") : null, h("button", { class: "btn ghost", type: "button", onclick: () => { answers = new Array(n).fill(null); ask = r.qs.map((_, k) => k); pos = 0; round = 1; why = {}; stage = "ask"; clock(); render(); $(".qq", box).focus(); } }, "Start again")]
+        box.append(h("div", { class: "qact wrap" }, ...(fin ? [bk ? h("a", { class: "btn qa grow", href: bk.href }, bk.label) : h("a", { class: "btn qa grow", href: "#/" }, "Back to My Quest"), wrong.length ? h("a", { class: "btn ghost", href: "#/review" }, "Review queue") : null, h("button", { class: "btn ghost", type: "button", onclick: () => { answers = new Array(n).fill(null); ask = r.qs.map((_, k) => k); pos = 0; round = 1; why = {}; stage = "ask"; clock(); render(); $(".qq", box).focus(); } }, "Start again")]
           : [h("button", { class: "btn qa grow", type: "button", onclick: () => { why = {}; wrong.forEach(k => { why[k] = x.results[k].why; }); ({ ask, answers } = QUEST.retry(answers, x.results)); pos = 0; round++; stage = "ask"; clock(); render(); $(".qq", box).focus(); } }, wrong.length === 1 ? "Retry the 1 I missed" : "Retry the " + wrong.length + " I missed"), h("button", { class: "btn ghost", type: "button", onclick: () => result(x, true) }, "Stop here")])));
         hd.focus();
       };
@@ -134,10 +136,10 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
 
   /* ---------- student: review (the same spaced queue as Compass Ed) ---------- */
   async function review() {
-    title("Review", "#/review"); CE.loading(page);
+    title("Review queue", "#/review"); CE.loading(page);
     try {
       const r = await capi("ed_s_review"); if (!r.ok) return CE.fail(page, r);
-      page.innerHTML = ""; page.append(lead("Review", "Flashcards made from anything you got wrong, spaced out so it sticks."));
+      page.innerHTML = ""; page.append(lead("Review queue", "Flashcards made from anything you got wrong, spaced out so it sticks."));
       const tmr = () => r.tomorrow > 0 ? (r.tomorrow === 1 ? "1 card is due tomorrow." : r.tomorrow + " cards are due tomorrow.") : r.tomorrow === 0 ? "Nothing is due tomorrow." : "";
       if (!r.due.length) return page.append(CE.emptyArt("sprout", r.total ? "Nothing due today" : "Your review queue is empty", r.total ? (r.tomorrow > 0 ? tmr() : "You have " + r.total + " cards. The next one is due " + (r.next ? D.short(r.next) : "soon") + ".") : "Wrong quiz answers and lesson key points become flashcards here, spaced out so they stick."));
       let i = 0, flipped = false, done = 0, busy = false; const q = r.due.slice(), box = h("div", { class: "qrev" }); page.append(box);
@@ -182,7 +184,7 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
 
   /* ---------- staff: class completion ---------- */
   async function classes() {
-    title("Classes"); CE.loading(page);
+    title("Class completion"); CE.loading(page);
     try {
       const r = await capi("ed_t_assigns"); if (!r.ok) return CE.fail(page, r);
       const rows = r.rows.filter(a => a.kind === "quiz" || a.kind === "dash"), stats = {};
@@ -197,5 +199,5 @@ if (typeof module === "object" && module.exports) module.exports = QUEST;
     } catch (e) { CE.fail(page, e); }
   }
 
-  CE.router(staff ? [{ path: "/", handler: classes }] : [{ path: "/", handler: home }, { path: "/play/:id", handler: play }, { path: "/review", handler: review }, { path: "/progress", handler: progress }]);
+  CE.router(staff ? [{ path: "/", handler: classes }] : [{ path: "/", handler: home }, { path: "/play/:id", handler: play }, { path: "/review", handler: review }, { path: "/progress", handler: () => location.replace("../student/#/progress") }]);
 })();

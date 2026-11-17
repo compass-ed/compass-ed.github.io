@@ -580,7 +580,7 @@
 
   /* ---------- people & classes ---------- */
   async function people(p) {
-    CE.title("People & classes"); CE.loading(page);
+    CE.title("People"); CE.loading(page);
     try {
       const r = await api("ed_a_users"); if (!r.ok) return CE.fail(page, r);
       page.innerHTML = ""; const tab = (p && p.tab) || "students";
@@ -1009,15 +1009,15 @@
   }
 
   const GROUPS = [
-    [["Campus Hub", "#/campus"], ["Student Voice", "#/voice"], ["Insights", "#/insights"], ["Display mode", "#/display"]],
-    [["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["News", "#/news"]],
+    [["Dashboard", "#/", /^#\/(wellbeing)?$/], ["Calendar", "#/calendar"]],
+    [["Classes", "#/classes", /^#\/(class|portfolio\/)/], ["People", "#/people", /^#\/people/], ["House points", "#/points"]],
+    [["Assignments", "#/assignments", /^#\/assignment/], ["Compass Quest", "../quest/"]],
     [["Lessons & quizzes", "#/content", /^#\/content/], ["Playlists", "#/playlists"], ["Rubrics", "#/rubrics"], ["Question bank", "#/bank"]],
-    [["Announcements", "#/announcements"], ["Calendar", "#/calendar"], ["Permission slips", "#/slips", /^#\/slip/]],
-    [["People & classes", "#/people", /^#\/people/], ["House points", "#/points"]],
-    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"], ["Wellbeing", "#/admin/wellbeing"]],
-    [["Classes", "#/classes", /^#\/class/]], [["Assignments", "#/assignments", /^#\/assignment/]]
+    [["Announcements", "#/announcements"], ["News", "#/news"], ["Permission slips", "#/slips", /^#\/slip/]],
+    [["Campus", "#/campus"], ["Activities", "#/activities"], ["Competitions", "#/competitions", /^#\/competition/], ["Clubs", "#/clubs"], ["Student Voice", "#/voice"], ["Insights", "#/insights"], ["Display mode", "#/display"]],
+    [["Overview", "#/admin"], ["Login codes", "#/admin/codes"], ["Feedback", "#/admin/feedback"], ["Calendar feeds", "#/admin/feeds"], ["Links & integrations", "#/admin/links"], ["Wellbeing", "#/admin/wellbeing"]]
   ];
-  CE.jump = GROUPS.flat();
+  CE.jump = GROUPS.filter(g => me.role === "admin" || g[0][1] !== "#/admin").flat();
   const setSub = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); CE.subnav(g && g.length > 1 ? g : []); };
   addEventListener("hashchange", setSub); setSub();
   CE.markNav = () => { const cur = (location.hash || "#/").split("?")[0]; const g = GROUPS.find(gr => gr.some(([l, hsh, m]) => m ? m.test(cur) : cur === hsh)); const first = g ? g[0][1] : cur; CE.$$("#side a.nl").forEach(a => a.classList.toggle("on", a.getAttribute("href") === first || a.getAttribute("href") === cur)); CE.shellUp(); };
@@ -1029,6 +1029,6 @@
     { path: "/content", handler: content }, { path: "/content/:subj", handler: content }, { path: "/playlists", handler: playlists }, { path: "/rubrics", handler: rubrics },
     { path: "/assignments", handler: assignments }, { path: "/assignment/:id", handler: assignmentPage },
     { path: "/announcements", handler: announcements }, { path: "/calendar", handler: calendar }, { path: "/slips", handler: slipsPage }, { path: "/wellbeing", handler: wellbeing }, { path: "/portfolio/:uid", handler: portfolioPage }, { path: "/portfolio/:uid/:ay", handler: portfolioPage }, { path: "/slip/:id", handler: slipPage }, { path: "/people", handler: people }, { path: "/people/:tab", handler: people }, { path: "/settings", handler: settings }, { path: "/admin", handler: admin }, { path: "/admin/:tab", handler: admin }
-  ]);
+  ], dashboard);
   loadBell();
 })();
